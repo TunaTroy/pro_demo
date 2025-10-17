@@ -1,0 +1,16 @@
+<mvc:View xmlns:mvc="sap.ui.core.mvc"
+          xmlns="sap.m"
+          controllerName="demodashboard.controller.PRList">
+  <Page id="prlist" title="PR List">
+    <content>
+      <List id="list1"
+      items="{/PRList}">
+      <StandardListItem id="listitem1"
+         title="{PRId}"
+         description="{PRName}"
+         press="onPRPress"
+         type="Navigation"/>
+   </List>
+    </content>
+  </Page>
+</mvc:View>

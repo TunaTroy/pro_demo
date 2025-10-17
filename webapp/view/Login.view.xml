@@ -1,0 +1,22 @@
+<mvc:View xmlns:mvc="sap.ui.core.mvc"
+          xmlns="sap.m"
+          xmlns:core="sap.ui.core"
+          controllerName="demodashboard.controller.Login">
+  <Page id="login" title="Login">
+    <content>
+      <VBox id="vbox1" class="sapUiSmallMargin">
+        <Input id="username" placeholder="Username" />
+        <Input id="password" type="Password" placeholder="Password" />
+
+        <Select id="roleSelect" selectedKey="2">
+          <items>
+            <core:Item id="role1" key="1" text="Manager" />
+            <core:Item id="role2" key="2" text="Employee" />
+          </items>
+        </Select>
+
+        <Button id="button1" text="Login" press="onLoginPress" />
+      </VBox>
+    </content>
+  </Page>
+</mvc:View>

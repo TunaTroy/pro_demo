@@ -1,0 +1,55 @@
+<mvc:View xmlns:mvc="sap.ui.core.mvc"
+          xmlns="sap.m"
+          xmlns:core="sap.ui.core"
+           xmlns:viz="sap.viz.ui5.controls"
+          xmlns:viz.data="sap.viz.ui5.data"
+          xmlns:viz.feeds="sap.viz.ui5.controls.common.feeds"
+          controllerName="demodashboard.controller.Dashboard">
+  <Page id="dashboard" title="Dashboard" enableScrolling="true">
+    <content>
+      <VBox id="vbox2" width="100%" class="dashboardContainer">
+
+        <!-- Bộ lọc thời gian -->
+        <HBox id="_IDGenHBox" alignItems="Center" justifyContent="End" width="100%" class="filterBar">
+          <Label id="_IDGenLabel" text="Time Filter:" labelFor="timeFilter" class="sapUiSmallMarginEnd"/>
+          <Select id="timeFilter"
+                  change="onTimeFilterChange"
+                  selectedKey="thisMonth"
+                  class="sapUiSmallMarginEnd">
+            <items>
+              <core:Item id="_IDGenItem" key="today" text="Today" />
+              <core:Item id="_IDGenItem1" key="thisWeek" text="This Week" />
+              <core:Item id="_IDGenItem2" key="thisMonth" text="This Month" />
+              <core:Item id="_IDGenItem3" key="thisQuarter" text="This Quarter" />
+              <core:Item id="_IDGenItem4" key="thisYear" text="This Year" />
+            </items>
+          </Select>
+        </HBox>
+
+        <!-- KPI Container -->
+        <HBox id="kpiContainer"
+              wrap="Wrap"
+              alignItems="Center"
+              justifyContent="Start"
+              width="100%">
+        </HBox>
+
+        <VBox id="_IDGenVBox" width="100%" class="sapUiMediumMarginTop">
+          <viz:VizFrame
+            id="idDonutChart"
+            vizType="donut"
+            width="100%"
+            height="350px">
+          </viz:VizFrame>
+        </VBox>
+
+        <!-- Nút chuyển sang danh sách PR -->
+        <Button id="button2"
+                text="Go to PR List"
+                press="onGoToPRList"
+                class="sapUiSmallMarginTop" />
+
+      </VBox>
+    </content>
+  </Page>
+</mvc:View>

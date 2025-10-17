@@ -1,0 +1,29 @@
+<core:FragmentDefinition 
+  xmlns="sap.m" 
+  xmlns:core="sap.ui.core">
+  
+  <VBox id="vbox3" class="kpiCard" alignItems="Stretch">
+    
+    <!-- Title -->
+    <Text text="{/title}" class="kpiTitle"/>
+    
+    <!-- Period -->
+    <Text text="{/period}" class="kpiSubtitle"/>
+    
+    <!-- Value and Percentage -->
+    <HBox alignItems="End" class="sapUiSmallMarginBottom">
+      <Text text="{/value}" class="kpiValue"/>
+      <Text text="{/percentage}" class="kpiPercent"/>
+    </HBox>
+    
+    <!-- Progress Bar -->
+    <ProgressIndicator id="indi1" 
+      percentValue="{/progress}" 
+      displayValue="{/progress}%"
+      state="{= ${/state} || 'None' }"
+      width="100%"
+      showValue="true"/>
+      
+  </VBox>
+  
+</core:FragmentDefinition>

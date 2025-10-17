@@ -1,0 +1,13 @@
+<mvc:View xmlns:mvc="sap.ui.core.mvc"
+          xmlns="sap.m"
+          controllerName="demodashboard.controller.PRDetail">
+  <Page id="prdetail" title="PR Detail">
+    <content>
+      <ObjectHeader id="header1"
+        title="{/PRName}"
+        number="{/PRId}"
+        numberUnit="ID"
+      />
+    </content>
+  </Page>
+</mvc:View>
