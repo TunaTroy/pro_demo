@@ -1,7 +1,7 @@
 <mvc:View xmlns:mvc="sap.ui.core.mvc"
           xmlns="sap.m"
           xmlns:core="sap.ui.core"
-           xmlns:viz="sap.viz.ui5.controls"
+          xmlns:viz="sap.viz.ui5.controls"
           xmlns:viz.data="sap.viz.ui5.data"
           xmlns:viz.feeds="sap.viz.ui5.controls.common.feeds"
           controllerName="demodashboard.controller.Dashboard">
@@ -26,21 +26,55 @@
           </Select>
         </HBox>
 
-        <!-- KPI Container -->
+        <!-- KPI Container (giữ nguyên ID, giờ dùng cho 6 cards dynamic) -->
         <HBox id="kpiContainer"
               wrap="Wrap"
               alignItems="Center"
-              justifyContent="Start"
-              width="100%">
+              justifyContent="SpaceAround"
+              width="100%"
+              class="sapUiMediumMarginTop">
+          <!-- 6 KPI cards sẽ được add động từ controller -->
         </HBox>
 
+        <!-- Charts Section (mới, với 6 VizFrame, giữ idDonutChart cho PR) -->
         <VBox id="_IDGenVBox" width="100%" class="sapUiMediumMarginTop">
-          <viz:VizFrame
-            id="idDonutChart"
-            vizType="donut"
-            width="100%"
-            height="350px">
-          </viz:VizFrame>
+          <Title id="_IDGenTitle" text="Status Approval" class="sapUiMediumMarginBottom"/>
+          <HBox id="chartsRowContainer"
+                wrap="Wrap"
+                alignItems="Stretch"
+                justifyContent="SpaceAround"
+                width="100%">
+            <!-- PR Chart (giữ ID cũ) -->
+            <VBox id="_IDGenVBox2" class="chartCard" width="18%">
+              <Title id="_IDGenTitle1" text="Purchase Requisition" class="sapUiSmallMarginBottom"/>
+              <viz:VizFrame id="idPRChart" vizType="donut" width="100%" height="250px"/>
+            </VBox>
+            <!-- RFQ Chart -->
+            <VBox id="_IDGenVBox1" class="chartCard" width="18%">
+              <Title id="_IDGenTitle2" text="RFQ" class="sapUiSmallMarginBottom"/>
+              <viz:VizFrame id="chartRFQ" vizType="donut" width="100%" height="250px"/>
+            </VBox>
+            <!-- Quotation Chart -->
+            <VBox id="_IDGenVBox3" class="chartCard" width="18%">
+              <Title id="_IDGenTitle3" text="Quotation" class="sapUiSmallMarginBottom"/>
+              <viz:VizFrame id="chartQuotation" vizType="donut" width="100%" height="250px"/>
+            </VBox>
+            <!-- PO Chart -->
+            <VBox id="_IDGenVBox4" class="chartCard" width="18%">
+              <Title id="_IDGenTitle5" text="Purchase Order" class="sapUiSmallMarginBottom"/>
+              <viz:VizFrame id="chartPO" vizType="donut" width="100%" height="250px"/>
+            </VBox>
+            <!-- GR Chart -->
+            <VBox id="_IDGenVBox5" class="chartCard" width="18%">
+              <Title id="_IDGenTitle4" text="Goods Receipt" class="sapUiSmallMarginBottom"/>
+              <viz:VizFrame id="chartGR" vizType="donut" width="100%" height="250px"/>
+            </VBox>
+            <!-- Invoice Chart -->
+            <VBox id="_IDGenVBox6" class="chartCard" width="18%">
+              <Title id="_IDGenTitle6" text="Invoice" class="sapUiSmallMarginBottom"/>
+              <viz:VizFrame id="chartInvoice" vizType="donut" width="100%" height="250px"/>
+            </VBox>
+          </HBox>
         </VBox>
 
         <!-- Nút chuyển sang danh sách PR -->

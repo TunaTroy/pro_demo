@@ -15,15 +15,18 @@
 
 /* KPI Card */
 .kpiCard {
-  min-width: 200px;
-  max-width: 250px;
-  padding: 1.5rem;
-  margin: 0.5rem;
+  width: calc(16.66% - 0.5rem);
+  min-width: 150px; 
+  max-width: 180px;
+  padding: 1rem; 
+  margin: 0.25rem; 
   background: white;
   border-radius: 0.5rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   border-left: 4px solid #0a6ed1;
   transition: transform 0.2s, box-shadow 0.2s;
+  flex: 1; 
+  max-height: 200px; 
 }
 
 .kpiCard:hover {
@@ -80,22 +83,46 @@
   height: 6px;
   border-radius: 3px;
 }
-/* Donut Chart Card */
+
+/* Donut Chart Card - Thu nhỏ để fit 6 trên 1 hàng */
 .card--donut {
-  min-width: 300px;
-  max-width: 450px;
-  padding: 1.5rem;
-  margin: 0.5rem;
+  min-width: 150px; 
+  max-width: 180px;
+  padding: 0.5rem; 
+  margin: 0.25rem; 
   background: white;
   border-radius: 0.5rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   border-left: 4px solid #0a6ed1;
   transition: transform 0.2s, box-shadow 0.2s;
+  flex: 1; 
+  max-height: 200px; 
 }
 
 .card--donut:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Chart Card (cho VBox chứa VizFrame) - Thu nhỏ tương ứng */
+.chartCard {
+  min-width: 150px; /* Đồng bộ với .card--donut */
+  max-width: 180px;
+  padding: 0.5rem;
+  margin: 0.25rem;
+  background: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s;
+}
+
+.chartCard:hover {
+  transform: translateY(-2px);
+}
+
+/* VizFrame trong chart - Giảm height để fit nhỏ hơn */
+.chartCard .sapVizFrame {
+  height: 150px !important; /* Giảm từ 250px/350px, !important để override */
 }
 
 /* Generic Card Container */
@@ -114,8 +141,11 @@
 /* Responsive Design */
 @media (max-width: 1024px) {
   .card--donut {
-    min-width: 100%;
-    max-width: 100%;
+    min-width: 140px;
+    max-width: 160px;
+  }
+  .chartCard .sapVizFrame {
+    height: 120px !important;
   }
 }
 
@@ -130,8 +160,16 @@
     max-width: 100%;
   }
   
+  .chartCard {
+    min-width: 100%;
+    max-width: 100%;
+  }
+  
+  .chartCard .sapVizFrame {
+    height: 200px !important; /* Tăng height trên mobile để dễ xem */
+  }
+  
   .dashboardContainer {
     padding: 0.5rem;
   }
 }
-
