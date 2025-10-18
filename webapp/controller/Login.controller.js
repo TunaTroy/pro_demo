@@ -21,7 +21,7 @@ sap.ui.define([
       var sPassword = oView.byId("password").getValue();
       var sRole = oView.byId("roleSelect").getSelectedKey(); // "1" or "2"
 
-      // ✅ Danh sách user hợp lệ (tạm hardcoded)
+   
       var aUsers = [
         { username: "LEARN-4881", password: "1", role: "1" },
         { username: "LEARN-4882", password: "2", role: "2" }
