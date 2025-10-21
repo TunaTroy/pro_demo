@@ -15,24 +15,5 @@ function (JSONModel, Device) {
             oModel.setDefaultBindingMode("OneWay");
             return oModel;
         },
-
-        /**
-         * Tạo model cho pie chart data (thêm data JSON của bạn ở đây).
-         * @returns {sap.ui.model.json.JSONModel} The chart model.
-         */
-        createChartModel: function () {
-            // Data JSON bạn cung cấp (thêm vào đây)
-            var oChartData = {
-                items: [
-                    { Category: "A", Value: 10 },
-                    { Category: "B", Value: 20 },
-                    { Category: "C", Value: 30 }
-                ]
-            };
-
-            var oModel = new JSONModel(oChartData);
-            oModel.setDefaultBindingMode("OneWay");
-            return oModel;
-        }
     };
 });

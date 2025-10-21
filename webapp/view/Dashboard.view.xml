@@ -5,73 +5,84 @@
           xmlns:viz.data="sap.viz.ui5.data"
           xmlns:viz.feeds="sap.viz.ui5.controls.common.feeds"
           controllerName="demodashboard.controller.Dashboard">
+
   <Page id="dashboard" title="Dashboard" enableScrolling="true">
     <content>
+
       <VBox id="vbox2" width="100%" class="dashboardContainer">
 
         <!-- Bộ lọc thời gian -->
-        <HBox id="_IDGenHBox" alignItems="Center" justifyContent="End" width="100%" class="filterBar">
-          <Label id="_IDGenLabel" text="Time Filter:" labelFor="timeFilter" class="sapUiSmallMarginEnd"/>
+        <HBox id="_IDGenHBox"
+              alignItems="Center"
+              justifyContent="End"
+              width="100%"
+              class="filterBar">
+          <Label text="Time Filter:" labelFor="timeFilter" class="sapUiSmallMarginEnd"/>
           <Select id="timeFilter"
                   change="onTimeFilterChange"
                   selectedKey="thisMonth"
                   class="sapUiSmallMarginEnd">
             <items>
-              <core:Item id="_IDGenItem" key="today" text="Today" />
-              <core:Item id="_IDGenItem1" key="thisWeek" text="This Week" />
-              <core:Item id="_IDGenItem2" key="thisMonth" text="This Month" />
-              <core:Item id="_IDGenItem3" key="thisQuarter" text="This Quarter" />
-              <core:Item id="_IDGenItem4" key="thisYear" text="This Year" />
+              <core:Item key="today" text="Today" />
+              <core:Item key="thisWeek" text="This Week" />
+              <core:Item key="thisMonth" text="This Month" />
+              <core:Item key="thisQuarter" text="This Quarter" />
+              <core:Item key="thisYear" text="This Year" />
             </items>
           </Select>
         </HBox>
 
-        <!-- KPI + Donut Chart trên cùng 1 hàng -->
-<HBox id="kpiAndChartRow"
-      alignItems="Stretch"
-      justifyContent="Center"
-      wrap="Wrap"
-      width="100%"
-      class="kpiChartRow">
+        <!-- Row ngang: KPI - Donut - Bar -->
+        <HBox id="dashboardMainRow"
+              wrap="Wrap"
+              alignItems="Start"
+              justifyContent="SpaceBetween"
+              class="dashboardMainRow">
 
-  <!-- KPI Card 1 -->
-<VBox id="prKpiCard" class="kpiCard" width="20%" binding="{kpiModel>/}">
-  <Text id="_IDGenText" text="{kpiModel>/title}" class="kpiTitle"/>
-  <Text id="_IDGenText1" text="{kpiModel>/period}" class="kpiSubtitle"/>
-  <HBox id="_IDGenHBox1" alignItems="End" justifyContent="Start">
-    <Text id="_IDGenText2" text="{kpiModel>/value}" class="kpiValue"/>
-    <Text id="_IDGenText3" text="{kpiModel>/percentage}" class="kpiPercent" state="{kpiModel>/state}"/>
-  </HBox>
-  <ProgressIndicator id="_IDGenProgressIndicator"
-      percentValue="{kpiModel>/progress}"
-      displayValue="{kpiModel>/progress}%"
-      state="{kpiModel>/state}"/>
+          <!-- KPI Card Container -->
+          <VBox id="kpiSection" class="dashboardCard kpiCard">
+  <HBox id="kpiContainer" />
 </VBox>
 
-
-  <!-- Donut Chart -->
-  <VBox id="donutChartCard" class="chartCard" width="25%">
-    <Title id="_IDGenTitle" text="Purchase Requisition" class="sapUiSmallMarginBottom"/>
-    <viz:VizFrame id="idPRChart" vizType="donut" width="100%" height="250px"/>
-  </VBox>
-
-  <!-- Thẻ dự phòng (chưa dùng, nhưng để sẵn layout) -->
-<!-- Thẻ Bar Chart -->
-<VBox id="kpiContainer" class="sapUiSmallMargin sapUiSizeCompact">
-          
+          <!-- Donut Chart -->
+          <VBox id="donutChartSection"  width="32%">
+            <viz:VizFrame
+              id="idDonutChart"
+              vizType="donut"
+              width="100%"
+              height="200px" />
           </VBox>
 
+          <!-- Bar Chart -->
+          <VBox id="barChartSection" width="32%">
+            <viz:VizFrame
+              id="idBarChart"
+              vizType="bar"
+              width="100%"
+              height="200px" />
+          </VBox>
 
-</HBox>
+        </HBox>
 
+        <VBox id="monthlyChartSection"
+      width="100%"
+      class="chartRowFullWidth sapUiSmallMarginTop">
+        <Title id="_IDGenTitle" text="Purchase Requisitions per Month" class="sapUiSmallMarginBottom"/>
+        <viz:VizFrame
+    id="idMonthlyBarChart"
+    vizType="column"
+    width="100%"
+    height="300px"/>
+        </VBox>
 
-        <!-- Nút chuyển sang danh sách PR -->
+        <!-- Nút chuyển sang PR List -->
         <Button id="button2"
                 text="Go to PR List"
                 press="onGoToPRList"
                 class="sapUiSmallMarginTop" />
 
       </VBox>
+
     </content>
   </Page>
 </mvc:View>
