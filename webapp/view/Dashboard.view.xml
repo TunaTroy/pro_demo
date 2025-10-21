@@ -26,56 +26,44 @@
           </Select>
         </HBox>
 
-        <!-- KPI Container (giữ nguyên ID, giờ dùng cho 6 cards dynamic) -->
-        <HBox id="kpiContainer"
-              wrap="Wrap"
-              alignItems="Center"
-              justifyContent="SpaceAround"
-              width="100%"
-              class="sapUiMediumMarginTop">
-          <!-- 6 KPI cards sẽ được add động từ controller -->
-        </HBox>
+        <!-- KPI + Donut Chart trên cùng 1 hàng -->
+<HBox id="kpiAndChartRow"
+      alignItems="Stretch"
+      justifyContent="Center"
+      wrap="Wrap"
+      width="100%"
+      class="kpiChartRow">
 
-        <!-- Charts Section (mới, với 6 VizFrame, giữ idDonutChart cho PR) -->
-        <VBox id="_IDGenVBox" width="100%" class="sapUiMediumMarginTop">
-          <Title id="_IDGenTitle" text="Status Approval" class="sapUiMediumMarginBottom"/>
-          <HBox id="chartsRowContainer"
-                wrap="Wrap"
-                alignItems="Stretch"
-                justifyContent="SpaceAround"
-                width="100%">
-            <!-- PR Chart (giữ ID cũ) -->
-            <VBox id="_IDGenVBox2" class="chartCard" width="18%">
-              <Title id="_IDGenTitle1" text="Purchase Requisition" class="sapUiSmallMarginBottom"/>
-              <viz:VizFrame id="idPRChart" vizType="donut" width="100%" height="250px"/>
-            </VBox>
-            <!-- RFQ Chart -->
-            <VBox id="_IDGenVBox1" class="chartCard" width="18%">
-              <Title id="_IDGenTitle2" text="RFQ" class="sapUiSmallMarginBottom"/>
-              <viz:VizFrame id="chartRFQ" vizType="donut" width="100%" height="250px"/>
-            </VBox>
-            <!-- Quotation Chart -->
-            <VBox id="_IDGenVBox3" class="chartCard" width="18%">
-              <Title id="_IDGenTitle3" text="Quotation" class="sapUiSmallMarginBottom"/>
-              <viz:VizFrame id="chartQuotation" vizType="donut" width="100%" height="250px"/>
-            </VBox>
-            <!-- PO Chart -->
-            <VBox id="_IDGenVBox4" class="chartCard" width="18%">
-              <Title id="_IDGenTitle5" text="Purchase Order" class="sapUiSmallMarginBottom"/>
-              <viz:VizFrame id="chartPO" vizType="donut" width="100%" height="250px"/>
-            </VBox>
-            <!-- GR Chart -->
-            <VBox id="_IDGenVBox5" class="chartCard" width="18%">
-              <Title id="_IDGenTitle4" text="Goods Receipt" class="sapUiSmallMarginBottom"/>
-              <viz:VizFrame id="chartGR" vizType="donut" width="100%" height="250px"/>
-            </VBox>
-            <!-- Invoice Chart -->
-            <VBox id="_IDGenVBox6" class="chartCard" width="18%">
-              <Title id="_IDGenTitle6" text="Invoice" class="sapUiSmallMarginBottom"/>
-              <viz:VizFrame id="chartInvoice" vizType="donut" width="100%" height="250px"/>
-            </VBox>
-          </HBox>
-        </VBox>
+  <!-- KPI Card 1 -->
+<VBox id="prKpiCard" class="kpiCard" width="20%" binding="{kpiModel>/}">
+  <Text id="_IDGenText" text="{kpiModel>/title}" class="kpiTitle"/>
+  <Text id="_IDGenText1" text="{kpiModel>/period}" class="kpiSubtitle"/>
+  <HBox id="_IDGenHBox1" alignItems="End" justifyContent="Start">
+    <Text id="_IDGenText2" text="{kpiModel>/value}" class="kpiValue"/>
+    <Text id="_IDGenText3" text="{kpiModel>/percentage}" class="kpiPercent" state="{kpiModel>/state}"/>
+  </HBox>
+  <ProgressIndicator id="_IDGenProgressIndicator"
+      percentValue="{kpiModel>/progress}"
+      displayValue="{kpiModel>/progress}%"
+      state="{kpiModel>/state}"/>
+</VBox>
+
+
+  <!-- Donut Chart -->
+  <VBox id="donutChartCard" class="chartCard" width="25%">
+    <Title id="_IDGenTitle" text="Purchase Requisition" class="sapUiSmallMarginBottom"/>
+    <viz:VizFrame id="idPRChart" vizType="donut" width="100%" height="250px"/>
+  </VBox>
+
+  <!-- Thẻ dự phòng (chưa dùng, nhưng để sẵn layout) -->
+<!-- Thẻ Bar Chart -->
+<VBox id="kpiContainer" class="sapUiSmallMargin sapUiSizeCompact">
+          
+          </VBox>
+
+
+</HBox>
+
 
         <!-- Nút chuyển sang danh sách PR -->
         <Button id="button2"

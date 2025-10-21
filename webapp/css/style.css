@@ -1,6 +1,6 @@
 /* Dashboard Container */
 .dashboardContainer {
-  padding: 1rem;
+  padding: 1.5rem;
   background-color: #f5f5f5;
 }
 
@@ -13,39 +13,47 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
+/* KPI + Chart Row Container */
+.kpiChartRow {
+  display: flex;
+  justify-content: center; /* căn giữa hàng */
+  align-items: stretch;
+  flex-wrap: wrap;
+  gap: 2rem; /* khoảng cách giữa các thẻ */
+  width: 100%;
+  margin-top: 1rem;
+}
+
 /* KPI Card */
 .kpiCard {
-  width: calc(16.66% - 0.5rem);
-  min-width: 150px; 
-  max-width: 180px;
-  padding: 1rem; 
-  margin: 0.25rem; 
+  flex: 0 1 22%; /* mỗi thẻ chiếm ~22% width */
+  min-width: 220px;
+  max-width: 300px;
+  padding: 1rem;
   background: white;
-  border-radius: 0.5rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border-left: 4px solid #0a6ed1;
+  border-radius: 0.75rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  border-left: 5px solid #0a6ed1;
   transition: transform 0.2s, box-shadow 0.2s;
-  flex: 1; 
-  max-height: 200px; 
 }
 
 .kpiCard:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
 }
 
 /* KPI Title */
 .kpiTitle {
-  font-size: 0.875rem;
+  font-size: 1rem;
   font-weight: 600;
   color: #32363a;
   margin-bottom: 0.25rem;
   display: block;
 }
 
-/* KPI Subtitle (Period) */
+/* KPI Subtitle */
 .kpiSubtitle {
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   color: #6a6d70;
   margin-bottom: 0.75rem;
   display: block;
@@ -66,110 +74,81 @@
   font-weight: 600;
   color: #107e3e;
   align-self: flex-end;
-  margin-bottom: 0.25rem;
 }
 
-/* Negative percentage */
 .kpiPercent[data-state="Error"] {
   color: #bb0000;
 }
 
-/* Progress Indicator customization */
+/* Progress Bar */
 .kpiCard .sapMPI {
   margin-top: 0.5rem;
 }
-
 .kpiCard .sapMPIBar {
   height: 6px;
   border-radius: 3px;
 }
 
-/* Donut Chart Card - Thu nhỏ để fit 6 trên 1 hàng */
-.card--donut {
-  min-width: 150px; 
-  max-width: 180px;
-  padding: 0.5rem; 
-  margin: 0.25rem; 
-  background: white;
-  border-radius: 0.5rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border-left: 4px solid #0a6ed1;
-  transition: transform 0.2s, box-shadow 0.2s;
-  flex: 1; 
-  max-height: 200px; 
-}
-
-.card--donut:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-/* Chart Card (cho VBox chứa VizFrame) - Thu nhỏ tương ứng */
+/* Chart Card */
 .chartCard {
-  min-width: 150px; /* Đồng bộ với .card--donut */
-  max-width: 180px;
-  padding: 0.5rem;
-  margin: 0.25rem;
+  flex: 0 1 25%;
+  min-width: 250px;
+  max-width: 350px;
+  padding: 1rem;
   background: white;
-  border-radius: 0.5rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s;
+  border-radius: 0.75rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .chartCard:hover {
   transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
 }
 
-/* VizFrame trong chart - Giảm height để fit nhỏ hơn */
+/* Chart inside VizFrame */
 .chartCard .sapVizFrame {
-  height: 150px !important; /* Giảm từ 250px/350px, !important để override */
+  height: 220px !important;
 }
 
-/* Generic Card Container */
-.cardContainer {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
+.sapVizFrame .sapVizLegendText,
+.sapVizFrame .sapVizLegendTitle {
+  font-size: 0.7rem !important;
+  line-height: 1.1 !important;
 }
 
-/* Button styling */
+.sapVizFrame .sapVizDataLabel {
+  font-size: 0.75rem !important;
+}
+
+
+/* Button */
 #button2 {
-  margin: 1rem 0.5rem;
+  margin: 1.5rem auto;
+  display: block;
 }
 
 /* Responsive Design */
 @media (max-width: 1024px) {
-  .card--donut {
-    min-width: 140px;
-    max-width: 160px;
+  .kpiCard, .chartCard {
+    flex: 0 1 45%;
   }
+
   .chartCard .sapVizFrame {
-    height: 120px !important;
+    height: 200px !important;
   }
 }
 
 @media (max-width: 768px) {
-  .kpiCard {
-    min-width: 100%;
-    max-width: 100%;
+  .kpiCard, .chartCard {
+    flex: 0 1 100%;
   }
-  
-  .card--donut {
-    min-width: 100%;
-    max-width: 100%;
-  }
-  
-  .chartCard {
-    min-width: 100%;
-    max-width: 100%;
-  }
-  
+
   .chartCard .sapVizFrame {
-    height: 200px !important; /* Tăng height trên mobile để dễ xem */
+    height: 220px !important;
   }
-  
+
   .dashboardContainer {
-    padding: 0.5rem;
+    padding: 0.75rem;
   }
 }
