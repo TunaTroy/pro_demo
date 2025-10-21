@@ -28,15 +28,13 @@ sap.ui.define([
         oHBox.removeAllItems();
       }
 
-      var oTop3Container = this.getView().byId("top3Container");
-  if (oTop3Container) {
-    oTop3Container.removeAllItems();
-  }
+      
 
       // Không cần chartContainer nữa vì VizFrame hiển thị trực tiếp
       this._loadKpiPurchaseRequisition(sPeriodKey);
       this._loadStatusDonutChart(sPeriodKey);
-      this._loadTop3MaterialChart(sPeriodKey);
+      this._loadTopMaterialBarChart(sPeriodKey);
+      
     },
 
     /* ===== Load KPI ===== */
@@ -157,29 +155,29 @@ sap.ui.define([
       });
     },
 
-    /* ===== Load Top 3 Material Chart ===== */
-_loadTop3MaterialChart: function (sPeriodKey) {
+/* ===== Load Bar Chart: Top Material ===== */
+_loadTopMaterialBarChart: function (sPeriodKey) {
   BusyIndicator.show(0);
   var oCurrRange = this._getDateRange(sPeriodKey);
 
   this.oOData.read("/PRsSet", {
     urlParameters: {
-      "$select": "Banfn,Badat,Bnfpo,Matnr,Maktx,Menge", // Matnr=Material Code, Maktx=Material Name
-      "$top": "500"
+      "$select": "Banfn,Badat,Txz01",
+      "$top": "1000"
     },
     success: function (oData) {
       BusyIndicator.hide();
 
       if (!oData.results || oData.results.length === 0) {
-        MessageToast.show("Không có dữ liệu Material");
-        this._displayTop3MaterialChart(sPeriodKey, []);
+        MessageToast.show("Không có dữ liệu vật tư");
+        this._displayTopMaterialBarChart([]);
         return;
       }
 
-      // Parse BADAT
+      // Parse ngày
       oData.results.forEach(function (r) {
         if (r.Badat && typeof r.Badat === "string") {
-          var match = /Date\((\d+)\)/.exec(r.Badat);
+          var match = /Date\\((\\d+)\\)/.exec(r.Badat);
           if (match) r.Badat = new Date(parseInt(match[1], 10));
         }
       });
@@ -189,49 +187,37 @@ _loadTop3MaterialChart: function (sPeriodKey) {
         return r.Badat && r.Badat >= oCurrRange.start && r.Badat <= oCurrRange.end;
       });
 
-      // Đếm số lần xuất hiện của từng Material
-      var oMaterialCount = {};
+      // Nhóm theo Txz01
+      var oCountMap = {};
       aCurr.forEach(function (r) {
-        if (r.Matnr) {
-          if (!oMaterialCount[r.Matnr]) {
-            oMaterialCount[r.Matnr] = {
-              code: r.Matnr,
-              name: r.Maktx || "Material " + r.Matnr,
-              count: 0
-            };
-          }
-          oMaterialCount[r.Matnr].count++;
-        }
+        var key = r.Txz01 || "Không xác định";
+        oCountMap[key] = (oCountMap[key] || 0) + 1;
       });
 
-      // Sắp xếp và lấy Top 3
-      var aTop3 = Object.values(oMaterialCount)
-        .sort(function(a, b) { return b.count - a.count; })
-        .slice(0, 3)
-        .map(function(item) {
-          return {
-            materialCode: item.code,
-            materialName: item.name,
-            count: item.count
-          };
-        });
+      // Tạo mảng dữ liệu
+      var aChartData = Object.keys(oCountMap).map(function (key) {
+        return { Material: key, Count: oCountMap[key] };
+      });
 
-      if (aTop3.length === 0) {
-        aTop3 = [{ materialCode: "N/A", materialName: "No Data", count: 0 }];
-      }
+      // Sắp xếp và lấy Top 5
+      aChartData.sort((a, b) => b.Count - a.Count);
+      aChartData = aChartData.slice(0, 5);
 
-      this._displayTop3MaterialChart(sPeriodKey, aTop3);
+      this._displayTopMaterialBarChart(aChartData);
 
     }.bind(this),
 
     error: function (e) {
       BusyIndicator.hide();
-      console.error("❌ Load Top3 Material error:", e);
-      MessageToast.show("Lỗi khi tải Top 3 Material");
-      this._displayTop3MaterialChart(sPeriodKey, []);
+      MessageToast.show("Lỗi khi tải dữ liệu vật tư");
+      this._displayTopMaterialBarChart([]);
     }.bind(this)
   });
 },
+
+
+
+
 
     /* ===== Hiển thị KPI Card ===== */
     _displayKpiCard: function (sPeriodKey, iCurrCount, iPrevCount) {
@@ -288,16 +274,58 @@ _loadTop3MaterialChart: function (sPeriodKey) {
       });
     },
 
-   /* ===== Hiển thị Top 3 Material Chart ===== */
-_displayTop3MaterialChart: function (sPeriodKey, aTop3Data) {
-  var oChartData = {
-    title: "Top 3 Materials",
-    period: this._getPeriodLabel(sPeriodKey),
-    items: aTop3Data
-  };
+_displayTopMaterialBarChart: function (aChartData) {
+  var oVizFrame = this.getView().byId("idBarChart");
+  if (!oVizFrame) {
+    console.error("❌ Không tìm thấy Bar Chart VizFrame!");
+    return;
+  }
 
-  this._addTop3MaterialChart(oChartData);
+  oVizFrame.destroyFeeds();
+  oVizFrame.destroyDataset();
+
+  var oModel = new JSONModel({ items: aChartData });
+  this.getView().setModel(oModel, "topMaterial");
+
+  var oDataset = new FlattenedDataset({
+    dimensions: [{ name: "Material", value: "{topMaterial>Material}" }],
+    measures: [{ name: "Count", value: "{topMaterial>Count}" }],
+    data: { path: "topMaterial>/items" }
+  });
+
+  oVizFrame.setDataset(oDataset);
+  oVizFrame.setModel(oModel, "topMaterial");
+
+  oVizFrame.addFeed(new FeedItem({
+    uid: "valueAxis",
+    type: "Measure",
+    values: ["Count"]
+  }));
+  oVizFrame.addFeed(new FeedItem({
+    uid: "categoryAxis",
+    type: "Dimension",
+    values: ["Material"]
+  }));
+
+  oVizFrame.setVizProperties({
+  title: {
+    text: "Top 5 Best Material",
+    visible: true,
+    alignment: "center" // 👈 THÊM DÒNG NÀY
+  },
+  plotArea: {
+    colorPalette: ["#5CBAE6"],
+    dataLabel: { visible: true }
+  },
+  legend: { visible: false },
+  tooltip: { visible: true }
+});
+
 },
+
+
+
+
 
     /* ===== Tạo KPI Card Fragment ===== */
     _addKpiCard: function (oData) {
@@ -320,94 +348,6 @@ _displayTop3MaterialChart: function (sPeriodKey, aTop3Data) {
       });
     },
     
-/* ===== Thêm Top 3 Material Chart vào Container ===== */
-/* ===== Thêm Top 3 Material Chart vào Container ===== */
-_addTop3MaterialChart: function (oData) {
-  var oContainer = this.getView().byId("top3Container");
-  if (!oContainer) {
-    console.error("❌ top3Container not found!");
-    return;
-  }
-
-  Fragment.load({
-    id: this.getView().getId() + "_top3MaterialFragment_" + Date.now(),
-    name: "demodashboard.fragment.Top3MaterialChart",
-    controller: this
-  }).then(function (oFragment) {
-    
-    // Tạo JSONModel cho fragment
-    var oChartModel = new JSONModel(oData);
-    oFragment.setModel(oChartModel);
-
-    // Lấy VizFrame từ fragment
-    var oVizFrame = oFragment.getItems()[0].getItems()[1]; // VizFrame là item thứ 2
-    
-    if (oVizFrame && oVizFrame.getMetadata().getName() === "sap.viz.ui5.controls.VizFrame") {
-      
-      // Xóa feeds & dataset cũ (nếu có)
-      oVizFrame.destroyFeeds();
-      oVizFrame.destroyDataset();
-
-      // ✅ FIX: Dùng FlattenedDataset đã import
-      var oDataset = new FlattenedDataset({
-        dimensions: [
-          { name: "Material", value: "{materialName}" }
-        ],
-        measures: [
-          { name: "Count", value: "{count}" }
-        ],
-        data: {
-          path: "/items"
-        }
-      });
-
-      oVizFrame.setDataset(oDataset);
-      oVizFrame.setModel(oChartModel);
-
-      // ✅ FIX: Dùng FeedItem đã import
-      oVizFrame.addFeed(new FeedItem({
-        uid: "valueAxis",
-        type: "Measure",
-        values: ["Count"]
-      }));
-
-      oVizFrame.addFeed(new FeedItem({
-        uid: "categoryAxis",
-        type: "Dimension",
-        values: ["Material"]
-      }));
-
-      // Cấu hình VizProperties
-      oVizFrame.setVizProperties({
-        plotArea: {
-          colorPalette: ["#5899DA", "#E8743B", "#19A979"],
-          dataLabel: {
-            visible: true,
-            formatString: "#,##0"
-          }
-        },
-        valueAxis: {
-          title: { visible: true, text: "Count" }
-        },
-        categoryAxis: {
-          title: { visible: false }
-        },
-        title: {
-          visible: false
-        },
-        legend: { visible: false },
-        tooltip: { visible: true }
-      });
-    }
-
-    // Thêm fragment vào container
-    oContainer.addItem(oFragment);
-
-  }.bind(this)).catch(function (err) {
-    console.error("❌ Top3 Material Fragment load error:", err);
-  });
-},
-
     /* ===== Helper Functions ===== */
     _countUniqueBanfn: function (aRows) {
       var s = new Set();
