@@ -43,6 +43,14 @@
           </viz:VizFrame>
         </VBox>
 
+        <!-- Top3 Container -->
+        <HBox id="top3Container"
+              wrap="Wrap"
+              alignItems="Center"
+              justifyContent="Start"
+              width="100%">
+        </HBox>
+
         <!-- Nút chuyển sang danh sách PR -->
         <Button id="button2"
                 text="Go to PR List"

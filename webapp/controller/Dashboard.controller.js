@@ -22,15 +22,21 @@ sap.ui.define([
     },
 
     /* ===== Tải toàn bộ dashboard ===== */
-    _reloadAll: function (sPeriodKey) {
+    _reloadAll: function (sPeriodKey) { 
       var oHBox = this.getView().byId("kpiContainer");
       if (oHBox) {
         oHBox.removeAllItems();
       }
 
+      var oTop3Container = this.getView().byId("top3Container");
+  if (oTop3Container) {
+    oTop3Container.removeAllItems();
+  }
+
       // Không cần chartContainer nữa vì VizFrame hiển thị trực tiếp
       this._loadKpiPurchaseRequisition(sPeriodKey);
       this._loadStatusDonutChart(sPeriodKey);
+      this._loadTop3MaterialChart(sPeriodKey);
     },
 
     /* ===== Load KPI ===== */
@@ -151,6 +157,82 @@ sap.ui.define([
       });
     },
 
+    /* ===== Load Top 3 Material Chart ===== */
+_loadTop3MaterialChart: function (sPeriodKey) {
+  BusyIndicator.show(0);
+  var oCurrRange = this._getDateRange(sPeriodKey);
+
+  this.oOData.read("/PRsSet", {
+    urlParameters: {
+      "$select": "Banfn,Badat,Bnfpo,Matnr,Maktx,Menge", // Matnr=Material Code, Maktx=Material Name
+      "$top": "500"
+    },
+    success: function (oData) {
+      BusyIndicator.hide();
+
+      if (!oData.results || oData.results.length === 0) {
+        MessageToast.show("Không có dữ liệu Material");
+        this._displayTop3MaterialChart(sPeriodKey, []);
+        return;
+      }
+
+      // Parse BADAT
+      oData.results.forEach(function (r) {
+        if (r.Badat && typeof r.Badat === "string") {
+          var match = /Date\((\d+)\)/.exec(r.Badat);
+          if (match) r.Badat = new Date(parseInt(match[1], 10));
+        }
+      });
+
+      // Lọc theo thời gian
+      var aCurr = oData.results.filter(function (r) {
+        return r.Badat && r.Badat >= oCurrRange.start && r.Badat <= oCurrRange.end;
+      });
+
+      // Đếm số lần xuất hiện của từng Material
+      var oMaterialCount = {};
+      aCurr.forEach(function (r) {
+        if (r.Matnr) {
+          if (!oMaterialCount[r.Matnr]) {
+            oMaterialCount[r.Matnr] = {
+              code: r.Matnr,
+              name: r.Maktx || "Material " + r.Matnr,
+              count: 0
+            };
+          }
+          oMaterialCount[r.Matnr].count++;
+        }
+      });
+
+      // Sắp xếp và lấy Top 3
+      var aTop3 = Object.values(oMaterialCount)
+        .sort(function(a, b) { return b.count - a.count; })
+        .slice(0, 3)
+        .map(function(item) {
+          return {
+            materialCode: item.code,
+            materialName: item.name,
+            count: item.count
+          };
+        });
+
+      if (aTop3.length === 0) {
+        aTop3 = [{ materialCode: "N/A", materialName: "No Data", count: 0 }];
+      }
+
+      this._displayTop3MaterialChart(sPeriodKey, aTop3);
+
+    }.bind(this),
+
+    error: function (e) {
+      BusyIndicator.hide();
+      console.error("❌ Load Top3 Material error:", e);
+      MessageToast.show("Lỗi khi tải Top 3 Material");
+      this._displayTop3MaterialChart(sPeriodKey, []);
+    }.bind(this)
+  });
+},
+
     /* ===== Hiển thị KPI Card ===== */
     _displayKpiCard: function (sPeriodKey, iCurrCount, iPrevCount) {
       var fPercent = (iPrevCount === 0)
@@ -206,6 +288,17 @@ sap.ui.define([
       });
     },
 
+   /* ===== Hiển thị Top 3 Material Chart ===== */
+_displayTop3MaterialChart: function (sPeriodKey, aTop3Data) {
+  var oChartData = {
+    title: "Top 3 Materials",
+    period: this._getPeriodLabel(sPeriodKey),
+    items: aTop3Data
+  };
+
+  this._addTop3MaterialChart(oChartData);
+},
+
     /* ===== Tạo KPI Card Fragment ===== */
     _addKpiCard: function (oData) {
       var oHBox = this.getView().byId("kpiContainer");
@@ -226,6 +319,94 @@ sap.ui.define([
         console.error("❌ KPI Fragment load error:", err);
       });
     },
+    
+/* ===== Thêm Top 3 Material Chart vào Container ===== */
+/* ===== Thêm Top 3 Material Chart vào Container ===== */
+_addTop3MaterialChart: function (oData) {
+  var oContainer = this.getView().byId("top3Container");
+  if (!oContainer) {
+    console.error("❌ top3Container not found!");
+    return;
+  }
+
+  Fragment.load({
+    id: this.getView().getId() + "_top3MaterialFragment_" + Date.now(),
+    name: "demodashboard.fragment.Top3MaterialChart",
+    controller: this
+  }).then(function (oFragment) {
+    
+    // Tạo JSONModel cho fragment
+    var oChartModel = new JSONModel(oData);
+    oFragment.setModel(oChartModel);
+
+    // Lấy VizFrame từ fragment
+    var oVizFrame = oFragment.getItems()[0].getItems()[1]; // VizFrame là item thứ 2
+    
+    if (oVizFrame && oVizFrame.getMetadata().getName() === "sap.viz.ui5.controls.VizFrame") {
+      
+      // Xóa feeds & dataset cũ (nếu có)
+      oVizFrame.destroyFeeds();
+      oVizFrame.destroyDataset();
+
+      // ✅ FIX: Dùng FlattenedDataset đã import
+      var oDataset = new FlattenedDataset({
+        dimensions: [
+          { name: "Material", value: "{materialName}" }
+        ],
+        measures: [
+          { name: "Count", value: "{count}" }
+        ],
+        data: {
+          path: "/items"
+        }
+      });
+
+      oVizFrame.setDataset(oDataset);
+      oVizFrame.setModel(oChartModel);
+
+      // ✅ FIX: Dùng FeedItem đã import
+      oVizFrame.addFeed(new FeedItem({
+        uid: "valueAxis",
+        type: "Measure",
+        values: ["Count"]
+      }));
+
+      oVizFrame.addFeed(new FeedItem({
+        uid: "categoryAxis",
+        type: "Dimension",
+        values: ["Material"]
+      }));
+
+      // Cấu hình VizProperties
+      oVizFrame.setVizProperties({
+        plotArea: {
+          colorPalette: ["#5899DA", "#E8743B", "#19A979"],
+          dataLabel: {
+            visible: true,
+            formatString: "#,##0"
+          }
+        },
+        valueAxis: {
+          title: { visible: true, text: "Count" }
+        },
+        categoryAxis: {
+          title: { visible: false }
+        },
+        title: {
+          visible: false
+        },
+        legend: { visible: false },
+        tooltip: { visible: true }
+      });
+    }
+
+    // Thêm fragment vào container
+    oContainer.addItem(oFragment);
+
+  }.bind(this)).catch(function (err) {
+    console.error("❌ Top3 Material Fragment load error:", err);
+  });
+},
 
     /* ===== Helper Functions ===== */
     _countUniqueBanfn: function (aRows) {

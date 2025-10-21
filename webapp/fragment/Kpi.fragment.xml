@@ -14,7 +14,7 @@
     <HBox alignItems="End" class="sapUiSmallMarginBottom">
       <Text text="{/value}" class="kpiValue"/>
       <Text text="{/percentage}" class="kpiPercent"/>
-    </HBox>
+    </HBox> 
     
     <!-- Progress Bar -->
     <ProgressIndicator id="indi1" 
