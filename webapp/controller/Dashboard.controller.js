@@ -30,8 +30,10 @@ _reloadChartsOnly: function (sPeriodKey) {
     this._loadKpiPurchaseRequisition(sPeriodKey),
     this._loadStatusDonutChart(sPeriodKey),
     this._loadTopMaterialBarChart(sPeriodKey)
+    
   ])
   .finally(() => {
+    this._loadMonthlyPRBarChart();
     BusyIndicator.hide();
   });
 },
@@ -354,52 +356,68 @@ _displayTopMaterialBarChart: function (aChartData) {
 },
 
 
-_loadMonthlyPRBarChart: function () {
-  BusyIndicator.show(0);
+/* ===== Load PR theo tháng (dữ liệu thật từ OData) ===== */
 
-  this.oOData.read("/PRsSet", {
-    urlParameters: { "$select": "Banfn,Badat", "$top": "2000" },
-    success: function (oData) {
-      BusyIndicator.hide();
+_loadMonthlyPRBarChart: function (sPeriodKey) {
+  return new Promise((resolve, reject) => {
+    BusyIndicator.show(0);
 
-      if (!oData.results || oData.results.length === 0) {
+    this.oOData.read("/PRsSet", {
+      urlParameters: { "$select": "Banfn,Badat", "$top": "2000" },
+      success: (oData) => {
+        BusyIndicator.hide();
+        const aResults = oData.results || [];
+        if (aResults.length === 0) {
+          this._displayMonthlyPRBarChart([]);
+          return resolve();
+        }
+
+        // Parse ngày từ /Date(...)/ → Date object
+        aResults.forEach((r) => {
+          if (typeof r.Badat === "string") {
+            const match = /Date\((\d+)\)/.exec(r.Badat);
+            if (match) r.Badat = new Date(parseInt(match[1], 10));
+          }
+        });
+
+        // Lấy năm dựa trên filter (khớp với KPI)
+        const year = this._getDateRange(sPeriodKey).start.getFullYear();
+
+        // Gom theo tháng nhưng tính unique Banfn
+        const monthlyCount = Array(12).fill(0);
+        const uniqueSet = new Set();
+
+        aResults.forEach((r) => {
+          if (r.Badat instanceof Date && r.Badat.getFullYear() === year) {
+            const month = r.Badat.getMonth(); // 0-11
+            const key = `${r.Banfn}-${month}`;
+            if (!uniqueSet.has(key)) {
+              uniqueSet.add(key);
+              monthlyCount[month]++;
+            }
+          }
+        });
+
+        // Tạo dữ liệu cho chart
+        const aChartData = monthlyCount.map((count, i) => ({
+          Month: `Tháng ${i + 1}`,
+          Count: count
+        }));
+
+        this._displayMonthlyPRBarChart(aChartData);
+        resolve();
+      },
+
+      error: (e) => {
+        BusyIndicator.hide();
+        console.error("❌ Lỗi load Monthly PR:", e);
         this._displayMonthlyPRBarChart([]);
-        return;
+        reject(e);
       }
-
-      // Chuyển ngày về dạng Date
-      oData.results.forEach(r => {
-        if (typeof r.Badat === "string") {
-          const match = /Date\((\d+)\)/.exec(r.Badat);
-          if (match) r.Badat = new Date(parseInt(match[1], 10));
-        }
-      });
-
-      // Đếm số lượng PR theo tháng
-      const monthCounts = Array(12).fill(0);
-      oData.results.forEach(r => {
-        if (r.Badat instanceof Date) {
-          const m = r.Badat.getMonth(); // 0-11
-          monthCounts[m]++;
-        }
-      });
-
-      // Tạo dữ liệu biểu đồ
-      const aChartData = monthCounts.map((count, i) => ({
-        Month: (i + 1).toString(),
-        Count: count
-      }));
-
-      this._displayMonthlyPRBarChart(aChartData);
-
-    }.bind(this),
-    error: function (e) {
-      BusyIndicator.hide();
-      MessageToast.show("Lỗi khi tải dữ liệu biểu đồ tháng");
-      this._displayMonthlyPRBarChart([]);
-    }.bind(this)
+    });
   });
 },
+
 
 
 
@@ -409,49 +427,61 @@ _loadMonthlyPRBarChart: function () {
 
 _displayMonthlyPRBarChart: function (aChartData) {
   const oVizFrame = this.getView().byId("idMonthlyBarChart");
-  if (!oVizFrame) return;
+  if (!oVizFrame) {
+    console.error("❌ Không tìm thấy VizFrame idMonthlyBarChart");
+    return;
+  }
 
   oVizFrame.destroyFeeds();
   oVizFrame.destroyDataset();
 
-  const oModel = new sap.ui.model.json.JSONModel({ items: aChartData });
+  const oModel = new JSONModel({ items: aChartData });
+  this.getView().setModel(oModel, "monthlyPR");
 
-  const oDataset = new sap.viz.ui5.data.FlattenedDataset({
-    dimensions: [{ name: "Month", value: "{chart>Month}" }],
-    measures: [{ name: "Count", value: "{chart>Count}" }],
-    data: { path: "chart>/items" }
+  const oDataset = new FlattenedDataset({
+    dimensions: [{ name: "Tháng", value: "{monthlyPR>Month}" }],
+    measures: [{ name: "Số lượng PR", value: "{monthlyPR>Count}" }],
+    data: { path: "monthlyPR>/items" }
   });
 
   oVizFrame.setDataset(oDataset);
-  oVizFrame.setModel(oModel, "chart");
+  oVizFrame.setModel(oModel, "monthlyPR");
 
-  oVizFrame.addFeed(new sap.viz.ui5.controls.common.feeds.FeedItem({
-    uid: "valueAxis",
-    type: "Measure",
-    values: ["Count"]
-  }));
-  oVizFrame.addFeed(new sap.viz.ui5.controls.common.feeds.FeedItem({
+  oVizFrame.addFeed(new FeedItem({
     uid: "categoryAxis",
     type: "Dimension",
-    values: ["Month"]
+    values: ["Tháng"]
+  }));
+  oVizFrame.addFeed(new FeedItem({
+    uid: "valueAxis",
+    type: "Measure",
+    values: ["Số lượng PR"]
   }));
 
+  oVizFrame.setVizType("column");
+
   oVizFrame.setVizProperties({
-    title: { visible: false },
+    title: {
+      text: "Số lượng PR theo tháng (năm hiện tại)",
+      alignment: "center",
+      visible: true
+    },
     plotArea: {
-      dataLabel: { visible: true },
-      colorPalette: ["#0a6ed1"]
-    },
-    valueAxis: {
-      title: { text: "Số lượng PR" }
-    },
-    categoryAxis: {
-      title: { text: "Tháng" }
+      colorPalette: ["#5CBAE6"],
+      dataLabel: { visible: true }
     },
     legend: { visible: false },
-    tooltip: { visible: true }
+    valueAxis: {
+      title: { visible: false }
+    },
+    categoryAxis: {
+      title: { visible: false },
+      label: { angle: 0 }
+    }
   });
 },
+
+
 
 
 
