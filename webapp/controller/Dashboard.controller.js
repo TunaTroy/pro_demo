@@ -97,7 +97,7 @@ sap.ui.define([
       this.oOData.read("/PRsSet", {
         urlParameters: {
           "$select": "Banfn,Badat,Frgkz",
-          "$top": "500"
+          "$top": "5000"
         },
         success: function (oData) {
           BusyIndicator.hide();
@@ -163,7 +163,7 @@ _loadTopMaterialBarChart: function (sPeriodKey) {
   this.oOData.read("/PRsSet", {
     urlParameters: {
       "$select": "Banfn,Badat,Txz01",
-      "$top": "1000"
+      "$top": "5000"
     },
     success: function (oData) {
       BusyIndicator.hide();
