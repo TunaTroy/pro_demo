@@ -17,17 +17,17 @@
               justifyContent="End"
               width="100%"
               class="filterBar">
-          <Label text="Time Filter:" labelFor="timeFilter" class="sapUiSmallMarginEnd"/>
+          <Label id="_IDGenLabel" text="Time Filter:" labelFor="timeFilter" class="sapUiSmallMarginEnd"/>
           <Select id="timeFilter"
                   change="onTimeFilterChange"
                   selectedKey="thisMonth"
                   class="sapUiSmallMarginEnd">
             <items>
-              <core:Item key="today" text="Today" />
-              <core:Item key="thisWeek" text="This Week" />
-              <core:Item key="thisMonth" text="This Month" />
-              <core:Item key="thisQuarter" text="This Quarter" />
-              <core:Item key="thisYear" text="This Year" />
+              <core:Item id="_IDGenItem" key="today" text="Today" />
+              <core:Item id="_IDGenItem1" key="thisWeek" text="This Week" />
+              <core:Item id="_IDGenItem2" key="thisMonth" text="This Month" />
+              <core:Item id="_IDGenItem3" key="thisQuarter" text="This Quarter" />
+              <core:Item id="_IDGenItem4" key="thisYear" text="This Year" />
             </items>
           </Select>
         </HBox>
@@ -40,15 +40,9 @@
               class="dashboardMainRow">
 
           <!-- KPI Card Container -->
-          <VBox id="kpiSection" width="32%">
-            <HBox id="kpiContainer"
-                  wrap="Wrap"
-                  alignItems="Start"
-                  justifyContent="Start"
-                  width="100%">
-              <!-- KPI cards load từ controller -->
-            </HBox>
-          </VBox>
+          <VBox id="kpiSection" class="dashboardCard kpiCard">
+  <HBox id="kpiContainer" />
+</VBox>
 
           <!-- Donut Chart -->
           <VBox id="donutChartSection"  width="32%">
@@ -69,6 +63,16 @@
           </VBox>
 
         </HBox>
+
+        <!-- Biểu đồ PR theo tháng -->
+<VBox id="monthlyChartSection" width="100%" class="chartFullRow sapUiSmallMarginTop">
+  <viz:VizFrame
+    id="idMonthlyBarChart"
+    vizType="column"
+    width="100%"
+    height="300px" />
+</VBox>
+
 
         <!-- Nút chuyển sang PR List -->
         <Button id="button2"

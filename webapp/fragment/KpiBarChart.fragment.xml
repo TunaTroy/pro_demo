@@ -1,0 +1,28 @@
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core"
+  xmlns:viz="sap.viz.ui5.controls"
+  xmlns:viz.data="sap.viz.ui5.data"
+  xmlns:viz.feeds="sap.viz.ui5.controls.common.feeds">
+
+  <VBox id="_IDGenVBox" class="sapUiSmallMargin card shadow" width="100%">
+    <Text id="_IDGenText8" text="{kpi>/title}" class="sapUiTinyMarginTop sapUiTinyMarginBottom sapUiBold sapUiMediumFont" />
+    <Text id="_IDGenText9" text="{kpi>/subtitle}" class="sapUiTinyMarginBottom sapUiSmallFont" />
+
+    <viz:VizFrame id="_IDGenVizFrame" height="260px" width="100%" uiConfig="{applicationSet:'fiori'}">
+      <viz:dataset>
+        <viz.data:FlattenedDataset id="_IDGenFlattenedDataset" data="{kpi>/chartData}">
+          <viz.data:dimensions>
+            <viz.data:DimensionDefinition id="_IDGenDimensionDefinition" name="Status" value="{kpi>label}" />
+          </viz.data:dimensions>
+          <viz.data:measures>
+            <viz.data:MeasureDefinition id="_IDGenMeasureDefinition" name="Số lượng" value="{kpi>value}" />
+          </viz.data:measures>
+        </viz.data:FlattenedDataset>
+      </viz:dataset>
+
+      <viz:feeds>
+        <viz.feeds:FeedItem id="_IDGenFeedItem" uid="categoryAxis" type="Dimension" values="Status" />
+        <viz.feeds:FeedItem id="_IDGenFeedItem1" uid="valueAxis" type="Measure" values="Số lượng" />
+      </viz:feeds>
+    </viz:VizFrame>
+  </VBox>
+</core:FragmentDefinition>

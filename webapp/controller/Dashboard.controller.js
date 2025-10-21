@@ -13,29 +13,30 @@ sap.ui.define([
 
     onInit: function () {
       this.oOData = this.getOwnerComponent().getModel(); // OData model
-      this._reloadAll("thisMonth");
+      this._reloadChartsOnly("thisMonth");
+      this._loadMonthlyPRBarChart();
     },
 
     onTimeFilterChange: function (oEvent) {
       var sKey = oEvent.getSource().getSelectedKey();
-      this._reloadAll(sKey);
+      this._reloadChartsOnly(sKey);
     },
 
     /* ===== Tải toàn bộ dashboard ===== */
-    _reloadAll: function (sPeriodKey) { 
-      var oHBox = this.getView().byId("kpiContainer");
-      if (oHBox) {
-        oHBox.removeAllItems();
-      }
+_reloadChartsOnly: function (sPeriodKey) {
+  BusyIndicator.show(0);
 
-      
-
-      // Không cần chartContainer nữa vì VizFrame hiển thị trực tiếp
-      this._loadKpiPurchaseRequisition(sPeriodKey);
-      this._loadStatusDonutChart(sPeriodKey);
-      this._loadTopMaterialBarChart(sPeriodKey);
-      
-    },
+  Promise.all([
+    this._loadKpiPurchaseRequisition(sPeriodKey),
+    this._loadStatusDonutChart(sPeriodKey),
+    this._loadTopMaterialBarChart(sPeriodKey)
+    
+  ])
+  .finally(() => {
+    this._loadMonthlyPRBarChart();
+    BusyIndicator.hide();
+  });
+},
 
     /* ===== Load KPI ===== */
     _loadKpiPurchaseRequisition: function (sPeriodKey) {
@@ -53,7 +54,7 @@ sap.ui.define([
 
           if (!oData.results || oData.results.length === 0) {
             MessageToast.show("Không có dữ liệu Purchase Requisition");
-            this._displayKpiCard(sPeriodKey, 0, 0);
+            this._displayKpiCard(sPeriodKey, iCurrCount, iPrevCount);
             return;
           }
 
@@ -220,59 +221,90 @@ _loadTopMaterialBarChart: function (sPeriodKey) {
 
 
     /* ===== Hiển thị KPI Card ===== */
-    _displayKpiCard: function (sPeriodKey, iCurrCount, iPrevCount) {
-      var fPercent = (iPrevCount === 0)
-        ? (iCurrCount > 0 ? 100 : 0)
-        : ((iCurrCount - iPrevCount) / iPrevCount * 100);
+  _displayKpiCard: function (sPeriodKey, iCurrCount, iPrevCount) {
+  const fPercent = (iPrevCount === 0)
+    ? (iCurrCount > 0 ? 100 : 0)
+    : ((iCurrCount - iPrevCount) / iPrevCount * 100);
 
-      var oKpi = {
-        title: "Purchase Requisition",
-        period: this._getPeriodLabel(sPeriodKey),
-        value: iCurrCount.toLocaleString(),
-        percentage: (fPercent >= 0 ? "+" : "") + fPercent.toFixed(1) + "%",
-        progress: Math.min(Math.abs(Math.round(fPercent)), 100),
-        state: fPercent >= 0 ? "Success" : "Error"
-      };
+  const oKpi = {
+    title: "Purchase Requisition",
+    period: this._getPeriodLabel(sPeriodKey),
+    value: iCurrCount.toLocaleString(),
+    percentage: (fPercent >= 0 ? "+" : "") + fPercent.toFixed(1) + "%",
+    progress: Math.min(Math.abs(Math.round(fPercent)), 100),
+    state: fPercent >= 0 ? "Success" : "Error"
+  };
 
-      this._addKpiCard(oKpi);
-    },
+  // 🔹 Nếu KPI model đã có thì chỉ cập nhật dữ liệu
+  const oKpiContainer = this.getView().byId("kpiContainer");
+  if (oKpiContainer.getItems().length > 0) {
+    const oKpiCard = oKpiContainer.getItems()[0]; // lấy card đầu tiên
+    const oModel = oKpiCard.getModel();
+    oModel.setData(oKpi); // cập nhật model
+  } else {
+    // Nếu chưa có -> tạo mới (chạy lần đầu)
+    this._addKpiCard(oKpi);
+  }
+},
+
 
     /* ===== Hiển thị Donut Chart ===== */
     _displayStatusDonutChart: function (aChartData) {
-      var oVizFrame = this.getView().byId("idDonutChart");
-      if (!oVizFrame) {
-        console.error("❌ Không tìm thấy Donut Chart VizFrame!");
-        return;
-      }
+  const oVizFrame = this.getView().byId("idDonutChart");
+  if (!oVizFrame) return;
 
-      oVizFrame.destroyFeeds();
-      oVizFrame.destroyDataset();
+  oVizFrame.destroyFeeds();
+  oVizFrame.destroyDataset();
 
-      var oChartModel = new JSONModel({ items: aChartData });
-      this.getView().setModel(oChartModel, "chart");
+  // Gán màu theo trạng thái
+  const mColorMap = {
+    "Approved": "#2e7d32",  // xanh lá
+    "Pending":  "#f9a825",  // vàng
+    "Rejected": "#c62828",  // đỏ
+    "No Data":  "#9e9e9e"   // xám
+  };
 
-      var oDataset = new FlattenedDataset({
-        dimensions: [{ name: "Status", value: "{chart>Status}" }],
-        measures: [{ name: "Count", value: "{chart>Count}" }],
-        data: { path: "chart>/items" }
-      });
+  // Chuẩn hóa dữ liệu: thêm màu ứng với từng Status
+  const aColoredData = aChartData.map(item => ({
+    Status: item.Status,
+    Count: item.Count,
+    Color: mColorMap[item.Status] || "#9e9e9e"
+  }));
 
-      oVizFrame.setDataset(oDataset);
-      oVizFrame.setModel(oChartModel, "chart");
+  const oChartModel = new sap.ui.model.json.JSONModel({ items: aColoredData });
 
-      oVizFrame.addFeed(new FeedItem({ uid: "size", type: "Measure", values: ["Count"] }));
-      oVizFrame.addFeed(new FeedItem({ uid: "color", type: "Dimension", values: ["Status"] }));
+  const oDataset = new sap.viz.ui5.data.FlattenedDataset({
+    dimensions: [{ name: "Status", value: "{chart>Status}" }],
+    measures: [{ name: "Count", value: "{chart>Count}" }],
+    data: { path: "chart>/items" }
+  });
 
-      oVizFrame.setVizProperties({
-        title: { text: "PR Status Overview" },
-        plotArea: {
-          colorPalette: ["#2e7d32", "#f9a825", "#c62828"], // Approved, Pending, Rejected
-          dataLabel: { visible: true }
-        },
-        legend: { visible: true, position: "bottom" },
-        tooltip: { visible: true }
-      });
+  oVizFrame.setDataset(oDataset);
+  oVizFrame.setModel(oChartModel, "chart");
+
+  oVizFrame.addFeed(new sap.viz.ui5.controls.common.feeds.FeedItem({
+    uid: "size",
+    type: "Measure",
+    values: ["Count"]
+  }));
+  oVizFrame.addFeed(new sap.viz.ui5.controls.common.feeds.FeedItem({
+    uid: "color",
+    type: "Dimension",
+    values: ["Status"]
+  }));
+
+  // ✅ Thiết lập colorPalette động theo dữ liệu thực tế
+  oVizFrame.setVizProperties({
+    title: { text: "PR Status Overview" },
+    plotArea: {
+      colorPalette: aColoredData.map(d => d.Color),
+      dataLabel: { visible: true }
     },
+    legend: { visible: true, position: "bottom" },
+    tooltip: { visible: true }
+  });
+},
+
 
 _displayTopMaterialBarChart: function (aChartData) {
   var oVizFrame = this.getView().byId("idBarChart");
@@ -322,6 +354,134 @@ _displayTopMaterialBarChart: function (aChartData) {
 });
 
 },
+
+
+/* ===== Load PR theo tháng (dữ liệu thật từ OData) ===== */
+
+_loadMonthlyPRBarChart: function (sPeriodKey) {
+  return new Promise((resolve, reject) => {
+    BusyIndicator.show(0);
+
+    this.oOData.read("/PRsSet", {
+      urlParameters: { "$select": "Banfn,Badat", "$top": "2000" },
+      success: (oData) => {
+        BusyIndicator.hide();
+        const aResults = oData.results || [];
+        if (aResults.length === 0) {
+          this._displayMonthlyPRBarChart([]);
+          return resolve();
+        }
+
+        // Parse ngày từ /Date(...)/ → Date object
+        aResults.forEach((r) => {
+          if (typeof r.Badat === "string") {
+            const match = /Date\((\d+)\)/.exec(r.Badat);
+            if (match) r.Badat = new Date(parseInt(match[1], 10));
+          }
+        });
+
+        // Lấy năm dựa trên filter (khớp với KPI)
+        const year = this._getDateRange(sPeriodKey).start.getFullYear();
+
+        // Gom theo tháng nhưng tính unique Banfn
+        const monthlyCount = Array(12).fill(0);
+        const uniqueSet = new Set();
+
+        aResults.forEach((r) => {
+          if (r.Badat instanceof Date && r.Badat.getFullYear() === year) {
+            const month = r.Badat.getMonth(); // 0-11
+            const key = `${r.Banfn}-${month}`;
+            if (!uniqueSet.has(key)) {
+              uniqueSet.add(key);
+              monthlyCount[month]++;
+            }
+          }
+        });
+
+        // Tạo dữ liệu cho chart
+        const aChartData = monthlyCount.map((count, i) => ({
+          Month: `Tháng ${i + 1}`,
+          Count: count
+        }));
+
+        this._displayMonthlyPRBarChart(aChartData);
+        resolve();
+      },
+
+      error: (e) => {
+        BusyIndicator.hide();
+        console.error("❌ Lỗi load Monthly PR:", e);
+        this._displayMonthlyPRBarChart([]);
+        reject(e);
+      }
+    });
+  });
+},
+
+
+
+
+
+
+
+
+_displayMonthlyPRBarChart: function (aChartData) {
+  const oVizFrame = this.getView().byId("idMonthlyBarChart");
+  if (!oVizFrame) {
+    console.error("❌ Không tìm thấy VizFrame idMonthlyBarChart");
+    return;
+  }
+
+  oVizFrame.destroyFeeds();
+  oVizFrame.destroyDataset();
+
+  const oModel = new JSONModel({ items: aChartData });
+  this.getView().setModel(oModel, "monthlyPR");
+
+  const oDataset = new FlattenedDataset({
+    dimensions: [{ name: "Tháng", value: "{monthlyPR>Month}" }],
+    measures: [{ name: "Số lượng PR", value: "{monthlyPR>Count}" }],
+    data: { path: "monthlyPR>/items" }
+  });
+
+  oVizFrame.setDataset(oDataset);
+  oVizFrame.setModel(oModel, "monthlyPR");
+
+  oVizFrame.addFeed(new FeedItem({
+    uid: "categoryAxis",
+    type: "Dimension",
+    values: ["Tháng"]
+  }));
+  oVizFrame.addFeed(new FeedItem({
+    uid: "valueAxis",
+    type: "Measure",
+    values: ["Số lượng PR"]
+  }));
+
+  oVizFrame.setVizType("column");
+
+  oVizFrame.setVizProperties({
+    title: {
+      text: "Số lượng PR theo tháng (năm hiện tại)",
+      alignment: "center",
+      visible: true
+    },
+    plotArea: {
+      colorPalette: ["#5CBAE6"],
+      dataLabel: { visible: true }
+    },
+    legend: { visible: false },
+    valueAxis: {
+      title: { visible: false }
+    },
+    categoryAxis: {
+      title: { visible: false },
+      label: { angle: 0 }
+    }
+  });
+},
+
+
 
 
 

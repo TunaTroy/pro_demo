@@ -1,58 +1,81 @@
-/* Dashboard Container */
+/* ====== DASHBOARD CONTAINER ====== */
 .dashboardContainer {
-  padding: 1rem;
-  background-color: #f5f5f5;
+  padding: 1.5rem 2rem;
+  background-color: #f4f6f9;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
-/* Filter Bar */
+/* ====== FILTER BAR ====== */
 .filterBar {
-  margin-bottom: 1.5rem;
-  padding: 0.5rem 1rem;
-  background-color: white;
-  border-radius: 0.25rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-/* Row ngang chứa các card */
-.dashboardMainRow {
-  width: 100%;
-  gap: 1rem;
-  flex-wrap: wrap;
-  margin-top: 1.5rem;
-}
-
-/* KPI Card nhỏ bên trong */
-.kpiCard {
-  min-width: 200px;
-  max-width: 250px;
-  padding: 1.5rem;
-  margin: 0.5rem;
-  background: white;
+  padding: 0.75rem 1.25rem;
+  background-color: #ffffff;
   border-radius: 0.5rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border-left: 4px solid #0a6ed1;
-  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
 }
 
-.kpiCard:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+/* ====== MAIN ROW: KPI - DONUT - BAR ====== */
+.dashboardMainRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: stretch;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  width: 100%;
 }
 
-/* KPI Title & Subtitle */
+/* ====== BASE CARD STYLE (Áp dụng cho cả KPI, Donut, Bar) ====== */
+.dashboardCard {
+  flex: 1;
+  min-width: 300px;
+  max-width: 32%;
+  background-color: #ffffff;
+  border-radius: 0.75rem;
+  border-left: 5px solid transparent;
+  padding: 1.25rem 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dashboardCard:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+
+/* ====== KPI CARD (kế thừa base card) ====== */
+.kpiCard {
+  @extend .dashboardCard;
+  border-left-color: #0a6ed1;
+}
+
+.chartCard {
+  animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
+}
+
 .kpiTitle {
-  font-size: 0.875rem;
+  font-size: 1rem;
   font-weight: 600;
   color: #32363a;
   margin-bottom: 0.25rem;
 }
+
 .kpiSubtitle {
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   color: #6a6d70;
   margin-bottom: 0.75rem;
 }
 
-/* KPI Value & Percentage */
 .kpiValue {
   font-size: 2rem;
   font-weight: 700;
@@ -60,18 +83,18 @@
   margin-right: 0.5rem;
   line-height: 1.2;
 }
+
 .kpiPercent {
-  font-size: 0.875rem;
+  font-size: 0.9rem;
   font-weight: 600;
   color: #107e3e;
   align-self: flex-end;
-  margin-bottom: 0.25rem;
 }
+
 .kpiPercent[data-state="Error"] {
   color: #bb0000;
 }
 
-/* Progress Indicator */
 .kpiCard .sapMPI {
   margin-top: 0.5rem;
 }
@@ -79,18 +102,50 @@
   height: 6px;
   border-radius: 3px;
 }
+.chartRowFullWidth {
+  background: white;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+}
 
-/* Responsive Layout */
+/* ====== CHART CARD (Donut + Bar) ====== */
+.chartCard {
+  @extend .dashboardCard;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.chartCard .sapVizFrame {
+  width: 100%;
+  height: 250px !important;
+}
+
+.chartCardTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #2f3640;
+  margin-bottom: 0.75rem;
+  align-self: flex-start;
+}
+
+/* ====== RESPONSIVE ====== */
 @media (max-width: 1024px) {
+  .dashboardMainRow {
+    justify-content: center;
+  }
   .dashboardCard {
-    width: 100% !important;
-    height: auto !important;
-    margin-bottom: 1rem;
+    max-width: 48%;
   }
-  .dashboardContainer {
-    padding: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .dashboardCard {
+    max-width: 100%;
   }
-  .kpiCard {
-    width: 100%;
+  .chartCard .sapVizFrame {
+    height: 220px !important;
   }
 }
