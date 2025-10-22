@@ -20,7 +20,7 @@
           <Label id="_IDGenLabel" text="Time Filter:" labelFor="timeFilter" class="sapUiSmallMarginEnd"/>
           <Select id="timeFilter"
                   change="onTimeFilterChange"
-                  selectedKey="thisMonth"
+                  selectedKey="thisYear"
                   class="sapUiSmallMarginEnd">
             <items>
               <core:Item id="_IDGenItem" key="today" text="Today" />
@@ -28,6 +28,7 @@
               <core:Item id="_IDGenItem2" key="thisMonth" text="This Month" />
               <core:Item id="_IDGenItem3" key="thisQuarter" text="This Quarter" />
               <core:Item id="_IDGenItem4" key="thisYear" text="This Year" />
+              <core:Item id="_IDGenItem7" key="thisAll" text="All" />
             </items>
           </Select>
         </HBox>
@@ -41,8 +42,8 @@
 
           <!-- KPI Card Container -->
           <VBox id="kpiSection" class="dashboardCard kpiCard">
-  <HBox id="kpiContainer" />
-</VBox>
+        <HBox id="kpiContainer" />
+      </VBox>
 
           <!-- Donut Chart -->
           <VBox id="donutChartSection"  width="32%">
@@ -65,18 +66,18 @@
         </HBox>
 
         <!-- Biểu đồ PR theo tháng -->
-<VBox id="monthlyChartSection" width="100%" class="chartFullRow sapUiSmallMarginTop">
-  <viz:VizFrame
-    id="idMonthlyBarChart"
-    vizType="column"
-    width="100%"
-    height="500px" />
-</VBox>
+          <VBox id="monthlyChartSection" width="100%" class="chartFullRow sapUiSmallMarginTop">
+            <viz:VizFrame
+              id="idMonthlyBarChart"
+              vizType="column"
+              width="100%"
+              height="500px" />
+          </VBox>
 
         <!-- Top Requester Table -->
-<!-- Top Request Purchase Requisition by Employee -->
-<VBox id="topRequesterSection" class="topRequesterCard" width="100%">
-  <HBox alignItems="Center" justifyContent="SpaceBetween" class="topRequesterHeader">
+          <!-- Top Request Purchase Requisition by Employee -->
+          <VBox id="topRequesterSection" class="topRequesterCard" width="100%">
+            <HBox alignItems="Center" justifyContent="SpaceBetween" class="topRequesterHeader">
     <Title text="Top Request Purchase Requisition by Employee" />
     <HBox alignItems="Center" class="sortFilterGroup">
       <Label text="Sort by:" class="sortLabel"/>
@@ -90,41 +91,43 @@
     </HBox>
   </HBox>
 
-  <Table id="topRequesterTable"
-       inset="false"
-       items="{topRequesterModel>/items}"
-       fixedLayout="true"
-       width="100%"
-       growing="false"
-       class="topRequesterTableScrollable">
 
-    <columns>
-      <Column><Text text="STT" /></Column>
-      <Column><Text text="Full Name" /></Column>
-      <Column><Text text="Total PR" /></Column>
-      <Column><Text text="Approved PR" /></Column>
-      <Column><Text text="Approval Rate" /></Column>
-      <Column><Text text="Pending PR" /></Column>
-      <Column><Text text="Last Created Date" /></Column>
-      <Column><Text text="Avg time" /></Column>
-    </columns>
+            <Table id="topRequesterTable"
+                inset="false"
+                items="{topRequesterModel>/items}"
+                fixedLayout="true"
+                width="100%"
+                growing="false"
+                class="topRequesterTableScrollable">
 
-    <items>
-      <ColumnListItem>
-        <cells>
-          <Text text="{topRequesterModel>index}" />
-          <Text text="{topRequesterModel>UserID}" />
-          <Text text="{topRequesterModel>TotalPR}" />
-          <Text text="{topRequesterModel>ApprovedPR}" />
-          <Text text="{topRequesterModel>ApprovalRate}" />
-          <Text text="{topRequesterModel>PendingPR}" />
-          <Text text="{topRequesterModel>LastCreatedDate}" />
-           <Text text="{topRequesterModel>AvgTime}" />
-        </cells>
-      </ColumnListItem>
-    </items>
-  </Table> 
-</VBox>
+              <columns>
+                <Column><Text text="STT" /></Column>
+                <Column><Text text="User ID" /></Column>
+                <Column><Text text="Total PR" /></Column>
+                <Column><Text text="Approved PR" /></Column>
+                <Column><Text text="Approval Rate" /></Column>
+                <Column><Text text="Pending PR" /></Column>
+                <Column><Text text="Last Created Date" /></Column>
+                <Column><Text text="Avg Time Approval" /></Column>
+                <!-- <Column><Text text="Avg Time Approval" /></Column> -->
+              </columns>
+
+              <items>
+                <ColumnListItem>
+                  <cells>
+                    <Text text="{topRequesterModel>index}" />
+                    <Text text="{topRequesterModel>UserID}" />
+                    <Text text="{topRequesterModel>TotalPR}" />
+                    <Text text="{topRequesterModel>ApprovedPR}" />
+                    <Text text="{topRequesterModel>ApprovalRate}" />
+                    <Text text="{topRequesterModel>PendingPR}" />
+                    <Text text="{topRequesterModel>LastCreatedDate}" />
+                    <ObjectNumber number="{topRequesterModel>AvgApprovalDays}" unit="days" />
+                  </cells>
+                </ColumnListItem>
+              </items>
+            </Table> 
+          </VBox>
 
 
 
