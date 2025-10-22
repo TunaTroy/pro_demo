@@ -106,10 +106,10 @@
           ]
         },
         {
-          "name": "Dashboard",
-          "pattern": "Dashboard",
+          "name": "DashboardPR",
+          "pattern": "DashboardPR",
           "target": [
-            "TargetDashboard"
+            "TargetDashboardPR"
           ]
         },
         {
@@ -135,12 +135,12 @@
           "viewId": "Login",
           "viewName": "Login"
         },
-        "TargetDashboard": {
+        "TargetDashboardPR": {
           "viewType": "XML",
           "transition": "slide",
           "clearControlAggregation": false,
-          "viewId": "Dashboard",
-          "viewName": "Dashboard"
+          "viewId": "DashboardPR",
+          "viewName": "DashboardPR"
         },
         "TargetPRList": {
           "viewType": "XML",

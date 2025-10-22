@@ -46,7 +46,7 @@ sap.ui.define([
 
         // Điều hướng
         var oRouter = sap.ui.core.UIComponent.getRouterFor(this);
-        oRouter.navTo("Dashboard");
+        oRouter.navTo("DashboardPR");
       } else {
         MessageToast.show("Thông tin đăng nhập không hợp lệ hoặc sai quyền truy cập.");
       }
