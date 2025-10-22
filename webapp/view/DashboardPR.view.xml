@@ -4,7 +4,7 @@
           xmlns:viz="sap.viz.ui5.controls"
           xmlns:viz.data="sap.viz.ui5.data"
           xmlns:viz.feeds="sap.viz.ui5.controls.common.feeds"
-          controllerName="demodashboard.controller.Dashboard">
+          controllerName="demodashboard.controller.DashboardPR">
 
   <Page id="dashboard" title="Dashboard" enableScrolling="true">
     <content>
@@ -106,6 +106,7 @@
       <Column><Text text="Approval Rate" /></Column>
       <Column><Text text="Pending PR" /></Column>
       <Column><Text text="Last Created Date" /></Column>
+      <Column><Text text="Avg time" /></Column>
     </columns>
 
     <items>
@@ -118,6 +119,7 @@
           <Text text="{topRequesterModel>ApprovalRate}" />
           <Text text="{topRequesterModel>PendingPR}" />
           <Text text="{topRequesterModel>LastCreatedDate}" />
+           <Text text="{topRequesterModel>AvgTime}" />
         </cells>
       </ColumnListItem>
     </items>
