@@ -1,3 +1,4 @@
+
   sap.ui.define(
     [
       "sap/ui/core/mvc/Controller",
@@ -82,7 +83,7 @@
             this._loadKpiPurchaseRequisition(sPeriodKey),
             this._loadStatusDonutChart(sPeriodKey),
             this._loadTopMaterialBarChart(sPeriodKey),
-              
+            this._loadTopVendorBarChart(sPeriodKey),
             this._loadTopRequesterTable(sPeriodKey),
             this._loadMonthlyPRBarChart(sPeriodKey),
           ]);   
@@ -282,6 +283,81 @@
             }.bind(this),
           });
         },
+
+ _loadTopVendorBarChart: function (sPeriodKey) {
+  BusyIndicator.show(0);
+  const oCurrRange = this._getDateRange(sPeriodKey);
+
+  // 🔹 Gọi VendorsSet trước
+  this.oOData.read("/VendorsSet", {
+    success: function (oVendorData) {
+      const oVendorMap = {};
+      oVendorData.results.forEach(v => {
+        oVendorMap[v.Lifnr] = v.Name1;
+      });
+
+      // 🔹 Gọi PRsSet sau khi đã có map vendor
+      this.oOData.read("/PRsSet", {
+        urlParameters: {
+          $select: "Banfn,Badat,Lifnr",
+          $top: "5000",
+        },
+        success: function (oPRData) {
+          BusyIndicator.hide();
+
+          const aResults = oPRData.results || [];
+
+          // Parse ngày
+          aResults.forEach(r => {
+            if (typeof r.Badat === "string") {
+              const match = /Date\((\d+)\)/.exec(r.Badat);
+              if (match) r.Badat = new Date(parseInt(match[1], 10));
+            }
+          });
+
+          // Lọc theo khoảng thời gian
+          const aCurr = aResults.filter(r =>
+            r.Badat &&
+            r.Badat >= oCurrRange.start &&
+            r.Badat <= oCurrRange.end
+          );
+
+          // Nhóm theo vendor (Lifnr)
+          const oCountMap = {};
+          aCurr.forEach(r => {
+            const key = r.Lifnr || "UNKNOWN";
+            oCountMap[key] = (oCountMap[key] || 0) + 1;
+          });
+
+          // Tạo dữ liệu biểu đồ (dùng tên nếu có)
+          let aChartData = Object.keys(oCountMap).map(key => {
+            return {
+              Vendor: oVendorMap[key] || key, // Ưu tiên tên, fallback mã
+              Count: oCountMap[key]
+            };
+          });
+
+          // Sắp xếp và lấy Top 5
+          aChartData.sort((a, b) => b.Count - a.Count);
+          aChartData = aChartData.slice(0, 5);
+
+          this._displayTopVendorBarChart(aChartData);
+        }.bind(this),
+
+        error: function (e) {
+          BusyIndicator.hide();
+          MessageToast.show("Lỗi khi đọc PRsSet");
+        }.bind(this)
+      });
+
+    }.bind(this),
+    error: function (e) {
+      BusyIndicator.hide();
+      MessageToast.show("Lỗi khi đọc VendorsSet");
+    }.bind(this)
+  });
+},
+
 
         /* ===== Load PR theo tháng (dữ liệu thật từ OData) ===== */
 
@@ -644,7 +720,7 @@
 
           oVizFrame.setVizProperties({
             title: {
-              text: "Top 5 Best Material",
+              text: "TopMaterial",
               visible: true,
               alignment: "center", // 👈 THÊM DÒNG NÀY
             },
@@ -656,6 +732,59 @@
             tooltip: { visible: true },
           });
         },
+
+        _displayTopVendorBarChart: function (aChartData) {
+  const oVizFrame = this.getView().byId("idVendorBarChart");
+  if (!oVizFrame) {
+    console.error("❌ Không tìm thấy idVendorBarChart");
+    return;
+  }
+
+  oVizFrame.destroyFeeds();
+  oVizFrame.destroyDataset();
+
+  const oModel = new JSONModel({ items: aChartData });
+  this.getView().setModel(oModel, "topVendor");
+
+  const oDataset = new FlattenedDataset({
+    dimensions: [{ name: "Vendor", value: "{topVendor>Vendor}" }],
+    measures: [{ name: "Count", value: "{topVendor>Count}" }],
+    data: { path: "topVendor>/items" },
+  });
+
+  oVizFrame.setDataset(oDataset);
+  oVizFrame.setModel(oModel, "topVendor");
+
+  oVizFrame.addFeed(
+    new FeedItem({
+      uid: "valueAxis",
+      type: "Measure",
+      values: ["Count"],
+    })
+  );
+  oVizFrame.addFeed(
+    new FeedItem({
+      uid: "categoryAxis",
+      type: "Dimension",
+      values: ["Vendor"],
+    })
+  );
+
+  oVizFrame.setVizProperties({
+    title: {
+      text: "TopVendors",
+      visible: true,
+      alignment: "center",
+    },
+    plotArea: {
+      colorPalette: ["#F5A623"],
+      dataLabel: { visible: true },
+    },
+    legend: { visible: false },
+    tooltip: { visible: true },
+  });
+},
+
 
         _displayMonthlyPRBarChart: function (aChartData) {
           const oVizFrame = this.getView().byId("idMonthlyBarChart");

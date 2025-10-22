@@ -41,12 +41,12 @@
               class="dashboardMainRow">
 
           <!-- KPI Card Container -->
-          <VBox id="kpiSection" class="dashboardCard kpiCard">
+          <VBox id="kpiSection"  class="dashboardCard kpiCard">
         <HBox id="kpiContainer" />
       </VBox>
 
           <!-- Donut Chart -->
-          <VBox id="donutChartSection"  width="32%">
+          <VBox id="donutChartSection"  width="20%">
             <viz:VizFrame
               id="idDonutChart"
               vizType="donut"
@@ -55,13 +55,22 @@
           </VBox>
 
           <!-- Bar Chart -->
-          <VBox id="barChartSection" width="32%">
+          <VBox id="barChartSection" width="20%">
             <viz:VizFrame
               id="idBarChart"
               vizType="bar"
               width="100%"
               height="200px" />
           </VBox>
+
+          <!-- Top Vendor Bar Chart -->
+<VBox id="vendorChartSection" width="20%">
+  <viz:VizFrame
+    id="idVendorBarChart"
+    vizType="bar"
+    width="100%"
+    height="200px" />
+</VBox>
 
         </HBox>
 
