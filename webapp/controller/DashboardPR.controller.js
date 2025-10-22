@@ -646,7 +646,7 @@
             title: {
               text: "Top 5 Best Material",
               visible: true,
-              alignment: "center", // 👈 THÊM DÒNG NÀY
+              alignment: "center", 
             },
             plotArea: {
               colorPalette: ["#5CBAE6"],
