@@ -4,9 +4,9 @@
           xmlns:viz="sap.viz.ui5.controls"
           xmlns:viz.data="sap.viz.ui5.data"
           xmlns:viz.feeds="sap.viz.ui5.controls.common.feeds"
-          controllerName="demodashboard.controller.Dashboard">
+          controllerName="demodashboard.controller.DashboardPR">
 
-  <Page id="dashboard" title="Dashboard" enableScrolling="true">
+  <Page id="dashboardPR" title="DashboardPR" enableScrolling="true">
     <content>
 
       <VBox id="vbox2" width="100%" class="dashboardContainer">

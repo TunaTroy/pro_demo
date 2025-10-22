@@ -9,7 +9,7 @@ sap.ui.define([
 ], function (Controller, JSONModel, Fragment, BusyIndicator, MessageToast, FeedItem, FlattenedDataset) {
   "use strict";
 
-  return Controller.extend("demodashboard.controller.Dashboard", {
+  return Controller.extend("demodashboard.controller.DashboardPR", {
 
     onInit: function () {
       this.oOData = this.getOwnerComponent().getModel(); // OData model
@@ -32,10 +32,10 @@ _reloadChartsOnly: function (sPeriodKey) {
     this._loadTopMaterialBarChart(sPeriodKey)
     
   ])
-  .finally(() => {
-    this._loadMonthlyPRBarChart();
-    BusyIndicator.hide();
-  });
+  // .finally(() => {
+  //   this._loadMonthlyPRBarChart();
+  //   BusyIndicator.hide();
+  // });
 },
 
     /* ===== Load KPI ===== */
