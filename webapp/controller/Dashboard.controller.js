@@ -15,12 +15,52 @@ sap.ui.define([
       this.oOData = this.getOwnerComponent().getModel(); // OData model
       this._reloadChartsOnly("thisMonth");
       this._loadMonthlyPRBarChart();
+      this._currentRequesterSort = "totalPR";
     },
 
     onTimeFilterChange: function (oEvent) {
       var sKey = oEvent.getSource().getSelectedKey();
       this._reloadChartsOnly(sKey);
     },
+
+    onRequesterSortChange: function (oEvent) {
+  const sKey = oEvent.getSource().getSelectedKey(); // totalPR hoặc approvalRate
+  this._currentRequesterSort = sKey;
+
+  const oModel = this.getView().getModel("topRequesterModel");
+  if (oModel && oModel.getData() && oModel.getData().items) {
+    // 🔹 Nếu đã có dữ liệu, chỉ cần sắp xếp lại
+    let aItems = oModel.getData().items;
+
+    if (sKey === "approvalRate") {
+      aItems.sort((a, b) => {
+        if (b.ApprovalRateNum !== a.ApprovalRateNum) {
+          return b.ApprovalRateNum - a.ApprovalRateNum;
+        }
+        return b.TotalPR - a.TotalPR;
+      });
+    } else {
+      aItems.sort((a, b) => {
+        if (b.TotalPR !== a.TotalPR) {
+          return b.TotalPR - a.TotalPR;
+        }
+        return b.ApprovalRateNum - a.ApprovalRateNum;
+      });
+    }
+
+    // 🔹 Gán lại STT (index)
+    aItems = aItems.map((item, idx) => ({ ...item, index: idx + 1 }));
+
+    // 🔹 Cập nhật lại model mà không reload từ server
+    oModel.setData({ items: aItems });
+    oModel.refresh(true);
+  } else {
+    // 🔸 Nếu chưa có dữ liệu (load lần đầu) → load từ server
+    this._loadTopRequesterTable();
+  }
+},
+
+
 
     /* ===== Tải toàn bộ dashboard ===== */
 _reloadChartsOnly: function (sPeriodKey) {
@@ -29,7 +69,8 @@ _reloadChartsOnly: function (sPeriodKey) {
   Promise.all([
     this._loadKpiPurchaseRequisition(sPeriodKey),
     this._loadStatusDonutChart(sPeriodKey),
-    this._loadTopMaterialBarChart(sPeriodKey)
+    this._loadTopMaterialBarChart(sPeriodKey),
+    this._loadTopRequesterTable()
     
   ])
   .finally(() => {
@@ -421,6 +462,108 @@ _loadMonthlyPRBarChart: function (sPeriodKey) {
 
 
 
+_loadTopRequesterTable: function () {
+  BusyIndicator.show(0);
+  
+  this.oOData.read("/PRsSet", {
+    urlParameters: { "$select": "Banfn,Ernam,Badat,Frgkz", "$top": "2000" },
+    success: (oData) => {
+      BusyIndicator.hide();
+      const aResults = oData.results || [];
+
+      // 🔹 Chuẩn hóa ngày /Date(…)/ → Date object
+      aResults.forEach(r => {
+        if (typeof r.Badat === "string") {
+          const match = /Date\((\d+)\)/.exec(r.Badat);
+          if (match) r.Badat = new Date(parseInt(match[1], 10));
+        }
+      });
+
+      // 🔹 Gom nhóm theo người tạo (Ernam)
+      const oUserMap = {};
+      aResults.forEach(r => {
+        const user = r.Ernam || "UNKNOWN";
+        if (!oUserMap[user]) {
+          oUserMap[user] = {
+            UserID: user,
+            TotalPR: 0,
+            ApprovedPR: 0,
+            PendingPR: 0,
+            Dates: []
+          };
+        }
+
+        oUserMap[user].TotalPR++;
+        oUserMap[user].Dates.push(r.Badat);
+
+        if (r.Frgkz === "R") oUserMap[user].ApprovedPR++;
+        else if (r.Frgkz === "C") oUserMap[user].PendingPR++;
+      });
+
+      // 🔹 Tính toán thống kê từng user
+      let aUsers = Object.values(oUserMap).map(u => {
+        const approvalRateNum = u.TotalPR > 0 ? (u.ApprovedPR / u.TotalPR * 100) : 0;
+        const approvalRateText = approvalRateNum.toFixed(1) + "%";
+        const lastDate = u.Dates.length > 0
+          ? new Date(Math.max(...u.Dates)).toLocaleDateString("vi-VN")
+          : "-";
+
+        return {
+          UserID: u.UserID,
+          FullName: "-", // nếu cần, có thể nối từ bảng nhân viên
+          TotalPR: u.TotalPR,
+          ApprovedPR: u.ApprovedPR,
+          ApprovalRateNum: approvalRateNum,
+          ApprovalRate: approvalRateText,
+          AvgApprovalDays: "-",
+          PendingPR: u.PendingPR,
+          LastCreatedDate: lastDate
+        };
+      });
+
+      // 🔹 Lọc bỏ user có ít hơn 5 PR
+      aUsers = aUsers.filter(u => u.TotalPR >= 5);
+
+      // 🔹 Sắp xếp theo tỉ lệ duyệt (giảm dần) → rồi theo tổng PR (giảm dần)
+      aUsers.sort((a, b) => {
+        if (this._currentRequesterSort === "approvalRate") {
+  // 👉 Ưu tiên tỉ lệ duyệt cao → rồi mới tới tổng PR
+  aUsers.sort((a, b) => {
+    if (b.ApprovalRateNum !== a.ApprovalRateNum) {
+      return b.ApprovalRateNum - a.ApprovalRateNum;
+    }
+    return b.TotalPR - a.TotalPR;
+  });
+} else {
+  // 👉 Mặc định: sắp xếp theo tổng PR giảm dần → rồi tỉ lệ duyệt
+  aUsers.sort((a, b) => {
+    if (b.TotalPR !== a.TotalPR) {
+      return b.TotalPR - a.TotalPR;
+    }
+    return b.ApprovalRateNum - a.ApprovalRateNum;
+  });
+}
+        return b.TotalPR - a.TotalPR; // nếu tỉ lệ bằng nhau → theo tổng PR
+      });
+
+      // 🔹 Lấy Top 10 & gán STT
+      const aTop = aUsers.slice(0, 50).map((item, idx) => ({
+        index: idx + 1,
+        ...item
+      }));
+
+      // 🔹 Bind vào model để hiển thị trong Table
+      const oModel = new sap.ui.model.json.JSONModel({ items: aTop });
+      this.getView().setModel(oModel, "topRequesterModel");
+    },
+
+    error: (e) => {
+      BusyIndicator.hide();
+      console.error("❌ Lỗi khi tải dữ liệu Top Requesters:", e);
+      MessageToast.show("Lỗi khi tải dữ liệu Top Requesters");
+    }
+  });
+},
 
 
 

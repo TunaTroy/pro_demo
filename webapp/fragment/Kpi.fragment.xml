@@ -5,15 +5,15 @@
   <VBox id="vbox3" class="kpiCard" alignItems="Stretch">
     
     <!-- Title -->
-    <Text text="{/title}" class="kpiTitle"/>
+    <Text id="_IDGenText2" text="{/title}" class="kpiTitle"/>
     
     <!-- Period -->
-    <Text text="{/period}" class="kpiSubtitle"/>
+    <Text id="_IDGenText3" text="{/period}" class="kpiSubtitle"/>
     
     <!-- Value and Percentage -->
-    <HBox alignItems="End" class="sapUiSmallMarginBottom">
-      <Text text="{/value}" class="kpiValue"/>
-      <Text text="{/percentage}" class="kpiPercent"/>
+    <HBox id="_IDGenHBox1" alignItems="End" class="sapUiSmallMarginBottom">
+      <Text id="_IDGenText" text="{/value}" class="kpiValue"/>
+      <Text id="_IDGenText1" text="{/percentage}" class="kpiPercent"/>
     </HBox> 
     
     <!-- Progress Bar -->
