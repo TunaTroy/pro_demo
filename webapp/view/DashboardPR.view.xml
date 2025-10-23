@@ -140,9 +140,23 @@
             </Table> 
           </VBox>
 
+          
 
- <!-- Biểu đồ PO theo tháng -->
+         <!-- Biểu đồ PO theo tháng -->
 <VBox id="monthlyPOChartSection" width="100%" class="chartFullRow sapUiSmallMarginTop">
+
+  <!-- 🔹 Bộ lọc loại chứng từ -->
+  <HBox alignItems="Center" justifyContent="End" class="sapUiSmallMarginBottom">
+    <Label text="Select Type:" class="sapUiSmallMarginEnd"/>
+    <Select id="poTypeFilter"
+            selectedKey="F"
+            change=".onPoTypeChange"
+            width="180px">
+      <core:Item key="F" text="Purchase Order (PO)" />
+      <core:Item key="A" text="Request for Quotation (RFQ)" />
+    </Select>
+  </HBox>
+
   <viz:VizFrame
     id="idMonthlyBarChartPO"
     vizType="column"

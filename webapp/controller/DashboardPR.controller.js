@@ -23,6 +23,7 @@ sap.ui.define(
       onInit: function () {
         this.oOData = this.getOwnerComponent().getModel(); // OData model
         this._reloadChartsOnly("thisYear");
+        this._currentPoType = "F";
         this._currentRequesterSort = "totalPR";
       },
 
@@ -605,120 +606,113 @@ sap.ui.define(
       },
 
       _loadMonthlyPoBarChart: function (sPeriodKey) {
-  return new Promise((resolve, reject) => {
-    BusyIndicator.show(0);
+        return new Promise((resolve, reject) => {
+          BusyIndicator.show(0);
 
-    if (!sPeriodKey) sPeriodKey = "thisYear";
-    this.oOData.read("/ProcurementHeaderSet", {
-      urlParameters: {
-        $select: "Ebeln,Aedat,Bstyp",
+          if (!sPeriodKey) sPeriodKey = "thisYear";
 
-        $top: "2000",
-      },
-      success: (oData) => {
-        BusyIndicator.hide();
-        const aResults = oData.results.filter(r => r.Bstyp === "F");
+          const sDocType = this._currentPoType || "F"; // ✅ lấy từ Select hiện tại
 
+          this.oOData.read("/ProcurementHeaderSet", {
+            urlParameters: {
+              $select: "Ebeln,Aedat,Bstyp",
+              $top: "2000",
+            },
+            success: (oData) => {
+              BusyIndicator.hide();
 
-        console.log("📦 PO Raw Data (filtered by Bstyp=F):", aResults.slice(0, 5));
+              // ✅ Lọc theo loại chứng từ đã chọn (PO hoặc RFQ)
+              const aResults = oData.results.filter(
+                (r) => r.Bstyp === sDocType
+              );
+              console.log(
+                `📦 Raw Data (Bstyp=${sDocType}):`,
+                aResults.slice(0, 5)
+              );
 
-        if (aResults.length === 0) {
-          console.warn("⚠️ No PO data found");
-          this._displayMonthlyPOBarChart([]);
-          return resolve();
-        }
+              if (aResults.length === 0) {
+                MessageToast.show(
+                  `Không có dữ liệu cho loại ${sDocType === "F" ? "PO" : "RFQ"}`
+                );
+                this._displayMonthlyPOBarChart([]);
+                return resolve();
+              }
 
-        // Parse ngày
-        aResults.forEach((r) => {
-          if (typeof r.Aedat === "string") {
-            const match = /Date\\((\\d+)\\)/.exec(r.Aedat);
-            if (match) r.Aedat = new Date(parseInt(match[1], 10));
-          }
-          if (!r.Aedat && typeof r.Agdat === "string") {
-            const match = /Date\\((\\d+)\\)/.exec(r.Agdat);
-            if (match) r.Aedat = new Date(parseInt(match[1], 10));
-          }
+              // Parse ngày
+              aResults.forEach((r) => {
+                if (typeof r.Aedat === "string") {
+                  const match = /Date\((\d+)\)/.exec(r.Aedat);
+                  if (match) r.Aedat = new Date(parseInt(match[1], 10));
+                }
+              });
+
+              const aValidRecords = aResults.filter(
+                (r) => r.Aedat instanceof Date && !isNaN(r.Aedat)
+              );
+
+              const range = this._getDateRange(sPeriodKey);
+              const uniqueSet = new Set();
+              let aChartData = [];
+
+              if (sPeriodKey === "thisAll") {
+                const yearCountMap = {};
+                aValidRecords.forEach((r) => {
+                  if (r.Aedat >= range.start && r.Aedat <= range.end) {
+                    const year = r.Aedat.getFullYear();
+                    const key = `${r.Ebeln}-${year}`;
+                    if (!uniqueSet.has(key)) {
+                      uniqueSet.add(key);
+                      yearCountMap[year] = (yearCountMap[year] || 0) + 1;
+                    }
+                  }
+                });
+                const minYear = Math.min(
+                  ...aValidRecords.map((r) => r.Aedat.getFullYear())
+                );
+                const maxYear = new Date().getFullYear();
+                for (let year = minYear; year <= maxYear; year++) {
+                  aChartData.push({
+                    Month: `Năm ${year}`,
+                    Count: yearCountMap[year] || 0,
+                  });
+                }
+              } else {
+                const year = range.start.getFullYear();
+                const monthlyCount = Array(12).fill(0);
+                aValidRecords.forEach((r) => {
+                  if (
+                    r.Aedat.getFullYear() === year &&
+                    r.Aedat >= range.start &&
+                    r.Aedat <= range.end
+                  ) {
+                    const month = r.Aedat.getMonth();
+                    const key = `${r.Ebeln}-${month}`;
+                    if (!uniqueSet.has(key)) {
+                      uniqueSet.add(key);
+                      monthlyCount[month]++;
+                    }
+                  }
+                });
+                aChartData = monthlyCount.map((count, i) => ({
+                  Month: `Tháng ${i + 1}`,
+                  Count: count,
+                }));
+              }
+
+              this._displayMonthlyPOBarChart(aChartData);
+              resolve();
+            },
+
+            error: (e) => {
+              BusyIndicator.hide();
+              console.error("❌ Lỗi load Monthly PO:", e);
+              MessageToast.show("Không thể tải dữ liệu PO/RFQ");
+              this._displayMonthlyPOBarChart([]);
+              reject(e);
+            },
+          });
         });
-
-        const aValidRecords = aResults.filter(
-          (r) => r.Aedat instanceof Date && !isNaN(r.Aedat)
-        );
-
-        console.log("✅ Valid PO Records (Bstyp=F):", aValidRecords.length);
-
-        if (aValidRecords.length === 0) {
-          this._displayMonthlyPOBarChart([]);
-          return resolve();
-        }
-
-        const range = this._getDateRange(sPeriodKey);
-        const uniqueSet = new Set();
-        let aChartData = [];
-
-        if (sPeriodKey === "thisAll") {
-          const yearCountMap = {};
-
-          aValidRecords.forEach((r) => {
-            if (r.Aedat >= range.start && r.Aedat <= range.end) {
-              const year = r.Aedat.getFullYear();
-              const key = `${r.Ebeln}-${year}`;
-              if (!uniqueSet.has(key)) {
-                uniqueSet.add(key);
-                yearCountMap[year] = (yearCountMap[year] || 0) + 1;
-              }
-            }
-          });
-
-          const minYear = Math.min(...aValidRecords.map((r) => r.Aedat.getFullYear()));
-          const maxYear = new Date().getFullYear();
-
-          for (let year = minYear; year <= maxYear; year++) {
-            aChartData.push({
-              Month: `Năm ${year}`,
-              Count: yearCountMap[year] || 0,
-            });
-          }
-        } else {
-          const year = range.start.getFullYear();
-          const monthlyCount = Array(12).fill(0);
-
-          aValidRecords.forEach((r) => {
-            if (
-              r.Aedat.getFullYear() === year &&
-              r.Aedat >= range.start &&
-              r.Aedat <= range.end
-            ) {
-              const month = r.Aedat.getMonth();
-              const key = `${r.Ebeln}-${month}`;
-              if (!uniqueSet.has(key)) {
-                uniqueSet.add(key);
-                monthlyCount[month]++;
-              }
-            }
-          });
-
-          aChartData = monthlyCount.map((count, i) => ({
-            Month: `Tháng ${i + 1}`,
-            Count: count,
-          }));
-        }
-
-        console.log("📊 PO Chart Data (Filtered):", aChartData);
-        this._displayMonthlyPOBarChart(aChartData);
-        resolve();
       },
-
-      error: (e) => {
-        BusyIndicator.hide();
-        console.error("❌ Lỗi load Monthly PO:", e);
-        MessageToast.show("Không thể tải dữ liệu PO");
-        this._displayMonthlyPOBarChart([]);
-        reject(e);
-      },
-    });
-  });
-},
-
 
       /* ===== Hiển thị KPI Card ===== */
       _displayKpiCard: function (sPeriodKey, iCurrCount, iPrevCount) {
@@ -1259,6 +1253,16 @@ sap.ui.define(
           default:
             return "";
         }
+      },
+
+      onPoTypeChange: function (oEvent) {
+        const sKey = oEvent.getSource().getSelectedKey();
+        this._currentPoType = sKey; // Lưu lại loại chọn hiện tại (F hoặc A)
+        const sPeriodKey =
+          this.byId("timeFilter").getSelectedKey() || "thisYear";
+
+        // 🔁 Gọi lại hàm load biểu đồ PO với loại mới
+        this._loadMonthlyPoBarChart(sPeriodKey);
       },
 
       onGoToPRList: function () {
