@@ -130,6 +130,14 @@
           </VBox>
 
 
+<VBox id="rfqChartSection" width="100%" class="chartRowFullWidth">
+  <viz:VizFrame
+    id="idMonthlyRFQBarChart"
+    vizType="column"
+    width="100%"
+    height="600px" />
+</VBox>
+
 
 
         <!-- Nút chuyển sang PR List -->

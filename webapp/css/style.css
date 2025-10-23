@@ -280,3 +280,12 @@
   border-radius: 4px;
 }
 
+.chartRowFullWidth {
+  background: white;
+  padding: 1rem 1.5rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  margin-top: 1rem;
+}
+
+

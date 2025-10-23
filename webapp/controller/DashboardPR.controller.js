@@ -22,9 +22,9 @@
       return Controller.extend("demodashboard.controller.DashboardPR", {
         onInit: function () {
           this.oOData = this.getOwnerComponent().getModel(); // OData model
-          this._reloadChartsOnly("thisYear");
-          this._loadMonthlyPRBarChart();      
+          this._reloadChartsOnly("thisYear");     
           this._currentRequesterSort = "totalPR";
+          
         },
 
         onTimeFilterChange: function (oEvent) {
@@ -78,13 +78,14 @@
         _reloadChartsOnly: function (sPeriodKey) {
           BusyIndicator.show(0);
 
-          Promise.all([
+          return Promise.all([
             this._loadKpiPurchaseRequisition(sPeriodKey),
             this._loadStatusDonutChart(sPeriodKey),
-            this._loadTopMaterialBarChart(sPeriodKey),
-              
+            this._loadTopMaterialBarChart(sPeriodKey),        
             this._loadTopRequesterTable(sPeriodKey),
             this._loadMonthlyPRBarChart(sPeriodKey),
+            this._loadMonthlyRFQBarChart(sPeriodKey)
+
           ]);   
         },
 
@@ -510,6 +511,109 @@
 },
 
 
+/* ===== Load Monthly RFQ Chart ===== */
+_loadMonthlyRFQBarChart: function (sPeriodKey) {
+  return new Promise((resolve, reject) => {
+    BusyIndicator.show(0);
+
+    // ⚙️ Đọc dữ liệu RFQ
+    this.oOData.read("/PRsSet", {
+      urlParameters: { $select: "Banfn,Badat", $top: "2000" },
+      success: (oData) => {
+        BusyIndicator.hide();
+        const aResults = oData.results || [];
+        if (aResults.length === 0) {
+          this._displayMonthlyRFQBarChart([]);
+          return resolve();
+        }
+
+     
+        aResults.forEach((r) => {
+          if (typeof r.Badat === "string") {
+            const match = /Date\((\d+)\)/.exec(r.Badat);
+            if (match) r.Badat = new Date(parseInt(match[1], 10));
+          }
+        });
+
+        const range = this._getDateRange(sPeriodKey);
+        const uniqueSet = new Set();
+
+        // 🔹 Nếu filter là "Tất cả năm"
+        if (sPeriodKey === "thisAll") {
+          const yearCountMap = {};
+
+          aResults.forEach((r) => {
+            if (
+              r.Badat instanceof Date &&
+              r.Badat >= range.start &&
+              r.Badat <= range.end
+            ) {
+              const year = r.Badat.getFullYear();
+              const key = `${r.Ebeln}-${year}`;
+              if (!uniqueSet.has(key)) {
+                uniqueSet.add(key);
+                yearCountMap[year] = (yearCountMap[year] || 0) + 1;
+              }
+            }
+          });
+
+          // 🔍 Xác định range năm từ nhỏ nhất đến hiện tại
+          const validYears = aResults
+            .filter(r => r.Badat instanceof Date)
+            .map(r => r.Badat.getFullYear());
+          const minYear = Math.min(...validYears);
+          const maxYear = new Date().getFullYear();
+
+          const aChartData = [];
+          for (let year = minYear; year <= maxYear; year++) {
+            aChartData.push({
+              Month: `Năm ${year}`,
+              Count: yearCountMap[year] || 0,
+            });
+          }
+
+          this._displayMonthlyRFQBarChart(aChartData);
+          return resolve();
+        }
+
+        // 🔹 Ngược lại: chỉ 1 năm → gom theo tháng
+        const year = range.start.getFullYear();
+        const monthlyCount = Array(12).fill(0);
+
+        aResults.forEach((r) => {
+          if (r.Badat instanceof Date && r.Badat.getFullYear() === year) {
+            const month = r.Badat.getMonth(); // 0–11
+            const key = `${r.Ebeln}-${month}`;
+            if (!uniqueSet.has(key)) {
+              uniqueSet.add(key);
+              monthlyCount[month]++;
+            }
+          }
+        });
+
+        const aChartData = monthlyCount.map((count, i) => ({
+          Month: `Tháng ${i + 1}`,
+          Count: count,
+        }));
+
+        this._displayMonthlyRFQBarChart(aChartData);
+        resolve();
+      },
+
+      error: (e) => {
+        BusyIndicator.hide();
+        console.error("❌ Lỗi load Monthly RFQ:", e);
+        this._displayMonthlyRFQBarChart([]);
+        reject(e);
+      },
+    });
+  });
+},
+
+
+
+
+
 
 
         /* ===== Hiển thị KPI Card ===== */
@@ -719,6 +823,78 @@
             },
           });
         },
+
+
+        /* ===== Hiển thị biểu đồ RFQ ===== */
+_displayMonthlyRFQBarChart: function (aChartData) {
+  const oVizFrame = this.getView().byId("idMonthlyRFQBarChart");
+  if (!oVizFrame) {
+    console.error("❌ Không tìm thấy VizFrame idMonthlyRFQBarChart");
+    return;
+  }
+
+  // Dọn sạch trước khi vẽ mới
+  oVizFrame.destroyFeeds();
+  oVizFrame.destroyDataset();
+
+  // Tạo model chứa dữ liệu RFQ
+  const oModel = new sap.ui.model.json.JSONModel({ items: aChartData });
+  this.getView().setModel(oModel, "monthlyRFQ");
+
+  // Dataset cho RFQ
+  const oDataset = new sap.viz.ui5.data.FlattenedDataset({
+    dimensions: [{ name: "Tháng", value: "{monthlyRFQ>Month}" }],
+    measures: [{ name: "Số lượng RFQ", value: "{monthlyRFQ>Count}" }],
+    data: { path: "monthlyRFQ>/items" },
+  });
+
+  oVizFrame.setDataset(oDataset);
+  oVizFrame.setModel(oModel, "monthlyRFQ");
+
+  // Thêm FeedItem (dữ liệu đo lường và trục)
+  oVizFrame.addFeed(
+    new sap.viz.ui5.controls.common.feeds.FeedItem({
+      uid: "categoryAxis",
+      type: "Dimension",
+      values: ["Tháng"],
+    })
+  );
+  oVizFrame.addFeed(
+    new sap.viz.ui5.controls.common.feeds.FeedItem({
+      uid: "valueAxis",
+      type: "Measure",
+      values: ["Số lượng RFQ"],
+    })
+  );
+
+  // Cấu hình loại biểu đồ
+  oVizFrame.setVizType("column");
+
+  // Thiết lập thuộc tính hiển thị
+  oVizFrame.setVizProperties({
+    title: {
+      text:
+        aChartData.length > 0 && aChartData[0].Month.startsWith("Năm")
+          ? "Số lượng RFQ theo năm (Toàn bộ thời gian)"
+          : "Số lượng RFQ theo tháng (năm hiện tại)",
+      alignment: "center",
+      visible: true,
+    },
+    plotArea: {
+      colorPalette: ["#FFB347"], // 🟧 Màu cam khác PR
+      dataLabel: { visible: true },
+    },
+    legend: { visible: false },
+    valueAxis: {
+      title: { visible: false },
+    },
+    categoryAxis: {
+      title: { visible: false },
+      label: { angle: 0 },
+    },
+  });
+},
+
 
         /* ===== Tạo KPI Card Fragment ===== */
         _addKpiCard: function (oData) {
