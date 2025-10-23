@@ -41,12 +41,12 @@
               class="dashboardMainRow">
 
           <!-- KPI Card Container -->
-          <VBox id="kpiSection" class="dashboardCard kpiCard">
+          <VBox id="kpiSection"  class="dashboardCard kpiCard">
         <HBox id="kpiContainer" />
       </VBox>
 
           <!-- Donut Chart -->
-          <VBox id="donutChartSection"  width="32%">
+          <VBox id="donutChartSection"  width="20%">
             <viz:VizFrame
               id="idDonutChart"
               vizType="donut"
@@ -55,7 +55,7 @@
           </VBox>
 
           <!-- Bar Chart -->
-          <VBox id="barChartSection" width="32%">
+          <VBox id="barChartSection" width="20%">
             <viz:VizFrame
               id="idBarChart"
               vizType="bar"
@@ -63,12 +63,21 @@
               height="200px" />
           </VBox>
 
+          <!-- Top Vendor Bar Chart -->
+<VBox id="vendorChartSection" width="20%">
+  <viz:VizFrame
+    id="idVendorBarChart"
+    vizType="bar"
+    width="100%"
+    height="200px" />
+</VBox>
+
         </HBox>
 
         <!-- Biểu đồ PR theo tháng -->
           <VBox id="monthlyChartSection" width="100%" class="chartFullRow sapUiSmallMarginTop">
             <viz:VizFrame
-              id="idMonthlyBarChart"
+              id="idMonthlyBarChartPR"
               vizType="column"
               width="100%"
               height="500px" />
@@ -90,6 +99,8 @@
       </Select>
     </HBox>
   </HBox>
+
+
 
 
             <Table id="topRequesterTable"
@@ -129,7 +140,9 @@
             </Table> 
           </VBox>
 
+          
 
+<<<<<<< HEAD
 <VBox id="rfqChartSection" width="100%" class="chartRowFullWidth">
   <viz:VizFrame
     id="idMonthlyRFQBarChart"
@@ -138,6 +151,29 @@
     height="600px" />
 </VBox>
 
+=======
+         <!-- Biểu đồ PO theo tháng -->
+<VBox id="monthlyPOChartSection" width="100%" class="chartFullRow sapUiSmallMarginTop">
+
+  <!-- 🔹 Bộ lọc loại chứng từ -->
+  <HBox alignItems="Center" justifyContent="End" class="sapUiSmallMarginBottom">
+    <Label text="Select Type:" class="sapUiSmallMarginEnd"/>
+    <Select id="poTypeFilter"
+            selectedKey="F"
+            change=".onPoTypeChange"
+            width="180px">
+      <core:Item key="F" text="Purchase Order (PO)" />
+      <core:Item key="A" text="Request for Quotation (RFQ)" />
+    </Select>
+  </HBox>
+
+  <viz:VizFrame
+    id="idMonthlyBarChartPO"
+    vizType="column"
+    width="100%"
+    height="500px" />
+</VBox>
+>>>>>>> 903bcb221159d0ce1878c1b0a0a5f9e58be78724
 
 
         <!-- Nút chuyển sang PR List -->
