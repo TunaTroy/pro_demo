@@ -605,123 +605,120 @@ sap.ui.define(
       },
 
       _loadMonthlyPoBarChart: function (sPeriodKey) {
-        return new Promise((resolve, reject) => {
-          BusyIndicator.show(0);
+  return new Promise((resolve, reject) => {
+    BusyIndicator.show(0);
 
-          // ✅ Fallback nếu không có tham số
-          if (!sPeriodKey) {
-            sPeriodKey = "thisYear";
-          }
+    if (!sPeriodKey) sPeriodKey = "thisYear";
+    this.oOData.read("/ProcurementHeaderSet", {
+      urlParameters: {
+        $select: "Ebeln,Aedat,Bstyp",
 
-          this.oOData.read("/ProcurementItemSet", {
-            urlParameters: {
-              $select: "Ebeln,Aedat,Agdat",
-              $top: "2000",
-            },
-            success: (oData) => {
-              BusyIndicator.hide();
-              const aResults = oData.results || [];
-
-              console.log("📦 PO Raw Data:", aResults.slice(0, 5));
-
-              if (aResults.length === 0) {
-                console.warn("⚠️ No PO data found");
-                this._displayMonthlyPOBarChart([]);
-                return resolve();
-              }
-
-              // Parse dates
-              aResults.forEach((r) => {
-                if (typeof r.Aedat === "string") {
-                  const match = /Date\((\d+)\)/.exec(r.Aedat);
-                  if (match) r.Aedat = new Date(parseInt(match[1], 10));
-                }
-                if (!r.Aedat && typeof r.Agdat === "string") {
-                  const match = /Date\((\d+)\)/.exec(r.Agdat);
-                  if (match) r.Aedat = new Date(parseInt(match[1], 10));
-                }
-              });
-
-              const aValidRecords = aResults.filter(
-                (r) => r.Aedat instanceof Date && !isNaN(r.Aedat)
-              );
-              console.log("✅ Valid PO Records:", aValidRecords.length);
-
-              if (aValidRecords.length === 0) {
-                console.warn("⚠️ No valid dates in PO data");
-                this._displayMonthlyPOBarChart([]);
-                return resolve();
-              }
-
-              const range = this._getDateRange(sPeriodKey);
-              const uniqueSet = new Set();
-              let aChartData = [];
-
-              if (sPeriodKey === "thisAll") {
-                const yearCountMap = {};
-
-                aValidRecords.forEach((r) => {
-                  if (r.Aedat >= range.start && r.Aedat <= range.end) {
-                    const year = r.Aedat.getFullYear();
-                    const key = `${r.Ebeln}-${year}`;
-                    if (!uniqueSet.has(key)) {
-                      uniqueSet.add(key);
-                      yearCountMap[year] = (yearCountMap[year] || 0) + 1;
-                    }
-                  }
-                });
-
-                const minYear = Math.min(
-                  ...aValidRecords.map((r) => r.Aedat.getFullYear())
-                );
-                const maxYear = new Date().getFullYear();
-
-                for (let year = minYear; year <= maxYear; year++) {
-                  aChartData.push({
-                    Month: `Năm ${year}`,
-                    Count: yearCountMap[year] || 0,
-                  });
-                }
-              } else {
-                const year = range.start.getFullYear();
-                const monthlyCount = Array(12).fill(0);
-
-                aValidRecords.forEach((r) => {
-                  if (
-                    r.Aedat.getFullYear() === year &&
-                    r.Aedat >= range.start &&
-                    r.Aedat <= range.end
-                  ) {
-                    const month = r.Aedat.getMonth();
-                    const key = `${r.Ebeln}-${month}`;
-                    if (!uniqueSet.has(key)) {
-                      uniqueSet.add(key);
-                      monthlyCount[month]++;
-                    }
-                  }
-                });
-
-                aChartData = monthlyCount.map((count, i) => ({
-                  Month: `Tháng ${i + 1}`,
-                  Count: count,
-                }));
-              }
-
-              console.log("📊 PO Chart Data:", aChartData);
-              this._displayMonthlyPOBarChart(aChartData);
-              resolve();
-            },
-
-            error: (e) => {
-              BusyIndicator.hide();
-              console.error("❌ Lỗi load Monthly PO:", e);
-              MessageToast.show("Không thể tải dữ liệu PO");
-              this._displayMonthlyPOBarChart([]);
-              reject(e);
-            },
-          });
-        });
+        $top: "2000",
       },
+      success: (oData) => {
+        BusyIndicator.hide();
+        const aResults = oData.results.filter(r => r.Bstyp === "F");
+
+
+        console.log("📦 PO Raw Data (filtered by Bstyp=F):", aResults.slice(0, 5));
+
+        if (aResults.length === 0) {
+          console.warn("⚠️ No PO data found");
+          this._displayMonthlyPOBarChart([]);
+          return resolve();
+        }
+
+        // Parse ngày
+        aResults.forEach((r) => {
+          if (typeof r.Aedat === "string") {
+            const match = /Date\\((\\d+)\\)/.exec(r.Aedat);
+            if (match) r.Aedat = new Date(parseInt(match[1], 10));
+          }
+          if (!r.Aedat && typeof r.Agdat === "string") {
+            const match = /Date\\((\\d+)\\)/.exec(r.Agdat);
+            if (match) r.Aedat = new Date(parseInt(match[1], 10));
+          }
+        });
+
+        const aValidRecords = aResults.filter(
+          (r) => r.Aedat instanceof Date && !isNaN(r.Aedat)
+        );
+
+        console.log("✅ Valid PO Records (Bstyp=F):", aValidRecords.length);
+
+        if (aValidRecords.length === 0) {
+          this._displayMonthlyPOBarChart([]);
+          return resolve();
+        }
+
+        const range = this._getDateRange(sPeriodKey);
+        const uniqueSet = new Set();
+        let aChartData = [];
+
+        if (sPeriodKey === "thisAll") {
+          const yearCountMap = {};
+
+          aValidRecords.forEach((r) => {
+            if (r.Aedat >= range.start && r.Aedat <= range.end) {
+              const year = r.Aedat.getFullYear();
+              const key = `${r.Ebeln}-${year}`;
+              if (!uniqueSet.has(key)) {
+                uniqueSet.add(key);
+                yearCountMap[year] = (yearCountMap[year] || 0) + 1;
+              }
+            }
+          });
+
+          const minYear = Math.min(...aValidRecords.map((r) => r.Aedat.getFullYear()));
+          const maxYear = new Date().getFullYear();
+
+          for (let year = minYear; year <= maxYear; year++) {
+            aChartData.push({
+              Month: `Năm ${year}`,
+              Count: yearCountMap[year] || 0,
+            });
+          }
+        } else {
+          const year = range.start.getFullYear();
+          const monthlyCount = Array(12).fill(0);
+
+          aValidRecords.forEach((r) => {
+            if (
+              r.Aedat.getFullYear() === year &&
+              r.Aedat >= range.start &&
+              r.Aedat <= range.end
+            ) {
+              const month = r.Aedat.getMonth();
+              const key = `${r.Ebeln}-${month}`;
+              if (!uniqueSet.has(key)) {
+                uniqueSet.add(key);
+                monthlyCount[month]++;
+              }
+            }
+          });
+
+          aChartData = monthlyCount.map((count, i) => ({
+            Month: `Tháng ${i + 1}`,
+            Count: count,
+          }));
+        }
+
+        console.log("📊 PO Chart Data (Filtered):", aChartData);
+        this._displayMonthlyPOBarChart(aChartData);
+        resolve();
+      },
+
+      error: (e) => {
+        BusyIndicator.hide();
+        console.error("❌ Lỗi load Monthly PO:", e);
+        MessageToast.show("Không thể tải dữ liệu PO");
+        this._displayMonthlyPOBarChart([]);
+        reject(e);
+      },
+    });
+  });
+},
+
 
       /* ===== Hiển thị KPI Card ===== */
       _displayKpiCard: function (sPeriodKey, iCurrCount, iPrevCount) {

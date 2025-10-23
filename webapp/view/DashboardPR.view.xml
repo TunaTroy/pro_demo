@@ -140,6 +140,7 @@
             </Table> 
           </VBox>
 
+
  <!-- Biểu đồ PO theo tháng -->
 <VBox id="monthlyPOChartSection" width="100%" class="chartFullRow sapUiSmallMarginTop">
   <viz:VizFrame
