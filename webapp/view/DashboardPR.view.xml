@@ -75,13 +75,23 @@
         </HBox>
 
         <!-- Biểu đồ PR theo tháng -->
-          <VBox id="monthlyChartSection" width="100%" class="chartFullRow sapUiSmallMarginTop">
-            <viz:VizFrame
-              id="idMonthlyBarChartPR"
-              vizType="column"
-              width="100%"
-              height="500px" />
-          </VBox>
+          <VBox class="sapUiSmallMargin">
+    <HBox alignItems="Center" justifyContent="SpaceBetween">
+        <Text text="Biểu đồ PR theo tháng" class="sapUiTinyMarginBegin sapUiTinyMarginBottom sapUiSmallMarginTop sapUiBold" />
+        <Select id="prYearFilter"
+                width="120px"
+                selectedKey="{viewModel>/selectedPRYear}"
+                change=".onPRYearChange">
+        </Select>
+    </HBox>
+
+    <viz:VizFrame id="idMonthlyBarChartPR"
+                  uiConfig="{applicationSet:'fiori'}"
+                  height="370px"
+                  width="100%">
+    </viz:VizFrame>
+</VBox>
+
 
         <!-- Top Requester Table -->
           <!-- Top Request Purchase Requisition by Employee -->
@@ -142,16 +152,6 @@
 
           
 
-<<<<<<< HEAD
-<VBox id="rfqChartSection" width="100%" class="chartRowFullWidth">
-  <viz:VizFrame
-    id="idMonthlyRFQBarChart"
-    vizType="column"
-    width="100%"
-    height="600px" />
-</VBox>
-
-=======
          <!-- Biểu đồ PO theo tháng -->
 <VBox id="monthlyPOChartSection" width="100%" class="chartFullRow sapUiSmallMarginTop">
 
@@ -173,7 +173,6 @@
     width="100%"
     height="500px" />
 </VBox>
->>>>>>> 903bcb221159d0ce1878c1b0a0a5f9e58be78724
 
 
         <!-- Nút chuyển sang PR List -->

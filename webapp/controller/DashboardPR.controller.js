@@ -19,23 +19,39 @@ sap.ui.define(
   ) {
     "use strict";
 
-<<<<<<< HEAD
-      return Controller.extend("demodashboard.controller.DashboardPR", {
-        onInit: function () {
-          this.oOData = this.getOwnerComponent().getModel(); // OData model
-          this._reloadChartsOnly("thisYear");     
-          this._currentRequesterSort = "totalPR";
-          
-        },
-=======
     return Controller.extend("demodashboard.controller.DashboardPR", {
       onInit: function () {
         this.oOData = this.getOwnerComponent().getModel(); // OData model
+        // 🔹 Tạo danh sách năm cho filter PR
+const currentYear = new Date().getFullYear();
+const aYears = [];
+for (let y = currentYear; y >= 2020; y--) {
+  aYears.push({ key: y.toString(), text: `Năm ${y}` });
+}
+
+// 🔹 Tạo model lưu năm được chọn riêng cho PR
+const oViewModel = new JSONModel({
+  years: aYears,
+  selectedPRYear: currentYear.toString(), // mặc định là năm hiện tại
+});
+this.getView().setModel(oViewModel, "viewModel");
+
+// 🔹 Bind năm vào Select
+const oYearSelect = this.byId("prYearFilter");
+if (oYearSelect) {
+  oYearSelect.bindItems({
+    path: "viewModel>/years",
+    template: new sap.ui.core.Item({
+      key: "{viewModel>key}",
+      text: "{viewModel>text}",
+    }),
+  });
+}
+
         this._reloadChartsOnly("thisYear");
         this._currentPoType = "F";
         this._currentRequesterSort = "totalPR";
       },
->>>>>>> 903bcb221159d0ce1878c1b0a0a5f9e58be78724
 
       onTimeFilterChange: function (oEvent) {
         var sKey = oEvent.getSource().getSelectedKey();
@@ -87,6 +103,20 @@ sap.ui.define(
         }
       },
 
+
+      onPRYearChange: function (oEvent) {
+  const sSelectedYear = oEvent.getSource().getSelectedKey();
+  console.log("📅 Năm PR được chọn:", sSelectedYear);
+
+  // Lưu lại vào model
+  const oViewModel = this.getView().getModel("viewModel");
+  oViewModel.setProperty("/selectedPRYear", sSelectedYear);
+
+  // 🔁 Reload lại biểu đồ PR theo năm đã chọn
+  this._loadMonthlyPRBarChart("thisYear", sSelectedYear);
+},
+
+
       /* ===== Tải toàn bộ dashboard ===== */
       _reloadChartsOnly: function (sPeriodKey) {
         BusyIndicator.show(0);
@@ -104,24 +134,11 @@ sap.ui.define(
         });
       },
 
-<<<<<<< HEAD
-          return Promise.all([
-            this._loadKpiPurchaseRequisition(sPeriodKey),
-            this._loadStatusDonutChart(sPeriodKey),
-            this._loadTopMaterialBarChart(sPeriodKey),        
-            this._loadTopRequesterTable(sPeriodKey),
-            this._loadMonthlyPRBarChart(sPeriodKey),
-            this._loadMonthlyRFQBarChart(sPeriodKey)
-
-          ]);   
-        },
-=======
       /* ===== Load KPI ===== */
       _loadKpiPurchaseRequisition: function (sPeriodKey) {
         BusyIndicator.show(0);
         var oCurrRange = this._getDateRange(sPeriodKey);
         var oPrevRange = this._getPreviousRange(sPeriodKey);
->>>>>>> 903bcb221159d0ce1878c1b0a0a5f9e58be78724
 
         this.oOData.read("/PRsSet", {
           urlParameters: {
@@ -386,7 +403,7 @@ sap.ui.define(
         });
       },
 
-      _loadMonthlyPRBarChart: function (sPeriodKey) {
+      _loadMonthlyPRBarChart: function (sPeriodKey, sSelectedYear) {
         return new Promise((resolve, reject) => {
           BusyIndicator.show(0);
 
@@ -446,7 +463,7 @@ sap.ui.define(
                 this._displayMonthlyPRBarChart(aChartData);
                 resolve();
               } else {
-                const year = range.start.getFullYear();
+                const year = sSelectedYear ? parseInt(sSelectedYear, 10) : range.start.getFullYear();
                 const monthlyCount = Array(12).fill(0);
 
                 aResults.forEach((r) => {
@@ -503,523 +520,6 @@ sap.ui.define(
             BusyIndicator.hide();
             const aResults = oData.results || [];
 
-<<<<<<< HEAD
-      // Normalize dates
-      aResults.forEach(r => {
-        ["Badat", "Frgdt"].forEach(field => {
-          if (typeof r[field] === "string") {
-            const m = /Date\((\d+)\)/.exec(r[field]);
-            if (m) r[field] = new Date(parseInt(m[1], 10));
-          }
-        });
-      });
-
-      // Group by Ernam (user)
-      const oUserMap = {};
-      aResults.forEach(r => {
-        const user = r.Ernam || "UNKNOWN";
-        if (!oUserMap[user]) {
-          oUserMap[user] = {
-            UserID: user,
-            FullName: user, // fallback; you can replace with lookup later
-            TotalPR: 0,
-            ApprovedPR: 0,
-            PendingPR: 0,
-            ApprovalDays: [],
-            Dates: []
-          };
-        }
-
-        oUserMap[user].TotalPR++;
-        if (r.Badat) oUserMap[user].Dates.push(r.Badat);
-
-        // Count statuses
-        if (r.Frgkz === "R") { // Approved (your mapping)
-          oUserMap[user].ApprovedPR++;
-          // If release date available - calculate approval days
-          if (r.Badat && r.Frgdt) {
-            const diffDays = Math.max(0, Math.round((r.Frgdt - r.Badat) / (1000 * 60 * 60 * 24)));
-            oUserMap[user].ApprovalDays.push(diffDays);
-          }
-        } else if (r.Frgkz === "C") { // Pending
-          oUserMap[user].PendingPR++;
-        }
-      });
-
-      // Build array without index yet
-      const aUsers = Object.values(oUserMap).map(u => {
-        const approvalRateNum = u.TotalPR > 0 ? (u.ApprovedPR / u.TotalPR * 100) : 0;
-        const approvalRate = u.TotalPR > 0 ? approvalRateNum.toFixed(1) + "%" : "0%";
-        const avgDays = u.ApprovalDays.length > 0
-          ? (u.ApprovalDays.reduce((a,b) => a+b, 0) / u.ApprovalDays.length).toFixed(1)
-          : null; // null means '-' in UI
-
-        const lastDate = u.Dates.length > 0 ? new Date(Math.max(...u.Dates)).toLocaleDateString() : "-";
-
-        return {
-          UserID: u.UserID,
-          TotalPR: u.TotalPR,
-          ApprovedPR: u.ApprovedPR,
-          ApprovalRate: approvalRate,
-          ApprovalRateNum: approvalRateNum, 
-          PendingPR: u.PendingPR,
-          AvgApprovalDays: avgDays,
-          LastCreatedDate: lastDate
-        };
-      });
-
-      // Decide sort key: read the current filter control (default to TotalPR)
-      let sKey = "totalPR";
-      const oSelect = this.byId("requesterSortFilter");
-      if (oSelect) {
-        sKey = oSelect.getSelectedKey() || "totalPR";
-      }
-
-      if (sKey === "approvalRate") {
-        aUsers.sort((a, b) => {
-          // sort by numeric approval rate desc, then totalPR desc
-          if (b.ApprovalRateNum !== a.ApprovalRateNum) return b.ApprovalRateNum - a.ApprovalRateNum;
-          return b.TotalPR - a.TotalPR;
-        });
-      } else {
-        // default sort by TotalPR desc, then approval rate desc
-        aUsers.sort((a, b) => {
-          if (b.TotalPR !== a.TotalPR) return b.TotalPR - a.TotalPR;
-          return b.ApprovalRateNum - a.ApprovalRateNum;
-        });
-      }
-
-      // Assign index (STT) after sorting and slice top N if needed
-      const aTop = aUsers.slice(0, 50).map((item, idx) => {
-        return Object.assign({}, item, {
-          index: idx + 1,
-          // format fields for display
-          ApprovalRate: item.ApprovalRate,
-          AvgApprovalDaysDisplay: item.AvgApprovalDays !== null ? item.AvgApprovalDays + " days" : "- days"
-        });
-      });
-
-      const oModel = new sap.ui.model.json.JSONModel({ items: aTop });
-      this.getView().setModel(oModel, "topRequesterModel");
-    },
-
-    error: (e) => {
-      BusyIndicator.hide();
-      console.error("❌ Lỗi khi tải dữ liệu Top Requesters:", e);
-      MessageToast.show("Lỗi khi tải dữ liệu Top Requesters");
-    }
-  });
-},
-
-
-/* ===== Load Monthly RFQ Chart ===== */
-_loadMonthlyRFQBarChart: function (sPeriodKey) {
-  return new Promise((resolve, reject) => {
-    BusyIndicator.show(0);
-
-    // ⚙️ Đọc dữ liệu RFQ
-    this.oOData.read("/PRsSet", {
-      urlParameters: { $select: "Banfn,Badat", $top: "2000" },
-      success: (oData) => {
-        BusyIndicator.hide();
-        const aResults = oData.results || [];
-        if (aResults.length === 0) {
-          this._displayMonthlyRFQBarChart([]);
-          return resolve();
-        }
-
-     
-        aResults.forEach((r) => {
-          if (typeof r.Badat === "string") {
-            const match = /Date\((\d+)\)/.exec(r.Badat);
-            if (match) r.Badat = new Date(parseInt(match[1], 10));
-          }
-        });
-
-        const range = this._getDateRange(sPeriodKey);
-        const uniqueSet = new Set();
-
-        // 🔹 Nếu filter là "Tất cả năm"
-        if (sPeriodKey === "thisAll") {
-          const yearCountMap = {};
-
-          aResults.forEach((r) => {
-            if (
-              r.Badat instanceof Date &&
-              r.Badat >= range.start &&
-              r.Badat <= range.end
-            ) {
-              const year = r.Badat.getFullYear();
-              const key = `${r.Ebeln}-${year}`;
-              if (!uniqueSet.has(key)) {
-                uniqueSet.add(key);
-                yearCountMap[year] = (yearCountMap[year] || 0) + 1;
-              }
-            }
-          });
-
-          // 🔍 Xác định range năm từ nhỏ nhất đến hiện tại
-          const validYears = aResults
-            .filter(r => r.Badat instanceof Date)
-            .map(r => r.Badat.getFullYear());
-          const minYear = Math.min(...validYears);
-          const maxYear = new Date().getFullYear();
-
-          const aChartData = [];
-          for (let year = minYear; year <= maxYear; year++) {
-            aChartData.push({
-              Month: `Năm ${year}`,
-              Count: yearCountMap[year] || 0,
-            });
-          }
-
-          this._displayMonthlyRFQBarChart(aChartData);
-          return resolve();
-        }
-
-        // 🔹 Ngược lại: chỉ 1 năm → gom theo tháng
-        const year = range.start.getFullYear();
-        const monthlyCount = Array(12).fill(0);
-
-        aResults.forEach((r) => {
-          if (r.Badat instanceof Date && r.Badat.getFullYear() === year) {
-            const month = r.Badat.getMonth(); // 0–11
-            const key = `${r.Ebeln}-${month}`;
-            if (!uniqueSet.has(key)) {
-              uniqueSet.add(key);
-              monthlyCount[month]++;
-            }
-          }
-        });
-
-        const aChartData = monthlyCount.map((count, i) => ({
-          Month: `Tháng ${i + 1}`,
-          Count: count,
-        }));
-
-        this._displayMonthlyRFQBarChart(aChartData);
-        resolve();
-      },
-
-      error: (e) => {
-        BusyIndicator.hide();
-        console.error("❌ Lỗi load Monthly RFQ:", e);
-        this._displayMonthlyRFQBarChart([]);
-        reject(e);
-      },
-    });
-  });
-},
-
-
-
-
-
-
-
-        /* ===== Hiển thị KPI Card ===== */
-        _displayKpiCard: function (sPeriodKey, iCurrCount, iPrevCount) {
-          const fPercent =
-            iPrevCount === 0
-              ? iCurrCount > 0
-                ? 100
-                : 0
-              : ((iCurrCount - iPrevCount) / iPrevCount) * 100;
-
-          const oKpi = {
-            title: "Purchase Requisition",
-            period: this._getPeriodLabel(sPeriodKey),
-            value: iCurrCount.toLocaleString(),
-            percentage: (fPercent >= 0 ? "+" : "") + fPercent.toFixed(1) + "%",
-            progress: Math.min(Math.abs(Math.round(fPercent)), 100),
-            state: fPercent >= 0 ? "Success" : "Error",
-          };
-
-          // 🔹 Nếu KPI model đã có thì chỉ cập nhật dữ liệu
-          const oKpiContainer = this.getView().byId("kpiContainer");
-          if (oKpiContainer.getItems().length > 0) {
-            const oKpiCard = oKpiContainer.getItems()[0]; // lấy card đầu tiên
-            const oModel = oKpiCard.getModel();
-            oModel.setData(oKpi); // cập nhật model
-          } else {
-            // Nếu chưa có -> tạo mới (chạy lần đầu)
-            this._addKpiCard(oKpi);
-          }
-        },
-
-        /* ===== Hiển thị Donut Chart ===== */
-        _displayStatusDonutChart: function (aChartData) {
-          const oVizFrame = this.getView().byId("idDonutChart");
-          if (!oVizFrame) return;
-
-          oVizFrame.destroyFeeds();
-          oVizFrame.destroyDataset();
-
-          // Gán màu theo trạng thái
-          const mColorMap = {
-            Approved: "#2e7d32", // xanh lá
-            Pending: "#f9a825", // vàng
-            Rejected: "#c62828", // đỏ
-            "No Data": "#9e9e9e", // xám
-          };
-
-          // Chuẩn hóa dữ liệu: thêm màu ứng với từng Status
-          const aColoredData = aChartData.map((item) => ({
-            Status: item.Status,
-            Count: item.Count,
-            Color: mColorMap[item.Status] || "#9e9e9e",
-          }));
-
-          const oChartModel = new sap.ui.model.json.JSONModel({
-            items: aColoredData,
-          });
-
-          const oDataset = new sap.viz.ui5.data.FlattenedDataset({
-            dimensions: [{ name: "Status", value: "{chart>Status}" }],
-            measures: [{ name: "Count", value: "{chart>Count}" }],
-            data: { path: "chart>/items" },
-          });
-
-          oVizFrame.setDataset(oDataset);
-          oVizFrame.setModel(oChartModel, "chart");
-
-          oVizFrame.addFeed(
-            new sap.viz.ui5.controls.common.feeds.FeedItem({
-              uid: "size",
-              type: "Measure",
-              values: ["Count"],
-            })
-          );
-          oVizFrame.addFeed(
-            new sap.viz.ui5.controls.common.feeds.FeedItem({
-              uid: "color",
-              type: "Dimension",
-              values: ["Status"],
-            })
-          );
-
-          // ✅ Thiết lập colorPalette động theo dữ liệu thực tế
-          oVizFrame.setVizProperties({
-            title: { text: "PR Status Overview" },
-            plotArea: {
-              colorPalette: aColoredData.map((d) => d.Color),
-              dataLabel: { visible: true },
-            },
-            legend: { visible: true, position: "bottom" },
-            tooltip: { visible: true },
-          });
-        },
-
-        _displayTopMaterialBarChart: function (aChartData) {
-          var oVizFrame = this.getView().byId("idBarChart");
-          if (!oVizFrame) {
-            console.error("❌ Không tìm thấy Bar Chart VizFrame!");
-            return;
-          }
-
-          oVizFrame.destroyFeeds();
-          oVizFrame.destroyDataset();
-
-          var oModel = new JSONModel({ items: aChartData });
-          this.getView().setModel(oModel, "topMaterial");
-
-          var oDataset = new FlattenedDataset({
-            dimensions: [{ name: "Material", value: "{topMaterial>Material}" }],
-            measures: [{ name: "Count", value: "{topMaterial>Count}" }],
-            data: { path: "topMaterial>/items" },
-          });
-
-          oVizFrame.setDataset(oDataset);
-          oVizFrame.setModel(oModel, "topMaterial");
-
-          oVizFrame.addFeed(
-            new FeedItem({
-              uid: "valueAxis",
-              type: "Measure",
-              values: ["Count"],
-            })
-          );
-          oVizFrame.addFeed(
-            new FeedItem({
-              uid: "categoryAxis",
-              type: "Dimension",
-              values: ["Material"],
-            })
-          );
-
-          oVizFrame.setVizProperties({
-            title: {
-              text: "Top 5 Best Material",
-              visible: true,
-              alignment: "center", 
-            },
-            plotArea: {
-              colorPalette: ["#5CBAE6"],
-              dataLabel: { visible: true },
-            },
-            legend: { visible: false },
-            tooltip: { visible: true },
-          });
-        },
-
-        _displayMonthlyPRBarChart: function (aChartData) {
-          const oVizFrame = this.getView().byId("idMonthlyBarChart");
-          if (!oVizFrame) {
-            console.error("❌ Không tìm thấy VizFrame idMonthlyBarChart");
-            return;
-          }
-
-          oVizFrame.destroyFeeds();
-          oVizFrame.destroyDataset();
-
-          const oModel = new JSONModel({ items: aChartData });
-          this.getView().setModel(oModel, "monthlyPR");
-
-          const oDataset = new FlattenedDataset({
-            dimensions: [{ name: "Tháng", value: "{monthlyPR>Month}" }],
-            measures: [{ name: "Số lượng PR", value: "{monthlyPR>Count}" }],
-            data: { path: "monthlyPR>/items" },
-          });
-
-          oVizFrame.setDataset(oDataset);
-          oVizFrame.setModel(oModel, "monthlyPR");
-
-          oVizFrame.addFeed(
-            new FeedItem({
-              uid: "categoryAxis",
-              type: "Dimension",
-              values: ["Tháng"],
-            })
-          );
-          oVizFrame.addFeed(
-            new FeedItem({
-              uid: "valueAxis",
-              type: "Measure",
-              values: ["Số lượng PR"],
-            })
-          );
-
-          oVizFrame.setVizType("column");
-
-          oVizFrame.setVizProperties({
-            title: {
-              text:
-                aChartData.length > 0 && aChartData[0].Month.startsWith("Năm")
-                  ? "Số lượng PR theo năm (Toàn bộ thời gian)"
-                  : "Số lượng PR theo tháng (năm hiện tại)",
-              alignment: "center",
-              visible: true,
-            },
-            plotArea: {
-              colorPalette: ["#5CBAE6"],
-              dataLabel: { visible: true },
-            },
-            legend: { visible: false },
-            valueAxis: {
-              title: { visible: false },
-            },
-            categoryAxis: {
-              title: { visible: false },
-              label: { angle: 0 },
-            },
-          });
-        },
-
-
-        /* ===== Hiển thị biểu đồ RFQ ===== */
-_displayMonthlyRFQBarChart: function (aChartData) {
-  const oVizFrame = this.getView().byId("idMonthlyRFQBarChart");
-  if (!oVizFrame) {
-    console.error("❌ Không tìm thấy VizFrame idMonthlyRFQBarChart");
-    return;
-  }
-
-  // Dọn sạch trước khi vẽ mới
-  oVizFrame.destroyFeeds();
-  oVizFrame.destroyDataset();
-
-  // Tạo model chứa dữ liệu RFQ
-  const oModel = new sap.ui.model.json.JSONModel({ items: aChartData });
-  this.getView().setModel(oModel, "monthlyRFQ");
-
-  // Dataset cho RFQ
-  const oDataset = new sap.viz.ui5.data.FlattenedDataset({
-    dimensions: [{ name: "Tháng", value: "{monthlyRFQ>Month}" }],
-    measures: [{ name: "Số lượng RFQ", value: "{monthlyRFQ>Count}" }],
-    data: { path: "monthlyRFQ>/items" },
-  });
-
-  oVizFrame.setDataset(oDataset);
-  oVizFrame.setModel(oModel, "monthlyRFQ");
-
-  // Thêm FeedItem (dữ liệu đo lường và trục)
-  oVizFrame.addFeed(
-    new sap.viz.ui5.controls.common.feeds.FeedItem({
-      uid: "categoryAxis",
-      type: "Dimension",
-      values: ["Tháng"],
-    })
-  );
-  oVizFrame.addFeed(
-    new sap.viz.ui5.controls.common.feeds.FeedItem({
-      uid: "valueAxis",
-      type: "Measure",
-      values: ["Số lượng RFQ"],
-    })
-  );
-
-  // Cấu hình loại biểu đồ
-  oVizFrame.setVizType("column");
-
-  // Thiết lập thuộc tính hiển thị
-  oVizFrame.setVizProperties({
-    title: {
-      text:
-        aChartData.length > 0 && aChartData[0].Month.startsWith("Năm")
-          ? "Số lượng RFQ theo năm (Toàn bộ thời gian)"
-          : "Số lượng RFQ theo tháng (năm hiện tại)",
-      alignment: "center",
-      visible: true,
-    },
-    plotArea: {
-      colorPalette: ["#FFB347"], // 🟧 Màu cam khác PR
-      dataLabel: { visible: true },
-    },
-    legend: { visible: false },
-    valueAxis: {
-      title: { visible: false },
-    },
-    categoryAxis: {
-      title: { visible: false },
-      label: { angle: 0 },
-    },
-  });
-},
-
-
-        /* ===== Tạo KPI Card Fragment ===== */
-        _addKpiCard: function (oData) {
-          var oHBox = this.getView().byId("kpiContainer");
-          if (!oHBox) {
-            console.error("❌ kpiContainer not found!");
-            return;
-          }
-
-          Fragment.load({
-            id: this.getView().getId() + "_kpiFragment_" + Date.now(),
-            name: "demodashboard.fragment.Kpi",
-            controller: this,
-          })
-            .then(
-              function (oFrag) {
-                var oModel = new JSONModel(oData);
-                oFrag.setModel(oModel);
-                oHBox.addItem(oFrag);
-              }.bind(this)
-            )
-            .catch(function (err) {
-              console.error("❌ KPI Fragment load error:", err);
-=======
             // Normalize dates
             aResults.forEach((r) => {
               ["Badat", "Frgdt"].forEach((field) => {
@@ -1028,7 +528,6 @@ _displayMonthlyRFQBarChart: function (aChartData) {
                   if (m) r[field] = new Date(parseInt(m[1], 10));
                 }
               });
->>>>>>> 903bcb221159d0ce1878c1b0a0a5f9e58be78724
             });
 
             // Group by Ernam (user)
@@ -1496,7 +995,7 @@ _displayMonthlyRFQBarChart: function (aChartData) {
             text:
               aChartData.length > 0 && aChartData[0].Month.startsWith("Năm")
                 ? "Số lượng PR theo năm (Toàn bộ thời gian)"
-                : "Số lượng PR theo tháng (năm hiện tại)",
+                : "Số lượng PR theo tháng",
             alignment: "center",
             visible: true,
           },
@@ -1560,26 +1059,29 @@ _displayMonthlyRFQBarChart: function (aChartData) {
 
         oVizFrame.setVizType("column");
 
-        oVizFrame.setVizProperties({
-          title: {
-            text:
-              aChartData.length > 0 && aChartData[0].Month.startsWith("Năm")
-                ? "Số lượng PO theo năm"
-                : "Số lượng PO theo tháng",
-            alignment: "center",
-            visible: true,
-          },
-          plotArea: {
-            colorPalette: ["#4CAF50"],
-            dataLabel: { visible: true },
-          },
-          legend: { visible: false },
-          valueAxis: { title: { visible: false } },
-          categoryAxis: {
-            title: { visible: false },
-            label: { angle: 0 },
-          },
-        });
+        const sDocType = this._currentPoType === "A" ? "RFQ" : "PO";
+
+oVizFrame.setVizProperties({
+  title: {
+    text:
+      aChartData.length > 0 && aChartData[0].Month.startsWith("Năm")
+        ? `Số lượng ${sDocType} theo năm`
+        : `Số lượng ${sDocType} theo tháng`,
+    alignment: "center",
+    visible: true,
+  },
+  plotArea: {
+    colorPalette: [sDocType === "A" ? "#2196F3" : "#4CAF50"], // RFQ xanh dương, PO xanh lá
+    dataLabel: { visible: true },
+  },
+  legend: { visible: false },
+  valueAxis: { title: { visible: false } },
+  categoryAxis: {
+    title: { visible: false },
+    label: { angle: 0 },
+  },
+});
+
 
         console.log("✅ PO Chart rendered successfully");
       },
