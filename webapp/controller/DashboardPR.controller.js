@@ -23,30 +23,30 @@ sap.ui.define(
       onInit: function () {
         this.oOData = this.getOwnerComponent().getModel(); // OData model
         // 🔹 Tạo danh sách năm cho filter PR
-const currentYear = new Date().getFullYear();
-const aYears = [];
-for (let y = currentYear; y >= 2020; y--) {
-  aYears.push({ key: y.toString(), text: `Năm ${y}` });
-}
+        const currentYear = new Date().getFullYear();
+        const aYears = [];
+        for (let y = currentYear; y >= 2020; y--) {
+          aYears.push({ key: y.toString(), text: `Năm ${y}` });
+        }
 
-// 🔹 Tạo model lưu năm được chọn riêng cho PR
-const oViewModel = new JSONModel({
-  years: aYears,
-  selectedPRYear: currentYear.toString(), // mặc định là năm hiện tại
-});
-this.getView().setModel(oViewModel, "viewModel");
+        // 🔹 Tạo model lưu năm được chọn riêng cho PR
+        const oViewModel = new JSONModel({
+          years: aYears,
+          selectedPRYear: currentYear.toString(), // mặc định là năm hiện tại
+        });
+        this.getView().setModel(oViewModel, "viewModel");
 
-// 🔹 Bind năm vào Select
-const oYearSelect = this.byId("prYearFilter");
-if (oYearSelect) {
-  oYearSelect.bindItems({
-    path: "viewModel>/years",
-    template: new sap.ui.core.Item({
-      key: "{viewModel>key}",
-      text: "{viewModel>text}",
-    }),
-  });
-}
+        // 🔹 Bind năm vào Select
+        const oYearSelect = this.byId("prYearFilter");
+        if (oYearSelect) {
+          oYearSelect.bindItems({
+            path: "viewModel>/years",
+            template: new sap.ui.core.Item({
+              key: "{viewModel>key}",
+              text: "{viewModel>text}",
+            }),
+          });
+        }
 
         this._reloadChartsOnly("thisYear");
         this._currentPoType = "F";
@@ -103,19 +103,17 @@ if (oYearSelect) {
         }
       },
 
-
       onPRYearChange: function (oEvent) {
-  const sSelectedYear = oEvent.getSource().getSelectedKey();
-  console.log("📅 Năm PR được chọn:", sSelectedYear);
+        const sSelectedYear = oEvent.getSource().getSelectedKey();
+        console.log("📅 Năm PR được chọn:", sSelectedYear);
 
-  // Lưu lại vào model
-  const oViewModel = this.getView().getModel("viewModel");
-  oViewModel.setProperty("/selectedPRYear", sSelectedYear);
+        // Lưu lại vào model
+        const oViewModel = this.getView().getModel("viewModel");
+        oViewModel.setProperty("/selectedPRYear", sSelectedYear);
 
-  // 🔁 Reload lại biểu đồ PR theo năm đã chọn
-  this._loadMonthlyPRBarChart("thisYear", sSelectedYear);
-},
-
+        // 🔁 Reload lại biểu đồ PR theo năm đã chọn
+        this._loadMonthlyPRBarChart("thisYear", sSelectedYear);
+      },
 
       /* ===== Tải toàn bộ dashboard ===== */
       _reloadChartsOnly: function (sPeriodKey) {
@@ -129,6 +127,7 @@ if (oYearSelect) {
           this._loadTopRequesterTable(sPeriodKey),
           this._loadMonthlyPRBarChart(sPeriodKey),
           this._loadMonthlyPoBarChart(sPeriodKey),
+          this._loadConnectedScatterChart(sPeriodKey),
         ]).finally(() => {
           BusyIndicator.hide(); // ✅ Thêm dòng này để đóng BusyIndicator
         });
@@ -463,7 +462,9 @@ if (oYearSelect) {
                 this._displayMonthlyPRBarChart(aChartData);
                 resolve();
               } else {
-                const year = sSelectedYear ? parseInt(sSelectedYear, 10) : range.start.getFullYear();
+                const year = sSelectedYear
+                  ? parseInt(sSelectedYear, 10)
+                  : range.start.getFullYear();
                 const monthlyCount = Array(12).fill(0);
 
                 aResults.forEach((r) => {
@@ -753,6 +754,95 @@ if (oYearSelect) {
           });
         });
       },
+
+      _loadConnectedScatterChart: function () {
+  BusyIndicator.show(0);
+
+  const oPRPromise = new Promise((resolve, reject) => {
+    this.oOData.read("/PRsSet", {
+      urlParameters: {
+        $select: "Banfn,Bnfpo,Preis,Peinh,Menge,Badat,Matnr",
+        $top: "1000"
+      },
+      success: resolve,
+      error: reject
+    });
+  });
+
+  const oPOPromise = new Promise((resolve, reject) => {
+    this.oOData.read("/ProcurementItemSet", {
+      urlParameters: {
+        $select: "Ebeln,Ebelp,Netpr,Peinh,Menge,Aedat,Matnr",
+        $top: "1000"
+      },
+      success: resolve,
+      error: reject
+    });
+  });
+
+  const oHeaderPromise = new Promise((resolve, reject) => {
+    this.oOData.read("/ProcurementHeaderSet", {
+      urlParameters: {
+        $select: "Ebeln,Bsart,Aedat",
+        $top: "1000"
+      },
+      success: resolve,
+      error: reject
+    });
+  });
+
+  Promise.all([oPRPromise, oPOPromise, oHeaderPromise])
+    .then(([prData, poItemData, headerData]) => {
+      BusyIndicator.hide();
+
+      const aPRs = prData.results;
+      const aPOItems = poItemData.results;
+      const aHeaders = headerData.results;
+
+      const mHeaderMap = {};
+      aHeaders.forEach(h => { mHeaderMap[h.Ebeln] = h; });
+
+      const aChartData = [];
+
+      aPRs.forEach(pr => {
+        const key = pr.Banfn + "-" + pr.Bnfpo;
+
+        const prValue = parseFloat(pr.Preis || 0) * parseFloat(pr.Menge || 0);
+        if (prValue > 0) {
+          aChartData.push({
+            TrackID: key,
+            Phase: "PR",
+            Amount: prValue,
+            Date: this._parseDate(pr.Badat)
+          });
+        }
+
+        // Match PO hoặc RFQ theo Matnr
+        const poItem = aPOItems.find(po => po.Matnr === pr.Matnr);
+        if (poItem) {
+          const header = mHeaderMap[poItem.Ebeln];
+          if (!header) return;
+
+          const phase = header.Bsart === "AN" ? "RFQ" : "PO";
+          const poValue = parseFloat(poItem.Netpr || 0) * parseFloat(poItem.Menge || 0);
+
+          aChartData.push({
+            TrackID: key,
+            Phase: phase,
+            Amount: poValue,
+            Date: this._parseDate(poItem.Aedat)
+          });
+        }
+      });
+
+      this._displayConnectedScatterChart(aChartData);
+    })
+    .catch(e => {
+      BusyIndicator.hide();
+      console.error("❌ Lỗi khi tải dữ liệu ConnectedChart:", e);
+    });
+},
+
 
       /* ===== Hiển thị KPI Card ===== */
       _displayKpiCard: function (sPeriodKey, iCurrCount, iPrevCount) {
@@ -1061,30 +1151,95 @@ if (oYearSelect) {
 
         const sDocType = this._currentPoType === "A" ? "RFQ" : "PO";
 
-oVizFrame.setVizProperties({
-  title: {
-    text:
-      aChartData.length > 0 && aChartData[0].Month.startsWith("Năm")
-        ? `Số lượng ${sDocType} theo năm`
-        : `Số lượng ${sDocType} theo tháng`,
-    alignment: "center",
-    visible: true,
-  },
-  plotArea: {
-    colorPalette: [sDocType === "A" ? "#2196F3" : "#4CAF50"], // RFQ xanh dương, PO xanh lá
-    dataLabel: { visible: true },
-  },
-  legend: { visible: false },
-  valueAxis: { title: { visible: false } },
-  categoryAxis: {
-    title: { visible: false },
-    label: { angle: 0 },
-  },
-});
-
+        oVizFrame.setVizProperties({
+          title: {
+            text:
+              aChartData.length > 0 && aChartData[0].Month.startsWith("Năm")
+                ? `Số lượng ${sDocType} theo năm`
+                : `Số lượng ${sDocType} theo tháng`,
+            alignment: "center",
+            visible: true,
+          },
+          plotArea: {
+            colorPalette: [sDocType === "A" ? "#2196F3" : "#4CAF50"], // RFQ xanh dương, PO xanh lá
+            dataLabel: { visible: true },
+          },
+          legend: { visible: false },
+          valueAxis: { title: { visible: false } },
+          categoryAxis: {
+            title: { visible: false },
+            label: { angle: 0 },
+          },
+        });
 
         console.log("✅ PO Chart rendered successfully");
       },
+
+     _displayConnectedScatterChart: function (aChartData) {
+  const oVizFrame = this.byId("idConnectedChart");
+  if (!oVizFrame) return;
+
+  oVizFrame.destroyFeeds();
+  oVizFrame.destroyDataset();
+
+  const oModel = new JSONModel({ items: aChartData });
+  this.getView().setModel(oModel, "chart");
+
+  const oDataset = new FlattenedDataset({
+    dimensions: [
+      { name: "Date", value: "{chart>Date}" },
+      { name: "Phase", value: "{chart>Phase}" }
+    ],
+    measures: [
+      { name: "Amount", value: "{chart>Amount}" }
+    ],
+    data: { path: "chart>/items" }
+  });
+
+  oVizFrame.setDataset(oDataset);
+  oVizFrame.setModel(oModel, "chart");
+
+  // Trục hoành = ngày
+  oVizFrame.addFeed(new FeedItem({
+    uid: "categoryAxis",
+    type: "Dimension",
+    values: ["Date"]
+  }));
+
+  // Trục tung = số tiền
+  oVizFrame.addFeed(new FeedItem({
+    uid: "valueAxis",
+    type: "Measure",
+    values: ["Amount"]
+  }));
+
+  // Màu theo loại (PR, RFQ, PO)
+  oVizFrame.addFeed(new FeedItem({
+    uid: "color",
+    type: "Dimension",
+    values: ["Phase"]
+  }));
+
+  oVizFrame.setVizType("line");
+
+  oVizFrame.setVizProperties({
+    title: { text: "Giá trị PR / RFQ / PO theo thời gian", visible: true },
+    plotArea: {
+      dataLabel: { visible: true },
+      window: { start: "firstDataPoint", end: "lastDataPoint" }
+    },
+    categoryAxis: {
+      title: { visible: true, text: "Ngày" },
+      label: { formatString: "yyyy-MM-dd" }
+    },
+    valueAxis: {
+      title: { visible: true, text: "Số tiền (VND)" }
+    },
+    legend: { visible: true }
+  });
+},
+
+
 
       /* ===== Tạo KPI Card Fragment ===== */
       _addKpiCard: function (oData) {
@@ -1297,6 +1452,15 @@ oVizFrame.setVizProperties({
             return "";
         }
       },
+
+      _parseDate: function (sDate) {
+  if (typeof sDate === "string") {
+    const match = /Date\((\d+)\)/.exec(sDate);
+    if (match) return new Date(parseInt(match[1], 10));
+  }
+  return sDate instanceof Date ? sDate : null;
+},
+
 
       onPoTypeChange: function (oEvent) {
         const sKey = oEvent.getSource().getSelectedKey();

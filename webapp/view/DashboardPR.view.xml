@@ -174,6 +174,12 @@
     height="500px" />
 </VBox>
 
+<!-- Biểu đồ connected scatterplot PR → RFQ → PO -->
+<VBox id="connectedChartContainer" class="sapUiSmallMarginTop">
+  <core:Fragment fragmentName="demodashboard.fragment.ConnectedChart" type="XML"/>
+</VBox>
+
+
 
         <!-- Nút chuyển sang PR List -->
         <Button id="button2"
