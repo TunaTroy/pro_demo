@@ -75,9 +75,9 @@
         </HBox>
 
         <!-- Biểu đồ PR theo tháng -->
-          <VBox class="sapUiSmallMargin">
-    <HBox alignItems="Center" justifyContent="SpaceBetween">
-        <Text text="Biểu đồ PR theo tháng" class="sapUiTinyMarginBegin sapUiTinyMarginBottom sapUiSmallMarginTop sapUiBold" />
+          <VBox id="_IDGenVBox1" class="sapUiSmallMargin">
+    <HBox id="_IDGenHBox2" alignItems="Center" justifyContent="SpaceBetween">
+        <Text id="_IDGenText4" text="Biểu đồ PR theo tháng" class="sapUiTinyMarginBegin sapUiTinyMarginBottom sapUiSmallMarginTop sapUiBold" />
         <Select id="prYearFilter"
                 width="120px"
                 selectedKey="{viewModel>/selectedPRYear}"
@@ -96,16 +96,16 @@
         <!-- Top Requester Table -->
           <!-- Top Request Purchase Requisition by Employee -->
           <VBox id="topRequesterSection" class="topRequesterCard" width="100%">
-            <HBox alignItems="Center" justifyContent="SpaceBetween" class="topRequesterHeader">
-    <Title text="Top Request Purchase Requisition by Employee" />
-    <HBox alignItems="Center" class="sortFilterGroup">
-      <Label text="Sort by:" class="sortLabel"/>
+            <HBox id="_IDGenHBox3" alignItems="Center" justifyContent="SpaceBetween" class="topRequesterHeader">
+    <Title id="_IDGenTitle" text="Top Request Purchase Requisition by Employee" />
+    <HBox id="_IDGenHBox4" alignItems="Center" class="sortFilterGroup">
+      <Label id="_IDGenLabel1" text="Sort by:" class="sortLabel"/>
       <Select id="requesterSortFilter"
               selectedKey="totalPR"
               change=".onRequesterSortChange"
               width="180px">
-        <core:Item key="totalPR" text="Total PR Created" />
-        <core:Item key="approvalRate" text="Approval Rate (%)" />
+        <core:Item id="_IDGenItem5" key="totalPR" text="Total PR Created" />
+        <core:Item id="_IDGenItem6" key="approvalRate" text="Approval Rate (%)" />
       </Select>
     </HBox>
   </HBox>
