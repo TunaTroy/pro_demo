@@ -195,6 +195,10 @@
                         height="500px" />
         </VBox>
 
+        <!-- <VBox id="connectedChartContainer" class="sapUiSmallMarginTop">
+            <core:Fragment fragmentName="demodashboard.fragment.ConnectedChart" type="XML"/>
+      </VBox> -->
+
         <!-- ===================================================== -->
         <!-- Nút điều hướng -->
         <!-- ===================================================== -->
