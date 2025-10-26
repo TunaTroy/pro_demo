@@ -1,4 +1,6 @@
-/* ====== DASHBOARD CONTAINER ====== */
+/* ============================================================
+   🟩 DASHBOARD CONTAINER (Bao ngoài toàn bộ)
+   ============================================================ */
 .dashboardContainer {
   padding: 1.5rem 2rem;
   background-color: #f4f6f9;
@@ -7,7 +9,9 @@
   gap: 1.5rem;
 }
 
-/* ====== FILTER BAR ====== */
+/* ============================================================
+   🟦 FILTER BAR (Thanh chọn thời gian trên cùng)
+   ============================================================ */
 .filterBar {
   padding: 0.75rem 1.25rem;
   background-color: #ffffff;
@@ -18,20 +22,30 @@
   align-items: center;
 }
 
-/* ====== MAIN ROW: KPI - DONUT - BAR ====== */
-.dashboardMainRow {
+/* ============================================================
+   🟨 KPI ROW (Hàng đầu chứa 3 thẻ KPI)
+   ============================================================ */
+#kpiRow {
   display: flex;
-  justify-content: space-between;
-  align-items: stretch;
+  justify-content: space-around;
   flex-wrap: wrap;
-  gap: 1.5rem;
+  gap: 1.25rem;
   width: 100%;
 }
 
-/* ====== BASE CARD STYLE (Áp dụng cho cả KPI, Donut, Bar) ====== */
+/* KPI Card Container */
+#kpiContainer {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  width: 100%;
+}
+
+/* Base style cho tất cả card */
 .dashboardCard {
   flex: 1;
-  min-width: 300px;
+  min-width: 280px;
   max-width: 32%;
   background-color: #ffffff;
   border-radius: 0.75rem;
@@ -48,19 +62,9 @@
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
 }
 
-/* ====== KPI CARD (kế thừa base card) ====== */
+/* KPI Card style */
 .kpiCard {
-  @extend .dashboardCard;
   border-left-color: #0a6ed1;
-}
-
-.chartCard {
-  animation: fadeIn 0.5s ease;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: scale(0.98); }
-  to { opacity: 1; transform: scale(1); }
 }
 
 .kpiTitle {
@@ -80,7 +84,6 @@
   font-size: 2rem;
   font-weight: 700;
   color: #0a6ed1;
-  margin-right: 0.5rem;
   line-height: 1.2;
 }
 
@@ -98,90 +101,42 @@
 .kpiCard .sapMPI {
   margin-top: 0.5rem;
 }
+
 .kpiCard .sapMPIBar {
   height: 6px;
   border-radius: 3px;
 }
-.chartRowFullWidth {
-  background: white;
-  padding: 1rem;
-  border-radius: 0.75rem;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+
+/* ============================================================
+   🟧 CHART ROW (Hàng thứ 2: Donut, Top Material, Top Vendor)
+   ============================================================ */
+#chartRow {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 1.5rem;
+  width: 100%;
 }
 
-/* ====== CHART CARD (Donut + Bar) ====== */
+/* Card cho từng chart (Donut / Bar / Vendor) */
 .chartCard {
-  @extend .dashboardCard;
+  flex: 1;
+  min-width: 300px;
+  max-width: 32%;
+  background-color: #ffffff;
+  border-radius: 0.75rem;
+  padding: 1rem;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
   align-items: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease;
 }
 
-
-.dashboardTableCard {
-  background: white;
-  border-radius: 0.5rem;
-  padding: 1rem 1.5rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-#topRequesterTable .sapMListTblCell {
-  padding: 0.5rem !important;
-  vertical-align: middle !important;
-}
-
-#topRequesterTable .sapMText {
-  font-size: 0.85rem;
-}
-
-.dashboardTableCard {
-  background: white;
-  border-radius: 0.5rem;
-  padding: 1rem 1.5rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-#topRequesterTable .sapMListTblCell {
-  padding: 0.5rem !important;
-  vertical-align: middle !important;
-}
-
-#topRequesterTable .sapMText {
-  font-size: 0.85rem;
-}
-
-/* Scrollable Top Requester Table */
-.topRequesterTableScrollable {
-  max-height: 250px;         /* chỉ hiển thị tối đa 5 dòng (tùy chiều cao mỗi dòng) */
-  overflow-y: auto !important; /* bật cuộn dọc */
-  display: block;            /* cần để table scroll được */
-  border-top: 1px solid #d3d3d3;
-  border-bottom: 1px solid #d3d3d3;
-}
-
-/* Đảm bảo tiêu đề cột không bị co giãn */
-.topRequesterTableScrollable .sapMListTblHeader {
-  position: sticky;
-  top: 0;
-  z-index: 5;
-  background-color: #fafafa;
-}
-
-/* Ẩn scrollbar trên Chrome nếu muốn gọn hơn */
-.topRequesterTableScrollable::-webkit-scrollbar {
-  width: 6px;
-}
-.topRequesterTableScrollable::-webkit-scrollbar-thumb {
-  background-color: #ccc;
-  border-radius: 4px;
-}
-
-
-
-.chartCard .sapVizFrame {
-  width: 100%;
-  height: 250px !important;
+.chartCard:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
 }
 
 .chartCardTitle {
@@ -192,27 +147,31 @@
   align-self: flex-start;
 }
 
-/* ====== RESPONSIVE ====== */
-@media (max-width: 1024px) {
-  .dashboardMainRow {
-    justify-content: center;
-  }
-  .dashboardCard {
-    max-width: 48%;
-  }
+/* Kích thước biểu đồ bên trong card */
+.chartCard .sapVizFrame {
+  width: 100%;
+  height: 250px !important;
 }
 
-@media (max-width: 768px) {
-  .dashboardCard {
-    max-width: 100%;
-  }
-  .chartCard .sapVizFrame {
-    height: 220px !important;
-  }
+/* ============================================================
+   🟫 PR MONTHLY CHART + YEAR FILTER
+   ============================================================ */
+#prYearFilter {
+  border-radius: 6px;
+  height: 2rem;
 }
 
+.chartRowFullWidth {
+  background: white;
+  padding: 1rem 1.5rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  margin-top: 1rem;
+}
 
-/* ====== TOP REQUESTER CARD ====== */
+/* ============================================================
+   🟪 TOP REQUESTER TABLE SECTION
+   ============================================================ */
 .topRequesterCard {
   background-color: #ffffff;
   border-radius: 0.75rem;
@@ -224,7 +183,7 @@
   margin-top: 1.5rem;
 }
 
-/* Tiêu đề + Filter ở hàng đầu */
+/* Tiêu đề + Filter */
 .topRequesterHeader {
   display: flex;
   justify-content: space-between;
@@ -232,28 +191,25 @@
   flex-wrap: wrap;
 }
 
-/* Gom nhóm Sort label + Select */
+/* Nhóm "Sort by" + Select */
 .sortFilterGroup {
   display: flex;
   align-items: center;
-  gap: 0.4rem; /* 🔹 làm chữ Sort by gần với filter hơn */
+  gap: 0.4rem;
 }
 
-/* Label "Sort by:" */
 .sortLabel {
   font-weight: 500;
   color: #333;
   font-size: 0.9rem;
-  margin-right: 0 !important;
 }
 
-/* Select box */
 #requesterSortFilter {
   border-radius: 6px;
   height: 2rem;
 }
 
-/* Bảng scrollable bên trong card */
+/* Bảng Scrollable */
 .topRequesterTableScrollable {
   max-height: 250px;
   overflow-y: auto !important;
@@ -262,7 +218,7 @@
   border-bottom: 1px solid #e1e1e1;
 }
 
-/* Cố định header khi cuộn */
+/* Cố định header */
 .topRequesterTableScrollable .sapMListTblHeader {
   position: sticky;
   top: 0;
@@ -271,7 +227,7 @@
   border-bottom: 1px solid #ddd;
 }
 
-/* Scrollbar nhỏ gọn */
+/* Scrollbar nhỏ */
 .topRequesterTableScrollable::-webkit-scrollbar {
   width: 6px;
 }
@@ -280,12 +236,241 @@
   border-radius: 4px;
 }
 
-.chartRowFullWidth {
-  background: white;
+/* Cell và Text */
+#topRequesterTable .sapMListTblCell {
+  padding: 0.5rem !important;
+  vertical-align: middle !important;
+}
+
+#topRequesterTable .sapMText {
+  font-size: 0.85rem;
+}
+
+/* ============================================================
+   🟦 PO / RFQ MONTHLY CHART
+   ============================================================ */
+#monthlyPOChartSection {
+  background: #fff;
   padding: 1rem 1.5rem;
   border-radius: 0.75rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   margin-top: 1rem;
 }
+
+/* ============================================================
+   🟢 RESPONSIVE DESIGN
+   ============================================================ */
+@media (max-width: 1024px) {
+  #chartRow, #kpiRow {
+    justify-content: center;
+  }
+  .dashboardCard,
+  .chartCard {
+    max-width: 48%;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboardCard,
+  .chartCard {
+    max-width: 100%;
+  }
+  .chartCard .sapVizFrame {
+    height: 220px !important;
+  }
+}
+
+
+/* ============================================================
+   🌈 KPI CARD COLOR VARIANTS (PR - RFQ - PO)
+   ============================================================ */
+
+/* Cấu trúc mặc định chung */
+.kpiCard {
+  background-color: #ffffff;
+  border-radius: 1rem;
+  padding: 1.5rem 1.25rem;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: all 0.25s ease-in-out;
+  flex: 1;
+  min-width: 280px;
+  max-width: 340px;
+}
+
+.kpiCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+/* Tiêu đề KPI */
+.kpiCard .kpiTitle {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #2e3b4e;
+  margin-bottom: 0.25rem;
+}
+
+/* Subtitle (ví dụ “Năm 2025”) */
+.kpiCard .kpiSubtitle {
+  font-size: 0.9rem;
+  color: #6a737d;
+  margin-bottom: 1rem;
+}
+
+/* Giá trị chính */
+.kpiCard .kpiValue {
+  font-size: 2.25rem;
+  font-weight: 800;
+  margin-bottom: 0.25rem;
+}
+
+/* Tỷ lệ phần trăm */
+.kpiCard .kpiPercent {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin-left: 0.4rem;
+}
+
+/* Thanh tiến độ */
+.kpiCard .sapMPI {
+  margin-top: 0.75rem;
+}
+
+.kpiCard .sapMPIBar {
+  height: 7px;
+  border-radius: 4px;
+}
+
+/* ============================================================
+   🎨 Màu riêng cho từng KPI
+   ============================================================ */
+
+/* PR (Purchase Requisition) */
+.kpiCard.PR {
+  border-top: 5px solid #0a6ed1;
+}
+.kpiCard.PR .kpiValue {
+  color: #0a6ed1;
+}
+.kpiCard.PR .kpiPercent[data-state="Success"] {
+  color: #107e3e;
+}
+.kpiCard.PR .kpiPercent[data-state="Error"] {
+  color: #bb0000;
+}
+
+/* RFQ (Request for Quotation) */
+.kpiCard.RFQ {
+  border-top: 5px solid #f39c12;
+}
+.kpiCard.RFQ .kpiValue {
+  color: #e67e22;
+}
+.kpiCard.RFQ .kpiPercent[data-state="Success"] {
+  color: #2e7d32;
+}
+.kpiCard.RFQ .kpiPercent[data-state="Error"] {
+  color: #c0392b;
+}
+
+/* PO (Purchase Order) */
+.kpiCard.PO {
+  border-top: 5px solid #8e44ad;
+}
+.kpiCard.PO .kpiValue {
+  color: #8e44ad;
+}
+.kpiCard.PO .kpiPercent[data-state="Success"] {
+  color: #2e7d32;
+}
+.kpiCard.PO .kpiPercent[data-state="Error"] {
+  color: #c0392b;
+}
+
+/* ============================================================
+   ⚙️ Căn chỉnh hàng KPI
+   ============================================================ */
+#kpiRow, #kpiContainer {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  width: 100%;
+}
+
+@media (max-width: 1024px) {
+  .kpiCard {
+    max-width: 48%;
+  }
+}
+
+@media (max-width: 768px) {
+  .kpiCard {
+    max-width: 100%;
+  }
+}
+
+/* ====== CHART ROW (PR Donut, PO Donut, Top Material, Top Vendor) ====== */
+.chartRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: stretch;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  width: 100%;
+}
+
+/* ====== STYLE CHO MỖI THẺ CHART ====== */
+.chartCardBox {
+  flex: 1;
+  min-width: 280px;
+  max-width: 24%;
+  background-color: #ffffff;
+  border: 0.5px solid #d0d7de;       /* ✅ Viền nhẹ tạo khung rõ ràng */
+  border-radius: 0.75rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); /* bóng nhẹ */
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.chartCardBox:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
+  border-color: #b0bec5; /* nhẹ highlight khi hover */
+}
+
+/* ====== TITLES ====== */
+.chartCardBox .chartCardTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #2f3640;
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+/* ====== CHART BÊN TRONG ====== */
+.chartCardBox .sapVizFrame {
+  width: 100%;
+  height: 250px !important;
+}
+
+/* Responsive cho tablet & mobile */
+@media (max-width: 1024px) {
+  .chartCardBox {
+    max-width: 48%;
+  }
+}
+
+@media (max-width: 768px) {
+  .chartCardBox {
+    max-width: 100%;
+  }
+}
+
 
 

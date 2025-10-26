@@ -55,6 +55,7 @@ sap.ui.define(
 
       onTimeFilterChange: function (oEvent) {
         var sKey = oEvent.getSource().getSelectedKey();
+        if (this._currentPeriod === sKey) return;
         this._reloadChartsOnly(sKey);
       },
 
@@ -119,9 +120,17 @@ sap.ui.define(
       _reloadChartsOnly: function (sPeriodKey) {
         BusyIndicator.show(0);
 
+        const oHBox = this.getView().byId("kpiContainer");
+  if (oHBox) {
+    oHBox.removeAllItems(); // Xóa toàn bộ thẻ KPI cũ
+  }
+
         Promise.all([
           this._loadKpiPurchaseRequisition(sPeriodKey),
+          this._loadKpiRFQ(sPeriodKey),
+          this._loadKpiPO(sPeriodKey),
           this._loadStatusDonutChart(sPeriodKey),
+          this._loadStatusDonutChartPO(sPeriodKey),
           this._loadTopMaterialBarChart(sPeriodKey),
           this._loadTopVendorBarChart(sPeriodKey),
           this._loadTopRequesterTable(sPeriodKey),
@@ -135,62 +144,58 @@ sap.ui.define(
 
       /* ===== Load KPI ===== */
       _loadKpiPurchaseRequisition: function (sPeriodKey) {
-        BusyIndicator.show(0);
-        var oCurrRange = this._getDateRange(sPeriodKey);
-        var oPrevRange = this._getPreviousRange(sPeriodKey);
+  BusyIndicator.show(0);
+  const oCurrRange = this._getDateRange(sPeriodKey);
+  const oPrevRange = this._getPreviousRange(sPeriodKey);
 
-        this.oOData.read("/PRsSet", {
-          urlParameters: {
-            $select: "Banfn,Badat",
-            $top: "500",
-          },
-          success: function (oData) {
-            BusyIndicator.hide();
+  this.oOData.read("/PRsSet", {
+    urlParameters: {
+      $select: "Banfn,Badat",
+      $top: "500",
+    },
+    success: function (oData) {
+      BusyIndicator.hide();
 
-            if (!oData.results || oData.results.length === 0) {
-              MessageToast.show("Không có dữ liệu Purchase Requisition");
-              this._displayKpiCard(sPeriodKey, iCurrCount, iPrevCount);
-              return;
-            }
+      const aResults = oData.results || [];
+      if (aResults.length === 0) {
+        MessageToast.show("Không có dữ liệu Purchase Requisition");
+        this._displayKpiCardGeneric("PR", sPeriodKey, 0, 0);
+        return;
+      }
 
-            // Parse BADAT
-            oData.results.forEach(function (r) {
-              if (r.Badat && typeof r.Badat === "string") {
-                var match = /Date\((\d+)\)/.exec(r.Badat);
-                if (match) r.Badat = new Date(parseInt(match[1], 10));
-              }
-            });
+      // 🔹 Parse BADAT từ định dạng /Date(...)/ sang Date object
+      aResults.forEach(function (r) {
+        if (typeof r.Badat === "string") {
+          const match = /Date\((\d+)\)/.exec(r.Badat);
+          if (match) r.Badat = new Date(parseInt(match[1], 10));
+        }
+      });
 
-            // Lọc dữ liệu theo range
-            var aCurr = oData.results.filter(function (r) {
-              return (
-                r.Badat &&
-                r.Badat >= oCurrRange.start &&
-                r.Badat <= oCurrRange.end
-              );
-            });
-            var aPrev = oData.results.filter(function (r) {
-              return (
-                r.Badat &&
-                r.Badat >= oPrevRange.start &&
-                r.Badat <= oPrevRange.end
-              );
-            });
+      // 🔹 Lọc dữ liệu theo khoảng thời gian
+      const aCurr = aResults.filter(
+        (r) => r.Badat >= oCurrRange.start && r.Badat <= oCurrRange.end
+      );
+      const aPrev = aResults.filter(
+        (r) => r.Badat >= oPrevRange.start && r.Badat <= oPrevRange.end
+      );
 
-            var iCurrCount = this._countUniqueBanfn(aCurr);
-            var iPrevCount = this._countUniqueBanfn(aPrev);
+      // 🔹 Đếm PR duy nhất
+      const iCurrCount = this._countUniqueBanfn(aCurr);
+      const iPrevCount = this._countUniqueBanfn(aPrev);
 
-            this._displayKpiCard(sPeriodKey, iCurrCount, iPrevCount);
-          }.bind(this),
+      // 🔹 Hiển thị KPI Card cho PR
+      this._displayKpiCardGeneric("PR", sPeriodKey, iCurrCount, iPrevCount);
+    }.bind(this),
 
-          error: function (e) {
-            BusyIndicator.hide();
-            console.error("❌ OData Read error:", e);
-            MessageToast.show("Lỗi khi tải dữ liệu KPI");
-            this._displayKpiCard(sPeriodKey, 0, 0);
-          }.bind(this),
-        });
-      },
+    error: function (e) {
+      BusyIndicator.hide();
+      console.error("❌ OData Read error:", e);
+      MessageToast.show("Lỗi khi tải dữ liệu KPI Purchase Requisition");
+      this._displayKpiCardGeneric("PR", sPeriodKey, 0, 0);
+    }.bind(this),
+  });
+},
+
 
       /* ===== Load Status Donut Chart ===== */
       _loadStatusDonutChart: function (sPeriodKey) {
@@ -264,6 +269,72 @@ sap.ui.define(
           }.bind(this),
         });
       },
+
+
+      _loadStatusDonutChartPO: function (sPeriodKey) {
+  BusyIndicator.show(0);
+  const oCurrRange = this._getDateRange(sPeriodKey);
+
+  this.oOData.read("/ProcurementHeaderSet", {
+    urlParameters: {
+      $select: "Ebeln,Aedat,Frgke,Bstyp",
+      $top: "5000",
+    },
+    success: function (oData) {
+      BusyIndicator.hide();
+
+      // 🔹 Lọc chỉ lấy PO (Bstyp === "F")
+      const aResults = oData.results.filter((r) => r.Bstyp === "F");
+      if (aResults.length === 0) {
+        this._displayStatusDonutChartPO([
+          { Status: "Approved", Count: 0 },
+          { Status: "Pending", Count: 0 },
+          { Status: "Rejected", Count: 0 },
+        ]);
+        return;
+      }
+
+      // 🔹 Parse ngày Aedat
+      aResults.forEach((r) => {
+        if (r.Aedat && typeof r.Aedat === "string") {
+          const match = /Date\((\d+)\)/.exec(r.Aedat);
+          if (match) r.Aedat = new Date(parseInt(match[1], 10));
+        }
+      });
+
+      // 🔹 Lọc trong khoảng thời gian
+      const aCurr = aResults.filter(
+        (r) => r.Aedat >= oCurrRange.start && r.Aedat <= oCurrRange.end
+      );
+
+      // 🔹 Đếm trạng thái (Frgkz)
+      let iApproved = 0,
+        iPending = 0,
+        iRejected = 0;
+      aCurr.forEach((r) => {
+        if (r.Frgke === "R") iApproved++;
+        else if (r.Frgke === "C") iPending++;
+        else if (r.Frgke === "A") iRejected++;
+      });
+
+      const aChartData = [
+        { Status: "Approved", Count: iApproved },
+        { Status: "Pending", Count: iPending },
+        { Status: "Rejected", Count: iRejected },
+      ].filter((i) => i.Count > 0);
+
+      this._displayStatusDonutChartPO(aChartData);
+    }.bind(this),
+
+    error: function (e) {
+      BusyIndicator.hide();
+      console.error("❌ Lỗi load PO Status Donut:", e);
+      MessageToast.show("Không thể tải dữ liệu trạng thái PO");
+      this._displayStatusDonutChartPO([{ Status: "No Data", Count: 1 }]);
+    }.bind(this),
+  });
+},
+
 
       /* ===== Load Bar Chart: Top Material ===== */
       _loadTopMaterialBarChart: function (sPeriodKey) {
@@ -490,13 +561,6 @@ sap.ui.define(
                 resolve();
               }
 
-              // ❌ XÓA ĐOẠN NÀY - BỊ DUPLICATE
-              // const aChartData = monthlyCount.map((count, i) => ({
-              //   Month: `Tháng ${i + 1}`,
-              //   Count: count,
-              // }));
-              // this._displayMonthlyPRBarChart(aChartData);
-              // resolve();
             },
 
             error: (e) => {
@@ -622,7 +686,7 @@ sap.ui.define(
             }
 
             // Assign index (STT) after sorting and slice top N if needed
-            const aTop = aUsers.slice(0, 50).map((item, idx) => {
+            const aTop = aUsers.slice(0, 30).map((item, idx) => {
               return Object.assign({}, item, {
                 index: idx + 1,
                 // format fields for display
@@ -877,6 +941,34 @@ sap.ui.define(
         }
       },
 
+
+      _displayKpiCardGeneric: function (type, sPeriodKey, iCurrCount, iPrevCount) {
+  const fPercent =
+    iPrevCount === 0
+      ? iCurrCount > 0
+        ? 100
+        : 0
+      : ((iCurrCount - iPrevCount) / iPrevCount) * 100;
+
+  const oKpi = {
+    title:
+      type === "PR"
+        ? "Purchase Requisition"
+        : type === "RFQ"
+        ? "Request for Quotation"
+        : "Purchase Order",
+    period: this._getPeriodLabel(sPeriodKey),
+    value: iCurrCount.toLocaleString(),
+    percentage: (fPercent >= 0 ? "+" : "") + fPercent.toFixed(1) + "%",
+    progress: Math.min(Math.abs(Math.round(fPercent)), 100),
+    state: fPercent >= 0 ? "Success" : "Error",
+  };
+
+  // 🔹 Thêm card vào container
+  this._addKpiCard(oKpi);
+},
+
+
       /* ===== Hiển thị Donut Chart ===== */
       _displayStatusDonutChart: function (aChartData) {
         const oVizFrame = this.getView().byId("idDonutChart");
@@ -939,6 +1031,66 @@ sap.ui.define(
           tooltip: { visible: true },
         });
       },
+
+      _displayStatusDonutChartPO: function (aChartData) {
+  const oVizFrame = this.getView().byId("idDonutChartPO");
+  if (!oVizFrame) return;
+
+  oVizFrame.destroyFeeds();
+  oVizFrame.destroyDataset();
+
+  const mColorMap = {
+    Approved: "#2e7d32", // xanh lá
+    Pending: "#f9a825",  // vàng
+    Rejected: "#c62828", // đỏ
+    "No Data": "#9e9e9e",
+  };
+
+  const aColoredData = aChartData.map((item) => ({
+    Status: item.Status,
+    Count: item.Count,
+    Color: mColorMap[item.Status] || "#9e9e9e",
+  }));
+
+  const oChartModel = new sap.ui.model.json.JSONModel({
+    items: aColoredData,
+  });
+
+  const oDataset = new sap.viz.ui5.data.FlattenedDataset({
+    dimensions: [{ name: "Status", value: "{chartPO>Status}" }],
+    measures: [{ name: "Count", value: "{chartPO>Count}" }],
+    data: { path: "chartPO>/items" },
+  });
+
+  oVizFrame.setDataset(oDataset);
+  oVizFrame.setModel(oChartModel, "chartPO");
+
+  oVizFrame.addFeed(
+    new sap.viz.ui5.controls.common.feeds.FeedItem({
+      uid: "size",
+      type: "Measure",
+      values: ["Count"],
+    })
+  );
+  oVizFrame.addFeed(
+    new sap.viz.ui5.controls.common.feeds.FeedItem({
+      uid: "color",
+      type: "Dimension",
+      values: ["Status"],
+    })
+  );
+
+  oVizFrame.setVizProperties({
+    title: { text: "PO Status Overview", visible: true, alignment: "center" },
+    plotArea: {
+      colorPalette: aColoredData.map((d) => d.Color),
+      dataLabel: { visible: true },
+    },
+    legend: { visible: true, position: "bottom" },
+    tooltip: { visible: true },
+  });
+},
+
 
       _displayTopMaterialBarChart: function (aChartData) {
         var oVizFrame = this.getView().byId("idBarChart");
