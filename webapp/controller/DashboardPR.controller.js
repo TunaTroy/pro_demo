@@ -22,31 +22,36 @@ sap.ui.define(
     return Controller.extend("demodashboard.controller.DashboardPR", {
       onInit: function () {
         this.oOData = this.getOwnerComponent().getModel(); // OData model
+        this._hiddenPhases = {
+          PR: false,
+          PO: false,
+          RFQ: false,
+        };
         // 🔹 Tạo danh sách năm cho filter PR
-const currentYear = new Date().getFullYear();
-const aYears = [];
-for (let y = currentYear; y >= 2020; y--) {
-  aYears.push({ key: y.toString(), text: `Năm ${y}` });
-}
+        const currentYear = new Date().getFullYear();
+        const aYears = [];
+        for (let y = currentYear; y >= 2020; y--) {
+          aYears.push({ key: y.toString(), text: `Năm ${y}` });
+        }
 
-// 🔹 Tạo model lưu năm được chọn riêng cho PR
-const oViewModel = new JSONModel({
-  years: aYears,
-  selectedPRYear: currentYear.toString(), // mặc định là năm hiện tại
-});
-this.getView().setModel(oViewModel, "viewModel");
+        // 🔹 Tạo model lưu năm được chọn riêng cho PR
+        const oViewModel = new JSONModel({
+          years: aYears,
+          selectedPRYear: currentYear.toString(), // mặc định là năm hiện tại
+        });
+        this.getView().setModel(oViewModel, "viewModel");
 
-// 🔹 Bind năm vào Select
-const oYearSelect = this.byId("prYearFilter");
-if (oYearSelect) {
-  oYearSelect.bindItems({
-    path: "viewModel>/years",
-    template: new sap.ui.core.Item({
-      key: "{viewModel>key}",
-      text: "{viewModel>text}",
-    }),
-  });
-}
+        // 🔹 Bind năm vào Select
+        const oYearSelect = this.byId("prYearFilter");
+        if (oYearSelect) {
+          oYearSelect.bindItems({
+            path: "viewModel>/years",
+            template: new sap.ui.core.Item({
+              key: "{viewModel>key}",
+              text: "{viewModel>text}",
+            }),
+          });
+        }
 
         this._reloadChartsOnly("thisYear");
         this._currentPoType = "F";
@@ -104,28 +109,26 @@ if (oYearSelect) {
         }
       },
 
-
       onPRYearChange: function (oEvent) {
-  const sSelectedYear = oEvent.getSource().getSelectedKey();
-  console.log("📅 Năm PR được chọn:", sSelectedYear);
+        const sSelectedYear = oEvent.getSource().getSelectedKey();
+        console.log("📅 Năm PR được chọn:", sSelectedYear);
 
-  // Lưu lại vào model
-  const oViewModel = this.getView().getModel("viewModel");
-  oViewModel.setProperty("/selectedPRYear", sSelectedYear);
+        // Lưu lại vào model
+        const oViewModel = this.getView().getModel("viewModel");
+        oViewModel.setProperty("/selectedPRYear", sSelectedYear);
 
-  // 🔁 Reload lại biểu đồ PR theo năm đã chọn
-  this._loadMonthlyPRBarChart("thisYear", sSelectedYear);
-},
-
+        // 🔁 Reload lại biểu đồ PR theo năm đã chọn
+        this._loadMonthlyPRBarChart("thisYear", sSelectedYear);
+      },
 
       /* ===== Tải toàn bộ dashboard ===== */
       _reloadChartsOnly: function (sPeriodKey) {
         BusyIndicator.show(0);
 
         const oHBox = this.getView().byId("kpiContainer");
-  if (oHBox) {
-    oHBox.removeAllItems(); // Xóa toàn bộ thẻ KPI cũ
-  }
+        if (oHBox) {
+          oHBox.removeAllItems(); // Xóa toàn bộ thẻ KPI cũ
+        }
 
         Promise.all([
           this._loadKpiPurchaseRequisition(sPeriodKey),
@@ -146,58 +149,62 @@ if (oYearSelect) {
 
       /* ===== Load KPI ===== */
       _loadKpiPurchaseRequisition: function (sPeriodKey) {
-  BusyIndicator.show(0);
-  const oCurrRange = this._getDateRange(sPeriodKey);
-  const oPrevRange = this._getPreviousRange(sPeriodKey);
+        BusyIndicator.show(0);
+        const oCurrRange = this._getDateRange(sPeriodKey);
+        const oPrevRange = this._getPreviousRange(sPeriodKey);
 
-  this.oOData.read("/PRsSet", {
-    urlParameters: {
-      $select: "Banfn,Badat",
-      $top: "500",
-    },
-    success: function (oData) {
-      BusyIndicator.hide();
+        this.oOData.read("/PRsSet", {
+          urlParameters: {
+            $select: "Banfn,Badat",
+            $top: "500",
+          },
+          success: function (oData) {
+            BusyIndicator.hide();
 
-      const aResults = oData.results || [];
-      if (aResults.length === 0) {
-        MessageToast.show("Không có dữ liệu Purchase Requisition");
-        this._displayKpiCardGeneric("PR", sPeriodKey, 0, 0);
-        return;
-      }
+            const aResults = oData.results || [];
+            if (aResults.length === 0) {
+              MessageToast.show("Không có dữ liệu Purchase Requisition");
+              this._displayKpiCardGeneric("PR", sPeriodKey, 0, 0);
+              return;
+            }
 
-      // 🔹 Parse BADAT từ định dạng /Date(...)/ sang Date object
-      aResults.forEach(function (r) {
-        if (typeof r.Badat === "string") {
-          const match = /Date\((\d+)\)/.exec(r.Badat);
-          if (match) r.Badat = new Date(parseInt(match[1], 10));
-        }
-      });
+            // 🔹 Parse BADAT từ định dạng /Date(...)/ sang Date object
+            aResults.forEach(function (r) {
+              if (typeof r.Badat === "string") {
+                const match = /Date\((\d+)\)/.exec(r.Badat);
+                if (match) r.Badat = new Date(parseInt(match[1], 10));
+              }
+            });
 
-      // 🔹 Lọc dữ liệu theo khoảng thời gian
-      const aCurr = aResults.filter(
-        (r) => r.Badat >= oCurrRange.start && r.Badat <= oCurrRange.end
-      );
-      const aPrev = aResults.filter(
-        (r) => r.Badat >= oPrevRange.start && r.Badat <= oPrevRange.end
-      );
+            // 🔹 Lọc dữ liệu theo khoảng thời gian
+            const aCurr = aResults.filter(
+              (r) => r.Badat >= oCurrRange.start && r.Badat <= oCurrRange.end
+            );
+            const aPrev = aResults.filter(
+              (r) => r.Badat >= oPrevRange.start && r.Badat <= oPrevRange.end
+            );
 
-      // 🔹 Đếm PR duy nhất
-      const iCurrCount = this._countUniqueBanfn(aCurr);
-      const iPrevCount = this._countUniqueBanfn(aPrev);
+            // 🔹 Đếm PR duy nhất
+            const iCurrCount = this._countUniqueBanfn(aCurr);
+            const iPrevCount = this._countUniqueBanfn(aPrev);
 
-      // 🔹 Hiển thị KPI Card cho PR
-      this._displayKpiCardGeneric("PR", sPeriodKey, iCurrCount, iPrevCount);
-    }.bind(this),
+            // 🔹 Hiển thị KPI Card cho PR
+            this._displayKpiCardGeneric(
+              "PR",
+              sPeriodKey,
+              iCurrCount,
+              iPrevCount
+            );
+          }.bind(this),
 
-    error: function (e) {
-      BusyIndicator.hide();
-      console.error("❌ OData Read error:", e);
-      MessageToast.show("Lỗi khi tải dữ liệu KPI Purchase Requisition");
-      this._displayKpiCardGeneric("PR", sPeriodKey, 0, 0);
-    }.bind(this),
-  });
-},
-
+          error: function (e) {
+            BusyIndicator.hide();
+            console.error("❌ OData Read error:", e);
+            MessageToast.show("Lỗi khi tải dữ liệu KPI Purchase Requisition");
+            this._displayKpiCardGeneric("PR", sPeriodKey, 0, 0);
+          }.bind(this),
+        });
+      },
 
       /* ===== Load Status Donut Chart ===== */
       _loadStatusDonutChart: function (sPeriodKey) {
@@ -272,71 +279,69 @@ if (oYearSelect) {
         });
       },
 
-
       _loadStatusDonutChartPO: function (sPeriodKey) {
-  BusyIndicator.show(0);
-  const oCurrRange = this._getDateRange(sPeriodKey);
+        BusyIndicator.show(0);
+        const oCurrRange = this._getDateRange(sPeriodKey);
 
-  this.oOData.read("/ProcurementHeaderSet", {
-    urlParameters: {
-      $select: "Ebeln,Aedat,Frgke,Bstyp",
-      $top: "5000",
-    },
-    success: function (oData) {
-      BusyIndicator.hide();
+        this.oOData.read("/ProcurementHeaderSet", {
+          urlParameters: {
+            $select: "Ebeln,Aedat,Frgke,Bstyp",
+            $top: "5000",
+          },
+          success: function (oData) {
+            BusyIndicator.hide();
 
-      // 🔹 Lọc chỉ lấy PO (Bstyp === "F")
-      const aResults = oData.results.filter((r) => r.Bstyp === "F");
-      if (aResults.length === 0) {
-        this._displayStatusDonutChartPO([
-          { Status: "Approved", Count: 0 },
-          { Status: "Pending", Count: 0 },
-          { Status: "Rejected", Count: 0 },
-        ]);
-        return;
-      }
+            // 🔹 Lọc chỉ lấy PO (Bstyp === "F")
+            const aResults = oData.results.filter((r) => r.Bstyp === "F");
+            if (aResults.length === 0) {
+              this._displayStatusDonutChartPO([
+                { Status: "Approved", Count: 0 },
+                { Status: "Pending", Count: 0 },
+                { Status: "Rejected", Count: 0 },
+              ]);
+              return;
+            }
 
-      // 🔹 Parse ngày Aedat
-      aResults.forEach((r) => {
-        if (r.Aedat && typeof r.Aedat === "string") {
-          const match = /Date\((\d+)\)/.exec(r.Aedat);
-          if (match) r.Aedat = new Date(parseInt(match[1], 10));
-        }
-      });
+            // 🔹 Parse ngày Aedat
+            aResults.forEach((r) => {
+              if (r.Aedat && typeof r.Aedat === "string") {
+                const match = /Date\((\d+)\)/.exec(r.Aedat);
+                if (match) r.Aedat = new Date(parseInt(match[1], 10));
+              }
+            });
 
-      // 🔹 Lọc trong khoảng thời gian
-      const aCurr = aResults.filter(
-        (r) => r.Aedat >= oCurrRange.start && r.Aedat <= oCurrRange.end
-      );
+            // 🔹 Lọc trong khoảng thời gian
+            const aCurr = aResults.filter(
+              (r) => r.Aedat >= oCurrRange.start && r.Aedat <= oCurrRange.end
+            );
 
-      // 🔹 Đếm trạng thái (Frgkz)
-      let iApproved = 0,
-        iPending = 0,
-        iRejected = 0;
-      aCurr.forEach((r) => {
-        if (r.Frgke === "R") iApproved++;
-        else if (r.Frgke === "C") iPending++;
-        else if (r.Frgke === "A") iRejected++;
-      });
+            // 🔹 Đếm trạng thái (Frgkz)
+            let iApproved = 0,
+              iPending = 0,
+              iRejected = 0;
+            aCurr.forEach((r) => {
+              if (r.Frgke === "R") iApproved++;
+              else if (r.Frgke === "C") iPending++;
+              else if (r.Frgke === "A") iRejected++;
+            });
 
-      const aChartData = [
-        { Status: "Approved", Count: iApproved },
-        { Status: "Pending", Count: iPending },
-        { Status: "Rejected", Count: iRejected },
-      ].filter((i) => i.Count > 0);
+            const aChartData = [
+              { Status: "Approved", Count: iApproved },
+              { Status: "Pending", Count: iPending },
+              { Status: "Rejected", Count: iRejected },
+            ].filter((i) => i.Count > 0);
 
-      this._displayStatusDonutChartPO(aChartData);
-    }.bind(this),
+            this._displayStatusDonutChartPO(aChartData);
+          }.bind(this),
 
-    error: function (e) {
-      BusyIndicator.hide();
-      console.error("❌ Lỗi load PO Status Donut:", e);
-      MessageToast.show("Không thể tải dữ liệu trạng thái PO");
-      this._displayStatusDonutChartPO([{ Status: "No Data", Count: 1 }]);
-    }.bind(this),
-  });
-},
-
+          error: function (e) {
+            BusyIndicator.hide();
+            console.error("❌ Lỗi load PO Status Donut:", e);
+            MessageToast.show("Không thể tải dữ liệu trạng thái PO");
+            this._displayStatusDonutChartPO([{ Status: "No Data", Count: 1 }]);
+          }.bind(this),
+        });
+      },
 
       /* ===== Load Bar Chart: Top Material ===== */
       _loadTopMaterialBarChart: function (sPeriodKey) {
@@ -535,7 +540,9 @@ if (oYearSelect) {
                 this._displayMonthlyPRBarChart(aChartData);
                 resolve();
               } else {
-                const year = sSelectedYear ? parseInt(sSelectedYear, 10) : range.start.getFullYear();
+                const year = sSelectedYear
+                  ? parseInt(sSelectedYear, 10)
+                  : range.start.getFullYear();
                 const monthlyCount = Array(12).fill(0);
 
                 aResults.forEach((r) => {
@@ -826,122 +833,135 @@ if (oYearSelect) {
         });
       },
 
-
       /* ===== Load KPI cho RFQ ===== */
-_loadKpiRFQ: function (sPeriodKey) {
-  BusyIndicator.show(0);
-  const oCurrRange = this._getDateRange(sPeriodKey);
-  const oPrevRange = this._getPreviousRange(sPeriodKey);
+      _loadKpiRFQ: function (sPeriodKey) {
+        BusyIndicator.show(0);
+        const oCurrRange = this._getDateRange(sPeriodKey);
+        const oPrevRange = this._getPreviousRange(sPeriodKey);
 
-  this.oOData.read("/ProcurementHeaderSet", {
-    urlParameters: { $select: "Ebeln,Aedat,Bstyp", $top: "5000" },
-    success: function (oData) {
-      BusyIndicator.hide();
-      const aResults = (oData.results || []).filter((r) => r.Bstyp === "A"); // RFQ
+        this.oOData.read("/ProcurementHeaderSet", {
+          urlParameters: { $select: "Ebeln,Aedat,Bstyp", $top: "5000" },
+          success: function (oData) {
+            BusyIndicator.hide();
+            const aResults = (oData.results || []).filter(
+              (r) => r.Bstyp === "A"
+            ); // RFQ
 
-      if (aResults.length === 0) {
-        this._addKpiCard({
-          title: "Request for Quotation (RFQ)",
-          period: this._getPeriodLabel(sPeriodKey),
-          value: "0",
-          percentage: "0%",
-          progress: 0,
-          state: "Error",
+            if (aResults.length === 0) {
+              this._addKpiCard({
+                title: "Request for Quotation (RFQ)",
+                period: this._getPeriodLabel(sPeriodKey),
+                value: "0",
+                percentage: "0%",
+                progress: 0,
+                state: "Error",
+              });
+              return;
+            }
+
+            // Parse ngày
+            aResults.forEach((r) => {
+              if (typeof r.Aedat === "string") {
+                const match = /Date\((\d+)\)/.exec(r.Aedat);
+                if (match) r.Aedat = new Date(parseInt(match[1], 10));
+              }
+            });
+
+            // Lọc theo range hiện tại và trước đó
+            const aCurr = aResults.filter(
+              (r) => r.Aedat >= oCurrRange.start && r.Aedat <= oCurrRange.end
+            );
+            const aPrev = aResults.filter(
+              (r) => r.Aedat >= oPrevRange.start && r.Aedat <= oPrevRange.end
+            );
+
+            const iCurrCount = new Set(aCurr.map((r) => r.Ebeln)).size;
+            const iPrevCount = new Set(aPrev.map((r) => r.Ebeln)).size;
+
+            this._displayKpiCardGeneric(
+              "RFQ",
+              sPeriodKey,
+              iCurrCount,
+              iPrevCount
+            );
+          }.bind(this),
+
+          error: function (e) {
+            BusyIndicator.hide();
+            console.error("❌ Lỗi load RFQ KPI:", e);
+          },
         });
-        return;
-      }
+      },
 
-      // Parse ngày
-      aResults.forEach((r) => {
-        if (typeof r.Aedat === "string") {
-          const match = /Date\((\d+)\)/.exec(r.Aedat);
-          if (match) r.Aedat = new Date(parseInt(match[1], 10));
-        }
-      });
+      /* ===== Load KPI cho PO ===== */
+      _loadKpiPO: function (sPeriodKey) {
+        BusyIndicator.show(0);
+        const oCurrRange = this._getDateRange(sPeriodKey);
+        const oPrevRange = this._getPreviousRange(sPeriodKey);
 
-      // Lọc theo range hiện tại và trước đó
-      const aCurr = aResults.filter(
-        (r) => r.Aedat >= oCurrRange.start && r.Aedat <= oCurrRange.end
-      );
-      const aPrev = aResults.filter(
-        (r) => r.Aedat >= oPrevRange.start && r.Aedat <= oPrevRange.end
-      );
+        this.oOData.read("/ProcurementHeaderSet", {
+          urlParameters: { $select: "Ebeln,Aedat,Bstyp", $top: "5000" },
+          success: function (oData) {
+            BusyIndicator.hide();
+            const aResults = (oData.results || []).filter(
+              (r) => r.Bstyp === "F"
+            ); // PO
 
-      const iCurrCount = new Set(aCurr.map((r) => r.Ebeln)).size;
-      const iPrevCount = new Set(aPrev.map((r) => r.Ebeln)).size;
+            if (aResults.length === 0) {
+              this._addKpiCard({
+                title: "Purchase Order (PO)",
+                period: this._getPeriodLabel(sPeriodKey),
+                value: "0",
+                percentage: "0%",
+                progress: 0,
+                state: "Error",
+              });
+              return;
+            }
 
-      this._displayKpiCardGeneric("RFQ", sPeriodKey, iCurrCount, iPrevCount);
-    }.bind(this),
+            // Parse ngày
+            aResults.forEach((r) => {
+              if (typeof r.Aedat === "string") {
+                const match = /Date\((\d+)\)/.exec(r.Aedat);
+                if (match) r.Aedat = new Date(parseInt(match[1], 10));
+              }
+            });
 
-    error: function (e) {
-      BusyIndicator.hide();
-      console.error("❌ Lỗi load RFQ KPI:", e);
-    },
-  });
-},
+            // Lọc dữ liệu theo khoảng thời gian
+            const aCurr = aResults.filter(
+              (r) => r.Aedat >= oCurrRange.start && r.Aedat <= oCurrRange.end
+            );
+            const aPrev = aResults.filter(
+              (r) => r.Aedat >= oPrevRange.start && r.Aedat <= oPrevRange.end
+            );
 
-/* ===== Load KPI cho PO ===== */
-_loadKpiPO: function (sPeriodKey) {
-  BusyIndicator.show(0);
-  const oCurrRange = this._getDateRange(sPeriodKey);
-  const oPrevRange = this._getPreviousRange(sPeriodKey);
+            const iCurrCount = new Set(aCurr.map((r) => r.Ebeln)).size;
+            const iPrevCount = new Set(aPrev.map((r) => r.Ebeln)).size;
 
-  this.oOData.read("/ProcurementHeaderSet", {
-    urlParameters: { $select: "Ebeln,Aedat,Bstyp", $top: "5000" },
-    success: function (oData) {
-      BusyIndicator.hide();
-      const aResults = (oData.results || []).filter((r) => r.Bstyp === "F"); // PO
+            this._displayKpiCardGeneric(
+              "PO",
+              sPeriodKey,
+              iCurrCount,
+              iPrevCount
+            );
+          }.bind(this),
 
-      if (aResults.length === 0) {
-        this._addKpiCard({
-          title: "Purchase Order (PO)",
-          period: this._getPeriodLabel(sPeriodKey),
-          value: "0",
-          percentage: "0%",
-          progress: 0,
-          state: "Error",
+          error: function (e) {
+            BusyIndicator.hide();
+            console.error("❌ Lỗi load PO KPI:", e);
+          },
         });
-        return;
-      }
+      },
 
-      // Parse ngày
-      aResults.forEach((r) => {
-        if (typeof r.Aedat === "string") {
-          const match = /Date\((\d+)\)/.exec(r.Aedat);
-          if (match) r.Aedat = new Date(parseInt(match[1], 10));
-        }
-      });
-
-      // Lọc dữ liệu theo khoảng thời gian
-      const aCurr = aResults.filter(
-        (r) => r.Aedat >= oCurrRange.start && r.Aedat <= oCurrRange.end
-      );
-      const aPrev = aResults.filter(
-        (r) => r.Aedat >= oPrevRange.start && r.Aedat <= oPrevRange.end
-      );
-
-      const iCurrCount = new Set(aCurr.map((r) => r.Ebeln)).size;
-      const iPrevCount = new Set(aPrev.map((r) => r.Ebeln)).size;
-
-      this._displayKpiCardGeneric("PO", sPeriodKey, iCurrCount, iPrevCount);
-    }.bind(this),
-
-    error: function (e) {
-      BusyIndicator.hide();
-      console.error("❌ Lỗi load PO KPI:", e);
-    },
-  });
-},
-
-
-       _loadConnectedScatterChart: function () {
+      /* ===== Load Connected Scatter Chart (Ổn định, không thay đổi dữ liệu lịch sử) ===== */
+      _loadConnectedScatterChart: function () {
         BusyIndicator.show(0);
 
         const oPRPromise = new Promise((resolve, reject) => {
           this.oOData.read("/PRsSet", {
             urlParameters: {
               $select: "Banfn,Bnfpo,Preis,Peinh,Menge,Badat,Matnr",
-              $top: "1000",
+              $top: "5000",
             },
             success: resolve,
             error: reject,
@@ -952,7 +972,7 @@ _loadKpiPO: function (sPeriodKey) {
           this.oOData.read("/ProcurementItemSet", {
             urlParameters: {
               $select: "Ebeln,Ebelp,Netpr,Peinh,Menge,Aedat,Matnr",
-              $top: "1000",
+              $top: "5000",
             },
             success: resolve,
             error: reject,
@@ -963,7 +983,7 @@ _loadKpiPO: function (sPeriodKey) {
           this.oOData.read("/ProcurementHeaderSet", {
             urlParameters: {
               $select: "Ebeln,Bsart,Aedat",
-              $top: "1000",
+              $top: "5000",
             },
             success: resolve,
             error: reject,
@@ -974,50 +994,73 @@ _loadKpiPO: function (sPeriodKey) {
           .then(([prData, poItemData, headerData]) => {
             BusyIndicator.hide();
 
-            const aPRs = prData.results;
-            const aPOItems = poItemData.results;
-            const aHeaders = headerData.results;
+            const aPRs = prData.results || [];
+            const aPOItems = poItemData.results || [];
+            const aHeaders = headerData.results || [];
 
+            // Map header Ebeln -> Header info
             const mHeaderMap = {};
             aHeaders.forEach((h) => {
               mHeaderMap[h.Ebeln] = h;
             });
 
-            const aChartData = [];
+            // ✅ Gom dữ liệu ổn định
+            const mAgg = {
+              PR: {},
+              PO: {},
+              RFQ: {},
+            };
 
+            // --- Gom PR ---
             aPRs.forEach((pr) => {
-              const key = pr.Banfn + "-" + pr.Bnfpo;
+              const date = this._parseDate(pr.Badat);
+              if (!date || isNaN(date)) return;
+              const monthKey = `${date.getFullYear()}-${(
+                "0" +
+                (date.getMonth() + 1)
+              ).slice(-2)}`;
 
-              const prValue =
-                parseFloat(pr.Preis || 0) * parseFloat(pr.Menge || 0);
-              if (prValue > 0) {
-                aChartData.push({
-                  TrackID: key,
-                  Phase: "PR",
-                  Amount: prValue,
-                  Date: this._parseDate(pr.Badat),
-                });
-              }
-
-              // Match PO hoặc RFQ theo Matnr
-              const poItem = aPOItems.find((po) => po.Matnr === pr.Matnr);
-              if (poItem) {
-                const header = mHeaderMap[poItem.Ebeln];
-                if (!header) return;
-
-                const phase = header.Bsart === "AN" ? "RFQ" : "PO";
-                const poValue =
-                  parseFloat(poItem.Netpr || 0) * parseFloat(poItem.Menge || 0);
-
-                aChartData.push({
-                  TrackID: key,
-                  Phase: phase,
-                  Amount: poValue,
-                  Date: this._parseDate(poItem.Aedat),
-                });
-              }
+              const val =
+                ((parseFloat(pr.Preis) || 0) * (parseFloat(pr.Menge) || 0)) /
+                (parseFloat(pr.Peinh) || 1);
+              mAgg.PR[monthKey] = (mAgg.PR[monthKey] || 0) + val;
             });
 
+            // --- Gom PO / RFQ ---
+            aPOItems.forEach((po) => {
+              const date = this._parseDate(po.Aedat);
+              if (!date || isNaN(date)) return;
+              const monthKey = `${date.getFullYear()}-${(
+                "0" +
+                (date.getMonth() + 1)
+              ).slice(-2)}`;
+
+              const header = mHeaderMap[po.Ebeln];
+              if (!header) return;
+
+              const phase = header.Bsart === "AN" ? "RFQ" : "PO";
+              const val =
+                ((parseFloat(po.Netpr) || 0) * (parseFloat(po.Menge) || 0)) /
+                (parseFloat(po.Peinh) || 1);
+              mAgg[phase][monthKey] = (mAgg[phase][monthKey] || 0) + val;
+            });
+
+            // --- Merge 3 loại dữ liệu thành một mảng hiển thị ---
+            const aChartData = [];
+            ["PR", "PO", "RFQ"].forEach((phase) => {
+              Object.entries(mAgg[phase]).forEach(([monthKey, val]) => {
+                aChartData.push({
+                  Phase: phase,
+                  Amount: val,
+                  Date: monthKey,
+                });
+              });
+            });
+
+            // --- Sắp xếp thời gian tăng dần ---
+            aChartData.sort((a, b) => a.Date.localeCompare(b.Date));
+
+            // --- Gọi hàm hiển thị chart ---
             this._displayConnectedScatterChart(aChartData);
           })
           .catch((e) => {
@@ -1025,9 +1068,6 @@ _loadKpiPO: function (sPeriodKey) {
             console.error("❌ Lỗi khi tải dữ liệu ConnectedChart:", e);
           });
       },
-
-
-
 
       /* ===== Hiển thị KPI Card ===== */
       _displayKpiCard: function (sPeriodKey, iCurrCount, iPrevCount) {
@@ -1059,33 +1099,36 @@ _loadKpiPO: function (sPeriodKey) {
         }
       },
 
+      _displayKpiCardGeneric: function (
+        type,
+        sPeriodKey,
+        iCurrCount,
+        iPrevCount
+      ) {
+        const fPercent =
+          iPrevCount === 0
+            ? iCurrCount > 0
+              ? 100
+              : 0
+            : ((iCurrCount - iPrevCount) / iPrevCount) * 100;
 
-      _displayKpiCardGeneric: function (type, sPeriodKey, iCurrCount, iPrevCount) {
-  const fPercent =
-    iPrevCount === 0
-      ? iCurrCount > 0
-        ? 100
-        : 0
-      : ((iCurrCount - iPrevCount) / iPrevCount) * 100;
+        const oKpi = {
+          title:
+            type === "PR"
+              ? "Purchase Requisition"
+              : type === "RFQ"
+              ? "Request for Quotation"
+              : "Purchase Order",
+          period: this._getPeriodLabel(sPeriodKey),
+          value: iCurrCount.toLocaleString(),
+          percentage: (fPercent >= 0 ? "+" : "") + fPercent.toFixed(1) + "%",
+          progress: Math.min(Math.abs(Math.round(fPercent)), 100),
+          state: fPercent >= 0 ? "Success" : "Error",
+        };
 
-  const oKpi = {
-    title:
-      type === "PR"
-        ? "Purchase Requisition"
-        : type === "RFQ"
-        ? "Request for Quotation"
-        : "Purchase Order",
-    period: this._getPeriodLabel(sPeriodKey),
-    value: iCurrCount.toLocaleString(),
-    percentage: (fPercent >= 0 ? "+" : "") + fPercent.toFixed(1) + "%",
-    progress: Math.min(Math.abs(Math.round(fPercent)), 100),
-    state: fPercent >= 0 ? "Success" : "Error",
-  };
-
-  // 🔹 Thêm card vào container
-  this._addKpiCard(oKpi);
-},
-
+        // 🔹 Thêm card vào container
+        this._addKpiCard(oKpi);
+      },
 
       /* ===== Hiển thị Donut Chart ===== */
       _displayStatusDonutChart: function (aChartData) {
@@ -1151,64 +1194,67 @@ _loadKpiPO: function (sPeriodKey) {
       },
 
       _displayStatusDonutChartPO: function (aChartData) {
-  const oVizFrame = this.getView().byId("idDonutChartPO");
-  if (!oVizFrame) return;
+        const oVizFrame = this.getView().byId("idDonutChartPO");
+        if (!oVizFrame) return;
 
-  oVizFrame.destroyFeeds();
-  oVizFrame.destroyDataset();
+        oVizFrame.destroyFeeds();
+        oVizFrame.destroyDataset();
 
-  const mColorMap = {
-    Approved: "#2e7d32", // xanh lá
-    Pending: "#f9a825",  // vàng
-    Rejected: "#c62828", // đỏ
-    "No Data": "#9e9e9e",
-  };
+        const mColorMap = {
+          Approved: "#2e7d32", // xanh lá
+          Pending: "#f9a825", // vàng
+          Rejected: "#c62828", // đỏ
+          "No Data": "#9e9e9e",
+        };
 
-  const aColoredData = aChartData.map((item) => ({
-    Status: item.Status,
-    Count: item.Count,
-    Color: mColorMap[item.Status] || "#9e9e9e",
-  }));
+        const aColoredData = aChartData.map((item) => ({
+          Status: item.Status,
+          Count: item.Count,
+          Color: mColorMap[item.Status] || "#9e9e9e",
+        }));
 
-  const oChartModel = new sap.ui.model.json.JSONModel({
-    items: aColoredData,
-  });
+        const oChartModel = new sap.ui.model.json.JSONModel({
+          items: aColoredData,
+        });
 
-  const oDataset = new sap.viz.ui5.data.FlattenedDataset({
-    dimensions: [{ name: "Status", value: "{chartPO>Status}" }],
-    measures: [{ name: "Count", value: "{chartPO>Count}" }],
-    data: { path: "chartPO>/items" },
-  });
+        const oDataset = new sap.viz.ui5.data.FlattenedDataset({
+          dimensions: [{ name: "Status", value: "{chartPO>Status}" }],
+          measures: [{ name: "Count", value: "{chartPO>Count}" }],
+          data: { path: "chartPO>/items" },
+        });
 
-  oVizFrame.setDataset(oDataset);
-  oVizFrame.setModel(oChartModel, "chartPO");
+        oVizFrame.setDataset(oDataset);
+        oVizFrame.setModel(oChartModel, "chartPO");
 
-  oVizFrame.addFeed(
-    new sap.viz.ui5.controls.common.feeds.FeedItem({
-      uid: "size",
-      type: "Measure",
-      values: ["Count"],
-    })
-  );
-  oVizFrame.addFeed(
-    new sap.viz.ui5.controls.common.feeds.FeedItem({
-      uid: "color",
-      type: "Dimension",
-      values: ["Status"],
-    })
-  );
+        oVizFrame.addFeed(
+          new sap.viz.ui5.controls.common.feeds.FeedItem({
+            uid: "size",
+            type: "Measure",
+            values: ["Count"],
+          })
+        );
+        oVizFrame.addFeed(
+          new sap.viz.ui5.controls.common.feeds.FeedItem({
+            uid: "color",
+            type: "Dimension",
+            values: ["Status"],
+          })
+        );
 
-  oVizFrame.setVizProperties({
-    title: { text: "PO Status Overview", visible: true, alignment: "center" },
-    plotArea: {
-      colorPalette: aColoredData.map((d) => d.Color),
-      dataLabel: { visible: true },
-    },
-    legend: { visible: true, position: "bottom" },
-    tooltip: { visible: true },
-  });
-},
-
+        oVizFrame.setVizProperties({
+          title: {
+            text: "PO Status Overview",
+            visible: true,
+            alignment: "center",
+          },
+          plotArea: {
+            colorPalette: aColoredData.map((d) => d.Color),
+            dataLabel: { visible: true },
+          },
+          legend: { visible: true, position: "bottom" },
+          tooltip: { visible: true },
+        });
+      },
 
       _displayTopMaterialBarChart: function (aChartData) {
         var oVizFrame = this.getView().byId("idBarChart");
@@ -1424,158 +1470,168 @@ _loadKpiPO: function (sPeriodKey) {
 
         const sDocType = this._currentPoType === "A" ? "RFQ" : "PO";
 
-oVizFrame.setVizProperties({
-  title: {
-    text:
-      aChartData.length > 0 && aChartData[0].Month.startsWith("Năm")
-        ? `Số lượng ${sDocType} theo năm`
-        : `Số lượng ${sDocType} theo tháng`,
-    alignment: "center",
-    visible: true,
-  },
-  plotArea: {
-    colorPalette: [sDocType === "A" ? "#2196F3" : "#4CAF50"], // RFQ xanh dương, PO xanh lá
-    dataLabel: { visible: true },
-  },
-  legend: { visible: false },
-  valueAxis: { title: { visible: false } },
-  categoryAxis: {
-    title: { visible: false },
-    label: { angle: 0 },
-  },
-});
+        oVizFrame.setVizProperties({
+          title: {
+            text:
+              aChartData.length > 0 && aChartData[0].Month.startsWith("Năm")
+                ? `Số lượng ${sDocType} theo năm`
+                : `Số lượng ${sDocType} theo tháng`,
+            alignment: "center",
+            visible: true,
+          },
+          plotArea: {
+            colorPalette: [sDocType === "A" ? "#2196F3" : "#4CAF50"], // RFQ xanh dương, PO xanh lá
+            dataLabel: { visible: true },
+          },
+          legend: { visible: false },
+          valueAxis: { title: { visible: false } },
+          categoryAxis: {
+            title: { visible: false },
+            label: { angle: 0 },
+          },
+        });
 
         console.log("✅ PO Chart rendered successfully");
       },
 
-
-
       _displayConnectedScatterChart: function (aChartData) {
-    const oVizFrame = this.byId("idConnectedChart");
-    if (!oVizFrame) return;
+        const oVizFrame = this.byId("idConnectedChart");
+        if (!oVizFrame) return;
 
-    oVizFrame.destroyFeeds();
-    oVizFrame.destroyDataset();
+          
 
-    // ✅ Gom dữ liệu tổng theo tháng và loại chứng từ
-    const mAgg = {};
-    aChartData.forEach(item => {
-        if (!item.Date || !item.Phase) return;
-        const date = new Date(item.Date);
-        if (isNaN(date)) return;
 
-        const monthKey = `${date.getFullYear()}-${("0" + (date.getMonth() + 1)).slice(-2)}`;
-        const key = `${monthKey}_${item.Phase}`;
+        oVizFrame.destroyFeeds();
+        oVizFrame.destroyDataset();
 
-        if (!mAgg[key]) {
+        // ✅ Gom dữ liệu tổng theo tháng và loại chứng từ
+        const mAgg = {};
+        aChartData.forEach((item) => {
+          if (!item.Date || !item.Phase) return;
+          const date = new Date(item.Date);
+          if (isNaN(date)) return;
+
+          const monthKey = `${date.getFullYear()}-${(
+            "0" +
+            (date.getMonth() + 1)
+          ).slice(-2)}`;
+          const key = `${monthKey}_${item.Phase}`;
+
+          if (!mAgg[key]) {
             mAgg[key] = { Date: monthKey, Phase: item.Phase, Amount: 0 };
-        }
-        mAgg[key].Amount += Number(item.Amount) || 0;
-    });
-    console.log("cc", mAgg)
+          }
+          mAgg[key].Amount += Number(item.Amount) || 0;
+        });
+       
 
-    // ✅ Sắp xếp thời gian tăng dần
-    const aProcessed = Object.values(mAgg).sort((a, b) => a.Date.localeCompare(b.Date));
+        // ✅ Sắp xếp thời gian tăng dần
+        const aProcessed = Object.values(mAgg).sort((a, b) =>
+          a.Date.localeCompare(b.Date)
+        );
 
-    // ✅ Chuẩn hóa dữ liệu cho hiển thị đẹp (chuyển sang triệu hoặc tỷ)
-    const aFormatted = aProcessed.map(item => {
-        let displayAmount = item.Amount;
-        let unit = "VND";
+        // ✅ Chuẩn hóa dữ liệu cho hiển thị đẹp (chuyển sang triệu hoặc tỷ)
+        const aFormatted = aProcessed.map((item) => {
+          let displayAmount = item.Amount;
+          let unit = "VND";
 
-        if (displayAmount >= 1_000_000_000) {
+          if (displayAmount >= 1_000_000_000) {
             displayAmount = displayAmount / 1_000_000_000;
             unit = "Tỷ VND";
-        } else if (displayAmount >= 1_000_000) {
+          } else if (displayAmount >= 1_000_000) {
             displayAmount = displayAmount / 1_000_000;
             unit = "Triệu VND";
-        }
+          }
 
-        return {
+          return {
             Date: item.Date,
             Phase: item.Phase,
             Amount: item.Amount,
             DisplayAmount: displayAmount,
-            Unit: unit
-        };
-    });
-    console.log("cc1", aFormatted)
+            Unit: unit,
+          };
+        });
+        console.log("cc1", aFormatted);
 
-    const oModel = new sap.ui.model.json.JSONModel({ items: aFormatted });
-    this.getView().setModel(oModel, "chart");
+        this._originalConnectedChartData = aFormatted;
 
-    const oDataset = new sap.viz.ui5.data.FlattenedDataset({
-        dimensions: [
+
+        const aVisible = aFormatted.filter(item => !this._hiddenPhases[item.Phase]);
+const oModel = new sap.ui.model.json.JSONModel({ items: aVisible });
+this.getView().setModel(oModel, "chart");
+
+
+        const oDataset = new sap.viz.ui5.data.FlattenedDataset({
+          dimensions: [
             { name: "Mốc thời gian", value: "{chart>Date}" },
-            { name: "Loại chứng từ", value: "{chart>Phase}" }
-        ],
-        measures: [
-            { name: "Giá trị", value: "{chart>DisplayAmount}" }
-        ],
-        data: { path: "chart>/items" }
-    });
+            { name: "Loại chứng từ", value: "{chart>Phase}" },
+          ],
+          measures: [{ name: "Giá trị", value: "{chart>DisplayAmount}" }],
+          data: { path: "chart>/items" },
+        });
 
-    oVizFrame.setDataset(oDataset);
-    oVizFrame.setModel(oModel, "chart");
+        oVizFrame.setDataset(oDataset);
+        oVizFrame.setModel(oModel, "chart");
 
-    // ✅ Feeds
-    oVizFrame.addFeed(new sap.viz.ui5.controls.common.feeds.FeedItem({
-        uid: "categoryAxis",
-        type: "Dimension",
-        values: ["Mốc thời gian"]
-    }));
-    oVizFrame.addFeed(new sap.viz.ui5.controls.common.feeds.FeedItem({
-        uid: "color",
-        type: "Dimension",
-        values: ["Loại chứng từ"]
-    }));
-    oVizFrame.addFeed(new sap.viz.ui5.controls.common.feeds.FeedItem({
-        uid: "valueAxis",
-        type: "Measure",
-        values: ["Giá trị"]
-    }));
+        // ✅ Feeds
+        oVizFrame.addFeed(
+          new sap.viz.ui5.controls.common.feeds.FeedItem({
+            uid: "categoryAxis",
+            type: "Dimension",
+            values: ["Mốc thời gian"],
+          })
+        );
+        oVizFrame.addFeed(
+          new sap.viz.ui5.controls.common.feeds.FeedItem({
+            uid: "color",
+            type: "Dimension",
+            values: ["Loại chứng từ"],
+          })
+        );
+        oVizFrame.addFeed(
+          new sap.viz.ui5.controls.common.feeds.FeedItem({
+            uid: "valueAxis",
+            type: "Measure",
+            values: ["Giá trị"],
+          })
+        );
 
-    oVizFrame.setVizType("line");
+        oVizFrame.setVizType("line");
 
-    // ✅ Lấy đơn vị lớn nhất để đặt trục tung
-    const firstUnit = aFormatted.length > 0 ? aFormatted[0].Unit : "VND";
+        // ✅ Lấy đơn vị lớn nhất để đặt trục tung
+        const firstUnit = aFormatted.length > 0 ? aFormatted[0].Unit : "VND";
 
-    // ✅ Hiển thị đẹp như PR chart
-    oVizFrame.setVizProperties({
-        title: {
+        // ✅ Hiển thị đẹp như PR chart
+        oVizFrame.setVizProperties({
+          title: {
             text: `Giá trị PR / RFQ / PO theo mốc thời gian (${firstUnit})`,
             visible: true,
-            alignment: "center"
-        },
-        plotArea: {
+            alignment: "center",
+          },
+          plotArea: {
             dataLabel: {
-                visible: true,
-                // formatString: "n1", // 1 chữ số thập phân
-                style: { fontSize: "10px", color: "#333" }
+              visible: true,
+              // formatString: "n1", // 1 chữ số thập phân
+              style: { fontSize: "10px", color: "#333" },
             },
             marker: { visible: true, size: 5 },
             colorPalette: ["#1976D2", "#F57C00", "#388E3C"],
-            window: { start: "firstDataPoint", end: "lastDataPoint" }
-        },
-        legend: {
-            visible: true,
-            title: { visible: false },
-            label: { style: { fontSize: "11px" } }
-        },
-        valueAxis: {
+            window: { start: "firstDataPoint", end: "lastDataPoint" },
+          },
+          valueAxis: {
             title: { visible: true, text: `Giá trị (${firstUnit})` },
             // label: { formatString: "n1" }
-        },
-        categoryAxis: {
+          },
+          categoryAxis: {
             title: { visible: true, text: "Mốc thời gian (Tháng/Năm)" },
-            label: { angle: -45, style: { fontSize: "11px" } }
-        },
-        tooltip: {
+            label: { angle: -45, style: { fontSize: "11px" } },
+          },
+          tooltip: {
             visible: true,
-            formatString: "n0" // ✅ tooltip hiển thị đầy đủ số tiền gốc (không chia)
-        }
-    });
-},
-
+            formatString: "n0", // ✅ tooltip hiển thị đầy đủ số tiền gốc (không chia)
+          },
+        });
+        this._refreshConnectedChart();
+      },
 
       /* ===== Tạo KPI Card Fragment ===== */
       _addKpiCard: function (oData) {
@@ -1797,15 +1853,90 @@ oVizFrame.setVizProperties({
         return sDate instanceof Date ? sDate : null;
       },
 
-      onPoTypeChange: function (oEvent) {
-        const sKey = oEvent.getSource().getSelectedKey();
-        this._currentPoType = sKey; // Lưu lại loại chọn hiện tại (F hoặc A)
-        const sPeriodKey =
-          this.byId("timeFilter").getSelectedKey() || "thisYear";
+      onTogglePhase: function (oEvent) {
+        var sPhase = oEvent.getSource().getText(); // “PR”, “PO”, “RFQ”
+        var bSelected = oEvent.getParameter("selected");
+        this._hiddenPhases[sPhase] = !bSelected;
 
-        // 🔁 Gọi lại hàm load biểu đồ PO với loại mới
-        this._loadMonthlyPoBarChart(sPeriodKey);
+        // gọi lại biểu đồ Connected
+        this._refreshConnectedChart();
       },
+
+      _refreshConnectedChart: function () {
+  const oVizFrame = this.byId("idConnectedChart");
+  if (!oVizFrame) {
+    console.error("VizFrame idConnectedChart not found!");
+    return;
+  }
+
+  // Reload lại đúng chart với trạng thái phase đã toggle
+  const oModel = this.getView().getModel("chart");
+  const aItems = this._originalConnectedChartData || [];
+
+
+  // Lọc dữ liệu theo trạng thái toggle (ẩn/hiện)
+  const aFiltered = aItems.filter(item => !this._hiddenPhases[item.Phase]);
+
+  // Gán model mới
+  const oNewModel = new sap.ui.model.json.JSONModel({ items: aFiltered });
+  this.getView().setModel(oNewModel, "chart");
+  oVizFrame.setModel(oNewModel, "chart");
+
+  // ⚠️ MUST: Reset lại dataset và feeds
+  oVizFrame.destroyDataset();
+  oVizFrame.destroyFeeds();
+
+  const oDataset = new sap.viz.ui5.data.FlattenedDataset({
+    dimensions: [
+      { name: "Mốc thời gian", value: "{chart>Date}" },
+      { name: "Loại chứng từ", value: "{chart>Phase}" },
+    ],
+    measures: [{ name: "Giá trị", value: "{chart>DisplayAmount}" }],
+    data: { path: "chart>/items" },
+  });
+
+  oVizFrame.setDataset(oDataset);
+
+  // Add feeds lại
+  oVizFrame.addFeed(new sap.viz.ui5.controls.common.feeds.FeedItem({
+    uid: "categoryAxis",
+    type: "Dimension",
+    values: ["Mốc thời gian"]
+  }));
+  oVizFrame.addFeed(new sap.viz.ui5.controls.common.feeds.FeedItem({
+    uid: "color",
+    type: "Dimension",
+    values: ["Loại chứng từ"]
+  }));
+  oVizFrame.addFeed(new sap.viz.ui5.controls.common.feeds.FeedItem({
+    uid: "valueAxis",
+    type: "Measure",
+    values: ["Giá trị"]
+  }));
+
+  // Optional: Giữ lại các vizProperties nếu muốn
+  oVizFrame.setVizProperties({
+    title: {
+      text: "Giá trị PR / RFQ / PO theo mốc thời gian (VND)",
+      visible: true,
+      alignment: "center"
+    },
+    plotArea: {
+      dataLabel: { visible: true },
+      marker: { visible: true, size: 5 },
+      colorPalette: ["#1976D2", "#F57C00", "#388E3C"]
+    },
+    valueAxis: {
+      title: { visible: true, text: "Giá trị (VND)" }
+    },
+    categoryAxis: {
+      title: { visible: true, text: "Mốc thời gian (Tháng/Năm)" },
+      label: { angle: -45 }
+    },
+    tooltip: { visible: true }
+  });
+},
+
 
       onGoToPRList: function () {
         sap.ui.core.UIComponent.getRouterFor(this).navTo("PRList");
