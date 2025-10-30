@@ -1,16 +1,111 @@
-<mvc:View xmlns:mvc="sap.ui.core.mvc"
-          xmlns="sap.m"
-          controllerName="demodashboard.controller.PRList">
-  <Page id="prlist" title="PR List">
-    <content>
-      <List id="list1"
-      items="{/PRList}">
-      <StandardListItem id="listitem1"
-         title="{PRId}"
-         description="{PRName}"
-         press="onPRPress"
-         type="Navigation"/>
-   </List>
-    </content>
-  </Page>
-</mvc:View>
+  <mvc:View
+    controllerName="demodashboard.controller.PRList"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:l="sap.ui.layout"
+    displayBlock="true">
+
+    <Page id="prlist" title="Purchase Requisition List">
+      <headerContent>
+        <Button icon="sap-icon://home" text="Home" press="onNavHome"/>
+        <Button icon="sap-icon://refresh" text="Reload" type="Emphasized" press="onReload"/>
+        <Button icon="sap-icon://excel-attachment" text="Export Excel" press="onExportExcel"/>
+      </headerContent>
+
+      <content>
+
+        <!-- 🔍 Filter Toolbar -->
+        <Toolbar class="sapUiSmallMarginBottom sapUiSizeCompact">
+          <Label text="Purchase Req." labelFor="inpBanfn"/>
+          <Input id="inpBanfn"
+                width="12rem"
+                showValueHelp="true"
+                valueHelpRequest="onValueHelpBanfn"
+                placeholder="Search PR No."/>
+
+          <Label text="Document Type" labelFor="inpBsart" class="sapUiTinyMarginBegin"/>
+          <Input id="inpBsart"
+                width="10rem"
+                showValueHelp="true"
+                valueHelpRequest="onValueHelpBsart"
+                placeholder="Search Doc Type"/>
+
+          <ToolbarSpacer/>
+          <Button text="Go" type="Emphasized" press="onGoFilter"/>
+        </Toolbar>
+
+        <!-- ====== Split Container ====== -->
+        <l:ResponsiveSplitter defaultPane="paneMaster">
+          <l:PaneContainer orientation="Horizontal">
+
+            <!-- LEFT TABLE -->
+            <l:SplitPane id="paneMaster">
+              <l:layoutData>
+                <l:SplitterLayoutData id="layoutMaster" size="100%" resizable="true"/>
+              </l:layoutData>
+
+              <Table
+                id="tblPRList"
+                items="{ path: '/PRsSet', sorter: { path: 'Banfn', descending: true } }"
+                mode="SingleSelectLeft"
+                selectionChange="onSelectPR"
+                class="sapUiSizeCompact"
+                growing="true">
+
+                <columns>
+                  <Column><Text text="Purchase Req."/></Column>
+                  <Column><Text text="Item No"/></Column>
+                  <Column><Text text="Document Type"/></Column>
+                  <Column><Text text="Purchasing Group"/></Column>
+                  <Column><Text text="Created By"/></Column>
+                  <Column><Text text="Status"/></Column>
+                </columns>
+
+                <items>
+                  <ColumnListItem>
+                    <cells>
+                      <Text text="{Banfn}"/>
+                      <Text text="{Bnfpo}"/>
+                      <Text text="{Bsart}"/>
+                      <Text text="{Ekgrp}"/>
+                      <Text text="{Ernam}"/>
+                      <ObjectStatus
+                        text="{path:'Frgkz', formatter:'.formatter.statusText'}"
+                        state="{path:'Frgkz', formatter:'.formatter.statusState'}"/>
+                    </cells>
+                  </ColumnListItem>
+                </items>
+              </Table>
+            </l:SplitPane>
+
+            <!-- RIGHT DETAIL PANEL -->
+            <l:SplitPane id="paneDetail">
+              <VBox id="detailPanel" visible="false" class="sapUiSmallMargin sapUiSizeCompact">
+                <HBox justifyContent="SpaceBetween" alignItems="Center">
+                  <Title id="txtPRTitle" text="{Banfn}" level="H2"/>
+                  <Button icon="sap-icon://decline" press="onCloseDetail" type="Transparent"/>
+                </HBox>
+
+                <ObjectHeader
+                  title="Purchase Requisition Info"
+                  number="{Banfn}"
+                  numberUnit="PR No."
+                  intro="Detail Overview"/>
+
+                <ObjectAttribute title="Document Type" text="{Bsart}"/>
+                <ObjectAttribute title="Purchasing Group" text="{Ekgrp}"/>
+                <ObjectAttribute title="Created By" text="{Ernam}"/>
+                <ObjectAttribute title="Plant" text="{Werks}"/>
+                <ObjectAttribute title="Location" text="{Lgort}"/>
+
+                <ObjectStatus
+                  title="Status"
+                  text="{path:'Frgkz', formatter:'.formatter.statusText'}"
+                  state="{path:'Frgkz', formatter:'.formatter.statusState'}"/>
+              </VBox>
+            </l:SplitPane>
+          </l:PaneContainer>
+        </l:ResponsiveSplitter>
+      </content>
+    </Page>
+  </mvc:View>

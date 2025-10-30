@@ -121,6 +121,16 @@ sap.ui.define(
         this._loadMonthlyPRBarChart("thisYear", sSelectedYear);
       },
 
+      // ⬇️⬇️ THÊM Ở ĐÂY
+      onPoTypeChange: function (oEvent) {
+        const sSelectedKey = oEvent.getParameter("selectedItem").getKey();
+        this._currentPoType = sSelectedKey; // lưu lại trạng thái hiện tại (F = PO, A = RFQ)
+        const sPeriodKey =
+          this.byId("timeFilter").getSelectedKey() || "thisYear";
+
+        this._loadMonthlyPoBarChart(sPeriodKey);
+      },
+
       /* ===== Tải toàn bộ dashboard ===== */
       _reloadChartsOnly: function (sPeriodKey) {
         BusyIndicator.show(0);
@@ -1498,9 +1508,6 @@ sap.ui.define(
         const oVizFrame = this.byId("idConnectedChart");
         if (!oVizFrame) return;
 
-          
-
-
         oVizFrame.destroyFeeds();
         oVizFrame.destroyDataset();
 
@@ -1522,7 +1529,6 @@ sap.ui.define(
           }
           mAgg[key].Amount += Number(item.Amount) || 0;
         });
-       
 
         // ✅ Sắp xếp thời gian tăng dần
         const aProcessed = Object.values(mAgg).sort((a, b) =>
@@ -1554,11 +1560,11 @@ sap.ui.define(
 
         this._originalConnectedChartData = aFormatted;
 
-
-        const aVisible = aFormatted.filter(item => !this._hiddenPhases[item.Phase]);
-const oModel = new sap.ui.model.json.JSONModel({ items: aVisible });
-this.getView().setModel(oModel, "chart");
-
+        const aVisible = aFormatted.filter(
+          (item) => !this._hiddenPhases[item.Phase]
+        );
+        const oModel = new sap.ui.model.json.JSONModel({ items: aVisible });
+        this.getView().setModel(oModel, "chart");
 
         const oDataset = new sap.viz.ui5.data.FlattenedDataset({
           dimensions: [
@@ -1863,80 +1869,86 @@ this.getView().setModel(oModel, "chart");
       },
 
       _refreshConnectedChart: function () {
-  const oVizFrame = this.byId("idConnectedChart");
-  if (!oVizFrame) {
-    console.error("VizFrame idConnectedChart not found!");
-    return;
-  }
+        const oVizFrame = this.byId("idConnectedChart");
+        if (!oVizFrame) {
+          console.error("VizFrame idConnectedChart not found!");
+          return;
+        }
 
-  // Reload lại đúng chart với trạng thái phase đã toggle
-  const oModel = this.getView().getModel("chart");
-  const aItems = this._originalConnectedChartData || [];
+        // Reload lại đúng chart với trạng thái phase đã toggle
+        const oModel = this.getView().getModel("chart");
+        const aItems = this._originalConnectedChartData || [];
 
+        // Lọc dữ liệu theo trạng thái toggle (ẩn/hiện)
+        const aFiltered = aItems.filter(
+          (item) => !this._hiddenPhases[item.Phase]
+        );
 
-  // Lọc dữ liệu theo trạng thái toggle (ẩn/hiện)
-  const aFiltered = aItems.filter(item => !this._hiddenPhases[item.Phase]);
+        // Gán model mới
+        const oNewModel = new sap.ui.model.json.JSONModel({ items: aFiltered });
+        this.getView().setModel(oNewModel, "chart");
+        oVizFrame.setModel(oNewModel, "chart");
 
-  // Gán model mới
-  const oNewModel = new sap.ui.model.json.JSONModel({ items: aFiltered });
-  this.getView().setModel(oNewModel, "chart");
-  oVizFrame.setModel(oNewModel, "chart");
+        // ⚠️ MUST: Reset lại dataset và feeds
+        oVizFrame.destroyDataset();
+        oVizFrame.destroyFeeds();
 
-  // ⚠️ MUST: Reset lại dataset và feeds
-  oVizFrame.destroyDataset();
-  oVizFrame.destroyFeeds();
+        const oDataset = new sap.viz.ui5.data.FlattenedDataset({
+          dimensions: [
+            { name: "Mốc thời gian", value: "{chart>Date}" },
+            { name: "Loại chứng từ", value: "{chart>Phase}" },
+          ],
+          measures: [{ name: "Giá trị", value: "{chart>DisplayAmount}" }],
+          data: { path: "chart>/items" },
+        });
 
-  const oDataset = new sap.viz.ui5.data.FlattenedDataset({
-    dimensions: [
-      { name: "Mốc thời gian", value: "{chart>Date}" },
-      { name: "Loại chứng từ", value: "{chart>Phase}" },
-    ],
-    measures: [{ name: "Giá trị", value: "{chart>DisplayAmount}" }],
-    data: { path: "chart>/items" },
-  });
+        oVizFrame.setDataset(oDataset);
 
-  oVizFrame.setDataset(oDataset);
+        // Add feeds lại
+        oVizFrame.addFeed(
+          new sap.viz.ui5.controls.common.feeds.FeedItem({
+            uid: "categoryAxis",
+            type: "Dimension",
+            values: ["Mốc thời gian"],
+          })
+        );
+        oVizFrame.addFeed(
+          new sap.viz.ui5.controls.common.feeds.FeedItem({
+            uid: "color",
+            type: "Dimension",
+            values: ["Loại chứng từ"],
+          })
+        );
+        oVizFrame.addFeed(
+          new sap.viz.ui5.controls.common.feeds.FeedItem({
+            uid: "valueAxis",
+            type: "Measure",
+            values: ["Giá trị"],
+          })
+        );
 
-  // Add feeds lại
-  oVizFrame.addFeed(new sap.viz.ui5.controls.common.feeds.FeedItem({
-    uid: "categoryAxis",
-    type: "Dimension",
-    values: ["Mốc thời gian"]
-  }));
-  oVizFrame.addFeed(new sap.viz.ui5.controls.common.feeds.FeedItem({
-    uid: "color",
-    type: "Dimension",
-    values: ["Loại chứng từ"]
-  }));
-  oVizFrame.addFeed(new sap.viz.ui5.controls.common.feeds.FeedItem({
-    uid: "valueAxis",
-    type: "Measure",
-    values: ["Giá trị"]
-  }));
-
-  // Optional: Giữ lại các vizProperties nếu muốn
-  oVizFrame.setVizProperties({
-    title: {
-      text: "Giá trị PR / RFQ / PO theo mốc thời gian (VND)",
-      visible: true,
-      alignment: "center"
-    },
-    plotArea: {
-      dataLabel: { visible: true },
-      marker: { visible: true, size: 5 },
-      colorPalette: ["#1976D2", "#F57C00", "#388E3C"]
-    },
-    valueAxis: {
-      title: { visible: true, text: "Giá trị (VND)" }
-    },
-    categoryAxis: {
-      title: { visible: true, text: "Mốc thời gian (Tháng/Năm)" },
-      label: { angle: -45 }
-    },
-    tooltip: { visible: true }
-  });
-},
-
+        // Optional: Giữ lại các vizProperties nếu muốn
+        oVizFrame.setVizProperties({
+          title: {
+            text: "Giá trị PR / RFQ / PO theo mốc thời gian (VND)",
+            visible: true,
+            alignment: "center",
+          },
+          plotArea: {
+            dataLabel: { visible: true },
+            marker: { visible: true, size: 5 },
+            colorPalette: ["#1976D2", "#F57C00", "#388E3C"],
+          },
+          valueAxis: {
+            title: { visible: true, text: "Giá trị (VND)" },
+          },
+          categoryAxis: {
+            title: { visible: true, text: "Mốc thời gian (Tháng/Năm)" },
+            label: { angle: -45 },
+          },
+          tooltip: { visible: true },
+        });
+      },
 
       onGoToPRList: function () {
         sap.ui.core.UIComponent.getRouterFor(this).navTo("PRList");
