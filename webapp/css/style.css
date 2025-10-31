@@ -471,3 +471,49 @@
     max-width: 100%;
   }
 }
+.filterPanel .sapMPanelHdr {
+  font-weight: 600;
+  color: #0a6ed1;
+}
+
+.sapUiFormResGrid > div {
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+
+.sapMLabel {
+  font-weight: 500;
+}
+
+.sapMInputBaseInner {
+  border-radius: 6px;
+}
+
+.sapMBtn.Emphasized {
+  background-color: #0a6ed1 !important;
+  color: white !important;
+}
+
+.buttonGo {
+  display: flex;
+  justify-content: flex-end; /* ✅ đẩy toàn bộ sang phải */
+  gap: 0.5rem;
+}
+
+.sapUiTinyMarginBottom{
+  margin-top: 20px;
+}
+
+/* Sticky header for sap.m.Table */
+.stickyTable .sapMListTblHeader {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: var(--sapList_HeaderBackground); /* Giữ đúng theme Fiori */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+}
+
+/* Đảm bảo cột header không bị ẩn */
+.stickyTable .sapMListTbl {
+  border-collapse: separate;
+}
