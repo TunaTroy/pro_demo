@@ -216,6 +216,128 @@ sap.ui.define(
         });
       },
 
+
+      
+      /* ===== Load KPI cho RFQ ===== */
+      _loadKpiRFQ: function (sPeriodKey) {
+        BusyIndicator.show(0);
+        const oCurrRange = this._getDateRange(sPeriodKey);
+        const oPrevRange = this._getPreviousRange(sPeriodKey);
+
+        this.oOData.read("/ProcurementHeaderSet", {
+          urlParameters: { $select: "Ebeln,Aedat,Bstyp", $top: "5000" },
+          success: function (oData) {
+            BusyIndicator.hide();
+            const aResults = (oData.results || []).filter(
+              (r) => r.Bstyp === "A"
+            ); // RFQ
+
+            if (aResults.length === 0) {
+              this._addKpiCard({
+                title: "Request for Quotation (RFQ)",
+                period: this._getPeriodLabel(sPeriodKey),
+                value: "0",
+                percentage: "0%",
+                progress: 0,
+                state: "Error",
+              });
+              return;
+            }
+
+            // Parse ngày
+            aResults.forEach((r) => {
+              if (typeof r.Aedat === "string") {
+                const match = /Date\((\d+)\)/.exec(r.Aedat);
+                if (match) r.Aedat = new Date(parseInt(match[1], 10));
+              }
+            });
+
+            // Lọc theo range hiện tại và trước đó
+            const aCurr = aResults.filter(
+              (r) => r.Aedat >= oCurrRange.start && r.Aedat <= oCurrRange.end
+            );
+            const aPrev = aResults.filter(
+              (r) => r.Aedat >= oPrevRange.start && r.Aedat <= oPrevRange.end
+            );
+
+            const iCurrCount = new Set(aCurr.map((r) => r.Ebeln)).size;
+            const iPrevCount = new Set(aPrev.map((r) => r.Ebeln)).size;
+
+            this._displayKpiCardGeneric(
+              "RFQ",
+              sPeriodKey,
+              iCurrCount,
+              iPrevCount
+            );
+          }.bind(this),
+
+          error: function (e) {
+            BusyIndicator.hide();
+            console.error("❌ Lỗi load RFQ KPI:", e);
+          },
+        });
+      },
+
+      /* ===== Load KPI cho PO ===== */
+      _loadKpiPO: function (sPeriodKey) {
+        BusyIndicator.show(0);
+        const oCurrRange = this._getDateRange(sPeriodKey);
+        const oPrevRange = this._getPreviousRange(sPeriodKey);
+
+        this.oOData.read("/ProcurementHeaderSet", {
+          urlParameters: { $select: "Ebeln,Aedat,Bstyp", $top: "5000" },
+          success: function (oData) {
+            BusyIndicator.hide();
+            const aResults = (oData.results || []).filter(
+              (r) => r.Bstyp === "F"
+            ); // PO
+
+            if (aResults.length === 0) {
+              this._addKpiCard({
+                title: "Purchase Order (PO)",
+                period: this._getPeriodLabel(sPeriodKey),
+                value: "0",
+                percentage: "0%",
+                progress: 0,
+                state: "Error",
+              });
+              return;
+            }
+
+            // Parse ngày
+            aResults.forEach((r) => {
+              if (typeof r.Aedat === "string") {
+                const match = /Date\((\d+)\)/.exec(r.Aedat);
+                if (match) r.Aedat = new Date(parseInt(match[1], 10));
+              }
+            });
+
+            // Lọc dữ liệu theo khoảng thời gian
+            const aCurr = aResults.filter(
+              (r) => r.Aedat >= oCurrRange.start && r.Aedat <= oCurrRange.end
+            );
+            const aPrev = aResults.filter(
+              (r) => r.Aedat >= oPrevRange.start && r.Aedat <= oPrevRange.end
+            );
+
+            const iCurrCount = new Set(aCurr.map((r) => r.Ebeln)).size;
+            const iPrevCount = new Set(aPrev.map((r) => r.Ebeln)).size;
+
+            this._displayKpiCardGeneric(
+              "PO",
+              sPeriodKey,
+              iCurrCount,
+              iPrevCount
+            );
+          }.bind(this),
+
+          error: function (e) {
+            BusyIndicator.hide();
+            console.error("❌ Lỗi load PO KPI:", e);
+          },
+        });
+      },
+
       /* ===== Load Status Donut Chart ===== */
       _loadStatusDonutChart: function (sPeriodKey) {
         BusyIndicator.show(0);
@@ -840,126 +962,6 @@ sap.ui.define(
               reject(e);
             },
           });
-        });
-      },
-
-      /* ===== Load KPI cho RFQ ===== */
-      _loadKpiRFQ: function (sPeriodKey) {
-        BusyIndicator.show(0);
-        const oCurrRange = this._getDateRange(sPeriodKey);
-        const oPrevRange = this._getPreviousRange(sPeriodKey);
-
-        this.oOData.read("/ProcurementHeaderSet", {
-          urlParameters: { $select: "Ebeln,Aedat,Bstyp", $top: "5000" },
-          success: function (oData) {
-            BusyIndicator.hide();
-            const aResults = (oData.results || []).filter(
-              (r) => r.Bstyp === "A"
-            ); // RFQ
-
-            if (aResults.length === 0) {
-              this._addKpiCard({
-                title: "Request for Quotation (RFQ)",
-                period: this._getPeriodLabel(sPeriodKey),
-                value: "0",
-                percentage: "0%",
-                progress: 0,
-                state: "Error",
-              });
-              return;
-            }
-
-            // Parse ngày
-            aResults.forEach((r) => {
-              if (typeof r.Aedat === "string") {
-                const match = /Date\((\d+)\)/.exec(r.Aedat);
-                if (match) r.Aedat = new Date(parseInt(match[1], 10));
-              }
-            });
-
-            // Lọc theo range hiện tại và trước đó
-            const aCurr = aResults.filter(
-              (r) => r.Aedat >= oCurrRange.start && r.Aedat <= oCurrRange.end
-            );
-            const aPrev = aResults.filter(
-              (r) => r.Aedat >= oPrevRange.start && r.Aedat <= oPrevRange.end
-            );
-
-            const iCurrCount = new Set(aCurr.map((r) => r.Ebeln)).size;
-            const iPrevCount = new Set(aPrev.map((r) => r.Ebeln)).size;
-
-            this._displayKpiCardGeneric(
-              "RFQ",
-              sPeriodKey,
-              iCurrCount,
-              iPrevCount
-            );
-          }.bind(this),
-
-          error: function (e) {
-            BusyIndicator.hide();
-            console.error("❌ Lỗi load RFQ KPI:", e);
-          },
-        });
-      },
-
-      /* ===== Load KPI cho PO ===== */
-      _loadKpiPO: function (sPeriodKey) {
-        BusyIndicator.show(0);
-        const oCurrRange = this._getDateRange(sPeriodKey);
-        const oPrevRange = this._getPreviousRange(sPeriodKey);
-
-        this.oOData.read("/ProcurementHeaderSet", {
-          urlParameters: { $select: "Ebeln,Aedat,Bstyp", $top: "5000" },
-          success: function (oData) {
-            BusyIndicator.hide();
-            const aResults = (oData.results || []).filter(
-              (r) => r.Bstyp === "F"
-            ); // PO
-
-            if (aResults.length === 0) {
-              this._addKpiCard({
-                title: "Purchase Order (PO)",
-                period: this._getPeriodLabel(sPeriodKey),
-                value: "0",
-                percentage: "0%",
-                progress: 0,
-                state: "Error",
-              });
-              return;
-            }
-
-            // Parse ngày
-            aResults.forEach((r) => {
-              if (typeof r.Aedat === "string") {
-                const match = /Date\((\d+)\)/.exec(r.Aedat);
-                if (match) r.Aedat = new Date(parseInt(match[1], 10));
-              }
-            });
-
-            // Lọc dữ liệu theo khoảng thời gian
-            const aCurr = aResults.filter(
-              (r) => r.Aedat >= oCurrRange.start && r.Aedat <= oCurrRange.end
-            );
-            const aPrev = aResults.filter(
-              (r) => r.Aedat >= oPrevRange.start && r.Aedat <= oPrevRange.end
-            );
-
-            const iCurrCount = new Set(aCurr.map((r) => r.Ebeln)).size;
-            const iPrevCount = new Set(aPrev.map((r) => r.Ebeln)).size;
-
-            this._displayKpiCardGeneric(
-              "PO",
-              sPeriodKey,
-              iCurrCount,
-              iPrevCount
-            );
-          }.bind(this),
-
-          error: function (e) {
-            BusyIndicator.hide();
-            console.error("❌ Lỗi load PO KPI:", e);
-          },
         });
       },
 
