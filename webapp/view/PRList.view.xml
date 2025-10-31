@@ -1,202 +1,118 @@
-<mvc:View  controllerName="demodashboard.controller.PRList"
-            xmlns:mvc="sap.ui.core.mvc"
-            xmlns="sap.m"
-            xmlns:l="sap.ui.layout"
-            xmlns:core="sap.ui.core"
-            xmlns:f="sap.ui.layout.form"
-            displayBlock="true">
+<mvc:View controllerName="demodashboard.controller.PRList"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:l="sap.ui.layout"
+    xmlns:core="sap.ui.core"
+    xmlns:f="sap.ui.layout.form"
+    displayBlock="true">
 
-  <Page id="prlist" title="📄 Purchase Requisition List">
+<Page id="prlist" title="📄 Purchase Requisition List">
 
-    <!-- ===== HEADER BUTTONS ===== -->
-    <headerContent>
-      <HBox id="_IDGenHBox2" alignItems="Center" justifyContent="End" class="sapUiTinyMarginEnd sapUiTinyMarginTop">
-        <Button id="_IDGenButton3" icon="sap-icon://home" text="Home" press="onNavHome" type="Transparent"/>
-        <Button id="_IDGenButton4" icon="sap-icon://refresh" text="Reload" press="onReload" type="Transparent"/>
-        <Button id="_IDGenButton5" icon="sap-icon://excel-attachment" text="Export Excel" press="onExportExcel" type="Transparent"/>
-      </HBox>
-    </headerContent>
+  <!-- ===== HEADER BUTTONS ===== -->
+  <headerContent>
+    <HBox alignItems="Center" justifyContent="End" class="sapUiTinyMarginEnd sapUiTinyMarginTop">
+      <Button icon="sap-icon://home" text="Home" press="onNavHome" type="Transparent"/>
+      <Button icon="sap-icon://refresh" text="Reload" press="onReload" type="Transparent"/>
+      <Button icon="sap-icon://excel-attachment" text="Export Excel" press="onExportExcel" type="Transparent"/>
+    </HBox>
+  </headerContent>
 
-    <content>
+  <content>
 
-      <!-- ===================================================== -->
-      <!-- 🔍 FILTER PANEL -->
-      <!-- ===================================================== -->
-      <Panel
-  headerText="Filter Criteria"
-  expandable="true"
-  expanded="true"
-  class="sapUiNoContentPadding sapUiResponsiveContentPadding sapUiSizeCompact filterPanel">
+    <!-- 🔍 FILTER PANEL -->
+    <Panel headerText="Filter Criteria" expandable="true"
+           class="sapUiNoContentPadding sapUiResponsiveContentPadding sapUiSizeCompact filterPanel">
 
-  <l:Grid
-    defaultSpan="L2 M4 S6"
-    hSpacing="1"
-    vSpacing="0.5"
-    class="sapUiTinyMarginBottom">
+      <l:Grid defaultSpan="L2 M4 S6" hSpacing="1" vSpacing="0.5" class="sapUiTinyMarginBottom">
+        <VBox width="12rem"><Label text="Purchase Req."/><Input id="inpBanfn" placeholder="Search PR No."/></VBox>
+        <VBox width="15rem"><Label text="Document Type"/><Input id="inpBsart" placeholder="Search Doc Type"/></VBox>
+        <VBox width="12rem"><Label text="Purchasing Group"/><Input id="inpEkgrp" placeholder="Enter Group"/></VBox>
+        <VBox width="12rem"><Label text="Created By"/><Input id="inpErnam" placeholder="Username"/></VBox>
+        <HBox width="639%" class="sapUiTinyMarginTop">
+          <Button text="Go" type="Emphasized" press="onGoFilter"/>
+          <Button text="Clear" icon="sap-icon://refresh" press="onClearFilter" type="Transparent"/>
+        </HBox>
+      </l:Grid>
+    </Panel>
 
-    <!-- Purchase Req -->
-    <VBox width="12rem" class="sapUiTinyMarginEnd">
-  <Label text="Purchase Req."/>
-  <Input
-    id="inpBanfn"
-    width="100%"
-    showValueHelp="true"
-    valueHelpRequest="onValueHelpBanfn"
-    placeholder="Search PR No."/>
-</VBox>
+    <Toolbar design="Transparent"><ToolbarSeparator width="100%" style="border-bottom: 1px solid #d9d9d9;"/></Toolbar>
 
-    <!-- Document Type -->
-    <VBox width="12rem" class="sapUiTinyMarginEnd">
-    <Label text="Document Type"/>
-    <Input id="inpBsart"
-           width="100%"
-           showValueHelp="true"
-           valueHelpRequest="onValueHelpBsart"
-           placeholder="Search Doc Type"/>
-</VBox>
+    <!-- 📋 TABLE + DETAIL -->
+    <l:ResponsiveSplitter id="_IDGenResponsiveSplitter" defaultPane="paneMaster">
+      <l:PaneContainer orientation="Horizontal">
 
-    <!-- Purchasing Group -->
-  <VBox width="12rem" class="sapUiTinyMarginEnd">
-    <Label text="Purchasing Group"/>
-    <Input id="inpEkgrp"
-           width="100%"
-           placeholder="Enter Group"/>
-    </VBox>
+        <!-- LEFT TABLE -->
+        <l:SplitPane id="paneMaster">
+          <l:layoutData><l:SplitterLayoutData id="layoutMaster" size="100%" resizable="true"/></l:layoutData>
 
-    <!-- Plant -->
-     <VBox width="12rem" class="sapUiTinyMarginEnd">
-    
-    <Label text="Plant"/>
-    <Input id="inpWerks"
-           width="100%"
-           placeholder="Enter Plant"/>
- </VBox>
+          <Table id="tblPRList"
+                 items="{ path: '/groups' }"
+                 mode="SingleSelectLeft"
+                 selectionChange="onSelectPR"
+                 class="sapUiSizeCompact stickyTable"
+                 growing="true"
+                 growingThreshold="100"
+                 growingScrollToLoad="true"
+                 width="100%">
 
+            <noData>
+              <IllustratedMessage
+                illustrationType="sapIllus-NoData"
+                title="No matching Purchase Requisitions found"
+                description="Try adjusting your filters or clear all filters to see more results."/>
+            </noData>
 
-    <!-- Status -->
-     <VBox width="12rem" class="sapUiTinyMarginEnd">
-    <Label text="Status"/>
-    <Select id="selStatus" width="100%">
-      <core:Item key="" text="All"/>
-      <core:Item key="C" text="Approved"/>
-      <core:Item key="R" text="Pending"/>
-      <core:Item key="X" text="Rejected"/>
-    </Select>
- </VBox>
- 
-    <!-- Created By -->
+            <columns>
+              <Column hAlign="Begin"><Text text="Purchase Requisition"/></Column>
+              <Column><Text text="Document Type"/></Column>
+              <Column hAlign="Center"><Text text="Purchasing Group"/></Column>
+              <Column><Text text="Created By"/></Column>
+              <Column><Text text="Requisition Date"/></Column>
+              <Column hAlign="Center" width="7rem"><Text text="Item Count"/></Column>
+              <Column hAlign="Center" width="12rem"><Text text="Status"/></Column>
+            </columns>
 
- <VBox width="12rem" class="sapUiTinyMarginEnd">
-    <Label text="Created By"/>
-    <Input id="inpErnam"
-           width="100%"
-           placeholder="Username"/>
-</VBox>
+            <items>
+              <ColumnListItem type="Active" press="onSelectPR" vAlign="Top">
+                <cells>
+                  <Link text="{path:'Banfn', formatter:'.formatter.padBanfn'}" press="onShowItems" textAlign="Begin"/>
+                  <Text text="{path:'Bsart', formatter:'.formatter.docTypeText'}"/>
+                  <Text text="{Ekgrp}"/>
+                  <Text text="{Ernam}"/>
+                  <Text text="{path:'Badat', formatter:'.formatter.dateFormat'}"/>
+                  <Text text="{ItemCount}"/>
 
+                  <ProgressIndicator 
+                      percentValue="{StatusPercent}" 
+                      displayValue="{StatusDisplay}" 
+                      showValue="true"
+                      state="{path:'StatusPercent', formatter:'.formatter.statusBarStatePending'}"/>
+                </cells>
+              </ColumnListItem>
+            </items>
+          </Table>
+        </l:SplitPane>
 
-    <!-- Go + Clear buttons -->
-   
-    <HBox  width="639%" class="buttonGo sapUiTinyMarginTop">
-  <Button text="Go" icon="sap-icon://filter" type="Emphasized" press="onGoFilter"/>
-  <Button text="Clear" icon="sap-icon://refresh" press="onClearFilter" type="Transparent" />
-</HBox>
-  </l:Grid>
-</Panel>
+        <!-- RIGHT DETAIL -->
+        <l:SplitPane id="paneDetail">
+          <VBox id="detailPanel" visible="false" class="sapUiMediumMargin sapUiSizeCompact sapUiNoContentPadding">
+            <HBox justifyContent="SpaceBetween" alignItems="Center" class="sapUiSmallMarginBottom">
+              <Title id="txtPRTitle" text="{Banfn}" level="H2"/>
+              <Button icon="sap-icon://decline" press="onCloseDetail" type="Transparent"/>
+            </HBox>
 
-<Toolbar design="Transparent">
-  <ToolbarSeparator width="100%" style="border-bottom: 1px solid #d9d9d9;"/>
-</Toolbar>
+            <ObjectHeader title="Purchase Requisition Info" number="{Banfn}" numberUnit="PR No." intro="Detail Overview"/>
+            <ObjectAttribute title="Document Type" text="{Bsart}"/>
+            <ObjectAttribute title="Purchasing Group" text="{Ekgrp}"/>
+            <ObjectAttribute title="Created By" text="{Ernam}"/>
+            <ObjectAttribute title="Requisition Date" text="{path:'Badat', formatter:'.formatter.dateFormat'}"/>
+            <ObjectStatus title="Status" text="{path:'Frgkz', formatter:'.formatter.statusText'}"
+                          state="{path:'Frgkz', formatter:'.formatter.statusState'}"/>
+          </VBox>
+        </l:SplitPane>
 
-
-
-      <!-- ===================================================== -->
-      <!-- 📋 PR TABLE + DETAIL PANEL -->
-      <!-- ===================================================== -->
-      <l:ResponsiveSplitter id="_IDGenResponsiveSplitter" defaultPane="paneMaster">
-        <l:PaneContainer id="_IDGenPaneContainer" orientation="Horizontal">
-
-          <!-- LEFT: TABLE -->
-          <l:SplitPane id="paneMaster">
-            <l:layoutData>
-              <l:SplitterLayoutData id="layoutMaster" size="100%" resizable="true"/>
-            </l:layoutData>
-
-            <Table
-              id="tblPRList"
-              items="{ path: '/PRsSet', sorter: { path: 'Banfn', descending: true } }"
-              mode="SingleSelectLeft"
-              selectionChange="onSelectPR"
-              class="sapUiSizeCompact stickyTable"
-              growing="true"
-              growingScrollToLoad="true"
-              width="100%">
-
-              <noData>
-    <IllustratedMessage
-      illustrationType="sapIllus-NoData"
-      title="No matching Purchase Requisitions found"
-      description="Try adjusting your filters or clear all filters to see more results." />
-  </noData>
-
-              <columns>
-                <Column id="_IDGenColumn" hAlign="Center"><Text id="_IDGenText4" text="Purchase Req."/></Column>
-                <Column id="_IDGenColumn1" hAlign="Center"><Text id="_IDGenText12" text="Item No"/></Column>
-                <Column id="_IDGenColumn2"><Text id="_IDGenText13" text="Document Type"/></Column>
-                <Column id="_IDGenColumn3"><Text id="_IDGenText14" text="Purchasing Group"/></Column>
-                <Column id="_IDGenColumn4"><Text id="_IDGenText15" text="Created By"/></Column>
-                <Column id="_IDGenColumn5"><Text id="_IDGenText16" text="Status"/></Column>
-              </columns>
-
-              <items>
-                <ColumnListItem id="_IDGenColumnListItem" type="Active" press="onSelectPR">
-                  <cells>
-                    <Text id="_IDGenText6" text="{Banfn}"/>
-                    <Text id="_IDGenText5" text="{Bnfpo}"/>
-                    <Text id="_IDGenText7" text="{Bsart}"/>
-                    <Text id="_IDGenText11" text="{Ekgrp}"/>
-                    <Text id="_IDGenText10" text="{Ernam}"/>
-                    <ObjectStatus id="_IDGenObjectStatus"
-                      text="{path:'Frgkz', formatter:'.formatter.statusText'}"
-                      state="{path:'Frgkz', formatter:'.formatter.statusState'}"/>
-                  </cells>
-                </ColumnListItem>
-              </items>
-            </Table>
-          </l:SplitPane>
-
-          <!-- RIGHT: DETAIL PANEL -->
-          <l:SplitPane id="paneDetail">
-            <VBox id="detailPanel"
-                  visible="false"
-                  class="sapUiMediumMargin sapUiSizeCompact sapUiNoContentPadding">
-
-              <HBox id="_IDGenHBox" justifyContent="SpaceBetween" alignItems="Center" class="sapUiSmallMarginBottom">
-                <Title id="txtPRTitle" text="{Banfn}" level="H2"/>
-                <Button id="_IDGenButton1" icon="sap-icon://decline" press="onCloseDetail" type="Transparent"/>
-              </HBox>
-
-              <ObjectHeader id="_IDGenObjectHeader1"
-                title="Purchase Requisition Info"
-                number="{Banfn}"
-                numberUnit="PR No."
-                intro="Detail Overview"/>
-
-              <ObjectAttribute id="_IDGenObjectAttribute" title="Document Type" text="{Bsart}"/>
-              <ObjectAttribute id="_IDGenObjectAttribute1" title="Purchasing Group" text="{Ekgrp}"/>
-              <ObjectAttribute id="_IDGenObjectAttribute2" title="Created By" text="{Ernam}"/>
-              <ObjectAttribute id="_IDGenObjectAttribute3" title="Plant" text="{Werks}"/>
-              <ObjectAttribute id="_IDGenObjectAttribute5" title="Location" text="{Lgort}"/>
-
-              <ObjectStatus id="_IDGenObjectStatus1"
-                title="Status"
-                text="{path:'Frgkz', formatter:'.formatter.statusText'}"
-                state="{path:'Frgkz', formatter:'.formatter.statusState'}"/>
-            </VBox>
-          </l:SplitPane>
-
-        </l:PaneContainer>
-      </l:ResponsiveSplitter>
-
-    </content>
-  </Page>
+      </l:PaneContainer>
+    </l:ResponsiveSplitter>
+  </content>
+</Page>
 </mvc:View>

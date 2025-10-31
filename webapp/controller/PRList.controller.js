@@ -4,11 +4,12 @@ sap.ui.define([
   "sap/m/MessageToast",
   "sap/ui/export/Spreadsheet",
   "sap/ui/model/json/JSONModel",
-  "sap/m/SelectDialog",
-  "sap/m/StandardListItem",
   "sap/ui/model/Filter",
-  "sap/ui/model/FilterOperator"
-], function (Controller, ODataModel, MessageToast, Spreadsheet, JSONModel, SelectDialog, StandardListItem, Filter, FilterOperator) {
+  "sap/ui/model/FilterOperator",
+  "sap/m/ResponsivePopover",
+  "sap/m/List",
+  "sap/m/StandardListItem"
+], function (Controller, ODataModel, MessageToast, Spreadsheet, JSONModel, Filter, FilterOperator, ResponsivePopover, List, StandardListItem) {
   "use strict";
 
   return Controller.extend("demodashboard.controller.PRList", {
@@ -29,6 +30,39 @@ sap.ui.define([
           case "X": return "Error";
           default: return "None";
         }
+      },
+      statusBarStatePending: function (percent) {
+        if (percent >= 80) return "Error";
+        if (percent >= 40) return "Warning";
+        return "Success";
+      },
+      dateFormat: function (sDate) {
+        if (!sDate) return "";
+        const oDate = new Date(sDate);
+        return oDate.toLocaleDateString("en-GB");
+      },
+      padBanfn: function (sBanfn) {
+        if (!sBanfn) return "";
+        return String(sBanfn).trim().padStart(10, "0");
+      },
+      docTypeText: function (sBsart) {
+        if (!sBsart) return "";
+        const map = {
+          NB: "Purchase Requisition",
+          ZNB1: "Service PR Type 1",
+          ZNB2: "Service PR Type 2",
+          ZNB3: "Maintenance PR",
+          ZNB4: "Material Request",
+          ZNB5: "Internal Purchase",
+          ZNB6: "Stock PR",
+          ZNB7: "Subcontracting PR",
+          ZNB8: "External Purchase",
+          ZNB9: "Repair PR",
+          AN: "Quotation Request",
+          UB: "Stock Transfer"
+        };
+        const desc = map[sBsart] || "Unknown Type";
+        return `${desc} (${sBsart})`;
       }
     },
 
@@ -36,213 +70,108 @@ sap.ui.define([
       const sServiceUrl = "/sap/opu/odata/sap/ZGW_PRO_G18_SRV/";
       const oModel = new ODataModel(sServiceUrl, { useBatch: false, json: true });
       this.getView().setModel(oModel);
-
-      oModel.metadataLoaded()
-        .then(() => {
-          console.log("✅ Metadata loaded for PRsSet");
-          // Ensure table binding is ready
-          const oTable = this.byId("tblPRList");
-          if (oTable && !oTable.getBinding("items")) {
-            oTable.bindItems({
-              path: "/PRsSet",
-              template: oTable.getBindingInfo("items")?.template || oTable.getItems()[0]?.clone()
-            });
-          }
-        })
-        .catch((err) => {
-          console.error("❌ Metadata load failed", err);
-          MessageToast.show("Cannot load OData metadata!");
-        });
-
       this.byId("detailPanel").setVisible(false);
+      this.onGoFilter();
     },
 
     // =========================================================
-    // SEARCH HELP - PURCHASE REQUISITION (Banfn)
-    // =========================================================
-    onValueHelpBanfn: function () {
-      const oView = this.getView();
-      const oModel = oView.getModel();
-
-      if (!this._oPRDialog) {
-        this._oPRDialog = new SelectDialog({
-          title: "Select Purchase Requisition",
-          search: function (oEvent) {
-            const sValue = oEvent.getParameter("value")?.trim() || "";
-            const oBinding = oEvent.getSource().getBinding("items");
-
-            if (!sValue) {
-              oBinding.filter([]);
-              return;
-            }
-
-            const aFilters = [
-              new Filter("Banfn", FilterOperator.Contains, sValue),
-              new Filter("Txz01", FilterOperator.Contains, sValue)
-            ];
-            oBinding.filter(new Filter(aFilters, false));
-          },
-          confirm: function (oEvt) {
-            const oItem = oEvt.getParameter("selectedItem");
-            if (oItem) {
-              const sPR = oItem.getDescription();
-              oView.byId("inpBanfn").setValue(sPR);
-              oView.byId("inpBanfn").data("selectedKey", sPR);
-              console.log("✅ Selected PR:", sPR);
-            }
-          },
-          items: {
-            path: "/PRsSet",
-            template: new StandardListItem({
-              title: "{Txz01}",
-              description: "{Banfn}"
-            })
-          }
-        });
-
-        this._oPRDialog.setModel(oModel);
-      }
-
-      this._oPRDialog.open();
-    },
-
-    // =========================================================
-    // SEARCH HELP - DOCUMENT TYPE (Bsart)
-    // =========================================================
-    onValueHelpBsart: function () {
-      const oView = this.getView();
-      const oModel = oView.getModel();
-
-      if (!this._oDocTypeDialog) {
-        this._oDocTypeDialog = new SelectDialog({
-          title: "Select Document Type",
-          search: function (oEvent) {
-            const sValue = oEvent.getParameter("value")?.trim() || "";
-            const oBinding = oEvent.getSource().getBinding("items");
-
-            if (!sValue) {
-              oBinding.filter([]);
-              return;
-            }
-
-            const aFilters = [
-              new Filter("Bsart", FilterOperator.Contains, sValue)
-            ];
-            oBinding.filter(new Filter(aFilters, false));
-          },
-          confirm: function (oEvt) {
-            const oItem = oEvt.getParameter("selectedItem");
-            if (oItem) {
-              const sType = oItem.getTitle();
-              oView.byId("inpBsart").setValue(sType);
-              oView.byId("inpBsart").data("selectedKey", sType);
-              console.log("✅ Selected Doc Type:", sType);
-            }
-          },
-          items: {
-            path: "/PRsSet",
-            template: new StandardListItem({
-              title: "{Bsart}",
-              description: "{Ernam}"
-            })
-          }
-        });
-
-        this._oDocTypeDialog.setModel(oModel);
-      }
-
-      this._oDocTypeDialog.open();
-    },
-
-    // =========================================================
-    // GO FILTER - Apply filters to OData binding directly
+    // FILTER + SORT + GROUP
     // =========================================================
     onGoFilter: function () {
-  const oView = this.getView();
-  const oModel = oView.getModel();
-  const oTable = oView.byId("tblPRList");
+      const oView = this.getView();
+      const oModel = oView.getModel();
+      const oTable = oView.byId("tblPRList");
 
-  // Lấy giá trị filter
-  const sBanfn = oView.byId("inpBanfn").getValue().trim();
-  const sBsart = oView.byId("inpBsart").getValue().trim();
-  const sEkgrp = oView.byId("inpEkgrp").getValue().trim();
-  const sWerks = oView.byId("inpWerks").getValue().trim();
-  const sErnam = oView.byId("inpErnam").getValue().trim();
-  const sStatus = oView.byId("selStatus").getSelectedKey();
+      const sBanfn = oView.byId("inpBanfn").getValue().trim();
+      const sBsart = oView.byId("inpBsart").getValue().trim();
+      const sEkgrp = oView.byId("inpEkgrp").getValue().trim();
+      const sWerks = oView.byId("inpWerks") ? oView.byId("inpWerks").getValue().trim() : "";
+      const sErnam = oView.byId("inpErnam").getValue().trim();
+      const sStatus = oView.byId("selStatus") ? oView.byId("selStatus").getSelectedKey() : "";
 
-  // Tạo mảng filter
-  const aFilters = [];
-  if (sBanfn) aFilters.push(new sap.ui.model.Filter("Banfn", sap.ui.model.FilterOperator.Contains, sBanfn));
-  if (sBsart) aFilters.push(new sap.ui.model.Filter("Bsart", sap.ui.model.FilterOperator.Contains, sBsart));
-  if (sEkgrp) aFilters.push(new sap.ui.model.Filter("Ekgrp", sap.ui.model.FilterOperator.Contains, sEkgrp));
-  if (sWerks) aFilters.push(new sap.ui.model.Filter("Werks", sap.ui.model.FilterOperator.Contains, sWerks));
-  if (sErnam) aFilters.push(new sap.ui.model.Filter("Ernam", sap.ui.model.FilterOperator.Contains, sErnam));
-  if (sStatus) aFilters.push(new sap.ui.model.Filter("Frgkz", sap.ui.model.FilterOperator.EQ, sStatus));
+      const aFilters = [];
+      if (sBanfn) aFilters.push(new Filter("Banfn", FilterOperator.Contains, sBanfn));
+      if (sBsart) aFilters.push(new Filter("Bsart", FilterOperator.Contains, sBsart));
+      if (sEkgrp) aFilters.push(new Filter("Ekgrp", FilterOperator.Contains, sEkgrp));
+      if (sWerks) aFilters.push(new Filter("Werks", FilterOperator.Contains, sWerks));
+      if (sErnam) aFilters.push(new Filter("Ernam", FilterOperator.Contains, sErnam));
+      if (sStatus) aFilters.push(new Filter("Frgkz", FilterOperator.EQ, sStatus));
 
-  sap.ui.core.BusyIndicator.show(0);
+      sap.ui.core.BusyIndicator.show(0);
 
-  // Gọi lại dữ liệu từ OData service
-  oModel.read("/PRsSet", {
-    filters: aFilters,
-    success: function (oData) {
-      sap.ui.core.BusyIndicator.hide();
+      oModel.read("/PRsSet", {
+        filters: aFilters,
+        urlParameters: { $top: 10000, $orderby: "Banfn asc" },
+        success: (oData) => {
+          sap.ui.core.BusyIndicator.hide();
+          const all = oData.results || [];
 
-      const aResults = oData.results || [];
-      const oJSON = new sap.ui.model.json.JSONModel({ results: aResults });
+          // Sort ASC
+          all.sort((a, b) => Number(a.Banfn) - Number(b.Banfn));
 
-      oTable.setModel(oJSON);
-      oTable.bindItems({
-        path: "/results",
-        template: oTable.getBindingInfo("items").template.clone()
+          // Group by Banfn
+          const groups = [];
+          all.forEach(row => {
+            let grp = groups.find(g => g.Banfn === row.Banfn);
+            if (!grp) {
+              grp = { Banfn: row.Banfn, Bsart: row.Bsart, Ekgrp: row.Ekgrp, Ernam: row.Ernam, Badat: row.Badat, Items: [row] };
+              groups.push(grp);
+            } else {
+              grp.Items.push(row);
+            }
+          });
+
+          // ✅ Tính Status % theo công thức x = 100 / tổng item, % = R_count * x
+          groups.forEach(g => {
+            g.ItemCount = g.Items.length;
+            const rCount = g.Items.filter(it => it.Frgkz === "R").length;
+            const x = g.ItemCount > 0 ? (100 / g.ItemCount) : 0;
+            const percent = Math.round(rCount * x);
+            g.StatusPercent = percent;
+            g.StatusDisplay = percent + "%";
+          });
+
+          const oJSON = new JSONModel({ groups });
+          oTable.setModel(oJSON);
+          MessageToast.show(`✅ Loaded ${groups.length} PRs (${all.length} total records).`);
+        },
+        error: () => {
+          sap.ui.core.BusyIndicator.hide();
+          MessageToast.show("❌ Error loading data from server.");
+        }
       });
-
-      if (aResults.length === 0) {
-        sap.m.MessageToast.show("⚠️ No matching Purchase Requisitions found.");
-      } else {
-        sap.m.MessageToast.show(`✅ Found ${aResults.length} record(s).`);
-      }
     },
-    error: function (oError) {
-      sap.ui.core.BusyIndicator.hide();
-      console.error("❌ Error loading filtered PR list:", oError);
-      sap.m.MessageToast.show("Error retrieving data from server!");
-    }
-  });
-},
-
-
-
-
-
-
-onClearFilter: function () {
-  const oView = this.getView();
-  ["inpBanfn", "inpBsart", "inpEkgrp", "inpWerks", "inpErnam"].forEach(id => oView.byId(id).setValue(""));
-  oView.byId("selStatus").setSelectedKey("");
-
-  // Gọi lại toàn bộ danh sách PR
-  this.onGoFilter();
-  sap.m.MessageToast.show("🔄 Filters cleared. Showing all Purchase Requisitions.");
-},
-
-
-
 
     // =========================================================
-    // WHEN SELECT A ROW
+    // CLEAR FILTER
+    // =========================================================
+    onClearFilter: function () {
+      const oView = this.getView();
+      ["inpBanfn", "inpBsart", "inpEkgrp", "inpWerks", "inpErnam"].forEach(id => {
+        if (oView.byId(id)) oView.byId(id).setValue("");
+      });
+      if (oView.byId("selStatus")) oView.byId("selStatus").setSelectedKey("");
+      this.onGoFilter();
+      MessageToast.show("🔄 Filters cleared. Showing all Purchase Requisitions.");
+    },
+
+    // =========================================================
+    // DETAIL PANEL
     // =========================================================
     onSelectPR: function (oEvent) {
-      const oItem = oEvent.getParameter("listItem");
-      const oCtx = oItem.getBindingContext();
-
+      const oCtx = oEvent.getParameter("listItem").getBindingContext();
       const oDetail = this.byId("detailPanel");
       const oLayout = this.byId("layoutMaster");
 
       if (oCtx) {
+        const group = oCtx.getObject();
+        const first = (group.Items && group.Items[0]) || group;
+        const oDetailModel = new JSONModel(first);
+        oDetail.setModel(oDetailModel);
+        oDetail.bindElement("/");
         oDetail.setVisible(true);
         oLayout.setSize("65%");
-        oDetail.setBindingContext(oCtx);
-        this.byId("txtPRTitle").setText(oCtx.getProperty("Banfn"));
+        this.byId("txtPRTitle").setText(group.Banfn);
       }
     },
 
@@ -254,40 +183,58 @@ onClearFilter: function () {
       this.byId("tblPRList").removeSelections();
     },
 
+    // =========================================================
+    // POPOVER ITEMS
+    // =========================================================
+    onShowItems: function (oEvent) {
+      const oGroup = oEvent.getSource().getBindingContext().getObject();
+      const aItems = oGroup.Items || [];
+
+      if (!this._oPopover) {
+        const oList = new List({
+          items: {
+            path: "/",
+            template: new StandardListItem({
+              title: "{= 'Item ' + ${Bnfpo}}",
+              description: "{= 'DocType: ' + ${Bsart} + ' • Group: ' + ${Ekgrp}}",
+              info: "{path:'Badat', formatter:'.formatter.dateFormat'}"
+            })
+          }
+        });
+        this._oPopover = new ResponsivePopover({
+          title: "Items for this PR",
+          contentWidth: "400px",
+          contentHeight: "300px",
+          content: [oList]
+        });
+        this.getView().addDependent(this._oPopover);
+      }
+
+      this._oPopover.setModel(new JSONModel(aItems));
+      this._oPopover.openBy(oEvent.getSource());
+    },
+
+    // =========================================================
+    // EXPORT
+    // =========================================================
     onExportExcel: function () {
       const oTable = this.byId("tblPRList");
-      const oBinding = oTable.getBinding("items");
-      
-      if (!oBinding) {
-        MessageToast.show("⚠️ No data to export!");
-        return;
-      }
-
-      // Get contexts from binding (respects filters)
-      const aContexts = oBinding.getContexts();
-      const aData = aContexts.map(ctx => ctx.getObject());
-
-      if (!aData.length) {
-        MessageToast.show("⚠️ No data to export!");
-        return;
-      }
+      const aData = oTable.getModel()?.getData()?.groups || [];
+      if (!aData.length) return MessageToast.show("⚠️ No data to export!");
 
       const aCols = [
-        { label: "Purchase Req.", property: "Banfn" },
-        { label: "Item No.", property: "Bnfpo" },
+        { label: "Purchase Requisition", property: "Banfn" },
         { label: "Document Type", property: "Bsart" },
         { label: "Purchasing Group", property: "Ekgrp" },
         { label: "Created By", property: "Ernam" },
-        { label: "Status", property: "Frgkz" }
+        { label: "Requisition Date", property: "Badat" }
       ];
 
-      const oSettings = {
+      const oSheet = new Spreadsheet({
         workbook: { columns: aCols },
         dataSource: aData,
         fileName: "PR_List_Export.xlsx"
-      };
-
-      const oSheet = new Spreadsheet(oSettings);
+      });
       oSheet.build().then(() => MessageToast.show("✅ Export successful!"))
         .finally(() => oSheet.destroy());
     },
@@ -297,5 +244,6 @@ onClearFilter: function () {
       if (oRouter) oRouter.navTo("DashBoard");
       else MessageToast.show("🔙 Back to Home");
     }
+
   });
 });
