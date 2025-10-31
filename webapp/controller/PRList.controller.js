@@ -158,31 +158,75 @@ sap.ui.define([
     // GO FILTER - Apply filters to OData binding directly
     // =========================================================
     onGoFilter: function () {
-      const sBanfn = this.byId("inpBanfn").getValue().trim();
-      const sBsart = this.byId("inpBsart").getValue().trim();
-      const oTable = this.byId("tblPRList");
-      const oBinding = oTable.getBinding("items");
+  const oView = this.getView();
+  const oModel = oView.getModel();
+  const oTable = oView.byId("tblPRList");
 
-      // Build filters array
-      const aFilters = [];
-      if (sBanfn) {
-        aFilters.push(new Filter("Banfn", FilterOperator.EQ, sBanfn));
-      }
-      if (sBsart) {
-        aFilters.push(new Filter("Bsart", FilterOperator.EQ, sBsart));
-      }
+  // Lấy giá trị filter
+  const sBanfn = oView.byId("inpBanfn").getValue().trim();
+  const sBsart = oView.byId("inpBsart").getValue().trim();
+  const sEkgrp = oView.byId("inpEkgrp").getValue().trim();
+  const sWerks = oView.byId("inpWerks").getValue().trim();
+  const sErnam = oView.byId("inpErnam").getValue().trim();
+  const sStatus = oView.byId("selStatus").getSelectedKey();
 
-      // Apply filters to binding (combines with AND logic)
-      if (oBinding) {
-        if (aFilters.length > 0) {
-          oBinding.filter(new Filter(aFilters, true)); // true = AND
-          MessageToast.show(`🔍 Filtering by: ${sBanfn || ''} ${sBsart || ''}`);
-        } else {
-          oBinding.filter([]); // Clear filters
-          MessageToast.show("🔁 Showing all Purchase Requisitions");
-        }
+  // Tạo mảng filter
+  const aFilters = [];
+  if (sBanfn) aFilters.push(new sap.ui.model.Filter("Banfn", sap.ui.model.FilterOperator.Contains, sBanfn));
+  if (sBsart) aFilters.push(new sap.ui.model.Filter("Bsart", sap.ui.model.FilterOperator.Contains, sBsart));
+  if (sEkgrp) aFilters.push(new sap.ui.model.Filter("Ekgrp", sap.ui.model.FilterOperator.Contains, sEkgrp));
+  if (sWerks) aFilters.push(new sap.ui.model.Filter("Werks", sap.ui.model.FilterOperator.Contains, sWerks));
+  if (sErnam) aFilters.push(new sap.ui.model.Filter("Ernam", sap.ui.model.FilterOperator.Contains, sErnam));
+  if (sStatus) aFilters.push(new sap.ui.model.Filter("Frgkz", sap.ui.model.FilterOperator.EQ, sStatus));
+
+  sap.ui.core.BusyIndicator.show(0);
+
+  // Gọi lại dữ liệu từ OData service
+  oModel.read("/PRsSet", {
+    filters: aFilters,
+    success: function (oData) {
+      sap.ui.core.BusyIndicator.hide();
+
+      const aResults = oData.results || [];
+      const oJSON = new sap.ui.model.json.JSONModel({ results: aResults });
+
+      oTable.setModel(oJSON);
+      oTable.bindItems({
+        path: "/results",
+        template: oTable.getBindingInfo("items").template.clone()
+      });
+
+      if (aResults.length === 0) {
+        sap.m.MessageToast.show("⚠️ No matching Purchase Requisitions found.");
+      } else {
+        sap.m.MessageToast.show(`✅ Found ${aResults.length} record(s).`);
       }
     },
+    error: function (oError) {
+      sap.ui.core.BusyIndicator.hide();
+      console.error("❌ Error loading filtered PR list:", oError);
+      sap.m.MessageToast.show("Error retrieving data from server!");
+    }
+  });
+},
+
+
+
+
+
+
+onClearFilter: function () {
+  const oView = this.getView();
+  ["inpBanfn", "inpBsart", "inpEkgrp", "inpWerks", "inpErnam"].forEach(id => oView.byId(id).setValue(""));
+  oView.byId("selStatus").setSelectedKey("");
+
+  // Gọi lại toàn bộ danh sách PR
+  this.onGoFilter();
+  sap.m.MessageToast.show("🔄 Filters cleared. Showing all Purchase Requisitions.");
+},
+
+
+
 
     // =========================================================
     // WHEN SELECT A ROW
