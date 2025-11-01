@@ -1,10 +1,11 @@
-<mvc:View controllerName="demodashboard.controller.PRList"
-    xmlns:mvc="sap.ui.core.mvc"
-    xmlns="sap.m"
-    xmlns:l="sap.ui.layout"
-    xmlns:core="sap.ui.core"
-    xmlns:f="sap.ui.layout.form"
-    displayBlock="true">
+<mvc:View
+  controllerName="demodashboard.controller.PRList"
+  xmlns:mvc="sap.ui.core.mvc"
+  xmlns="sap.m"
+  xmlns:l="sap.ui.layout"
+  xmlns:core="sap.ui.core"
+  xmlns:f="sap.ui.layout.form"
+  displayBlock="true">
 
 <Page id="prlist" title="📄 Purchase Requisition List">
 
@@ -20,14 +21,38 @@
   <content>
 
     <!-- 🔍 FILTER PANEL -->
-    <Panel headerText="Filter Criteria" expandable="true"
-           class="sapUiNoContentPadding sapUiResponsiveContentPadding sapUiSizeCompact filterPanel">
-
+    <Panel
+      headerText="Filter Criteria"
+      expandable="true"
+      class="sapUiNoContentPadding sapUiResponsiveContentPadding sapUiSizeCompact filterPanel">
       <l:Grid defaultSpan="L2 M4 S6" hSpacing="1" vSpacing="0.5" class="sapUiTinyMarginBottom">
-        <VBox width="12rem"><Label text="Purchase Req."/><Input id="inpBanfn" placeholder="Search PR No."/></VBox>
-        <VBox width="15rem"><Label text="Document Type"/><Input id="inpBsart" placeholder="Search Doc Type"/></VBox>
-        <VBox width="12rem"><Label text="Purchasing Group"/><Input id="inpEkgrp" placeholder="Enter Group"/></VBox>
-        <VBox width="12rem"><Label text="Created By"/><Input id="inpErnam" placeholder="Username"/></VBox>
+        <VBox width="12rem">
+          <Label text="Purchase Req."/>
+          <Input id="inpBanfn" placeholder="Search PR No."/>
+        </VBox>
+        <VBox width="15rem">
+          <Label text="Document Type"/>
+          <Input id="inpBsart" placeholder="Search Doc Type"/>
+        </VBox>
+        <VBox width="12rem">
+          <Label text="Purchasing Group"/>
+          <Input id="inpEkgrp" placeholder="Enter Group"/>
+        </VBox>
+        <VBox width="12rem">
+          <Label text="Created By"/>
+          <Input id="inpErnam" placeholder="Username"/>
+        </VBox>
+        <VBox width="20rem">
+          <Label text="Requisition Date Range"/>
+          <DateRangeSelection
+            id="inpDateRange"
+            delimiter=" to "
+            displayFormat="dd/MM/yyyy"
+            valueFormat="yyyy-MM-dd"
+            placeholder="Select date range"
+            width="100%"/>
+        </VBox>
+
         <HBox width="639%" class="sapUiTinyMarginTop">
           <Button text="Go" type="Emphasized" press="onGoFilter"/>
           <Button text="Clear" icon="sap-icon://refresh" press="onClearFilter" type="Transparent"/>
@@ -35,7 +60,9 @@
       </l:Grid>
     </Panel>
 
-    <Toolbar design="Transparent"><ToolbarSeparator width="100%" style="border-bottom: 1px solid #d9d9d9;"/></Toolbar>
+    <Toolbar design="Transparent">
+      <ToolbarSeparator width="100%" style="border-bottom: 1px solid #d9d9d9;"/>
+    </Toolbar>
 
     <!-- 📋 TABLE + DETAIL -->
     <l:ResponsiveSplitter id="_IDGenResponsiveSplitter" defaultPane="paneMaster">
@@ -43,17 +70,20 @@
 
         <!-- LEFT TABLE -->
         <l:SplitPane id="paneMaster">
-          <l:layoutData><l:SplitterLayoutData id="layoutMaster" size="100%" resizable="true"/></l:layoutData>
+          <l:layoutData>
+            <l:SplitterLayoutData id="layoutMaster" size="100%" resizable="true"/>
+          </l:layoutData>
 
-          <Table id="tblPRList"
-                 items="{ path: '/groups' }"
-                 mode="SingleSelectLeft"
-                 selectionChange="onSelectPR"
-                 class="sapUiSizeCompact stickyTable"
-                 growing="true"
-                 growingThreshold="100"
-                 growingScrollToLoad="true"
-                 width="100%">
+          <Table
+            id="tblPRList"
+            items="{ path: '/groups' }"
+            mode="SingleSelectLeft"
+            selectionChange="onSelectPR"
+            class="sapUiSizeCompact stickyTable"
+            growing="true"
+            growingThreshold="100"
+            growingScrollToLoad="true"
+            width="100%">
 
             <noData>
               <IllustratedMessage
@@ -75,39 +105,77 @@
             <items>
               <ColumnListItem type="Active" press="onSelectPR" vAlign="Top">
                 <cells>
-                  <Link text="{path:'Banfn', formatter:'.formatter.padBanfn'}" press="onShowItems" textAlign="Begin"/>
+                  <Link text="{path:'Banfn', formatter:'.formatter.padBanfn'}" textAlign="Begin"/>
                   <Text text="{path:'Bsart', formatter:'.formatter.docTypeText'}"/>
                   <Text text="{Ekgrp}"/>
                   <Text text="{Ernam}"/>
                   <Text text="{path:'Badat', formatter:'.formatter.dateFormat'}"/>
                   <Text text="{ItemCount}"/>
-
                   <ProgressIndicator 
-                      percentValue="{StatusPercent}" 
-                      displayValue="{StatusDisplay}" 
-                      showValue="true"
-                      state="{path:'StatusPercent', formatter:'.formatter.statusBarStatePending'}"/>
+                    percentValue="{StatusPercent}" 
+                    displayValue="{StatusDisplay}" 
+                    showValue="true"
+                    state="{path:'StatusPercent', formatter:'.formatter.statusBarStatePercent'}"/>
                 </cells>
               </ColumnListItem>
             </items>
           </Table>
         </l:SplitPane>
 
-        <!-- RIGHT DETAIL -->
+        <!-- RIGHT DETAIL PANEL -->
         <l:SplitPane id="paneDetail">
           <VBox id="detailPanel" visible="false" class="sapUiMediumMargin sapUiSizeCompact sapUiNoContentPadding">
-            <HBox justifyContent="SpaceBetween" alignItems="Center" class="sapUiSmallMarginBottom">
-              <Title id="txtPRTitle" text="{Banfn}" level="H2"/>
-              <Button icon="sap-icon://decline" press="onCloseDetail" type="Transparent"/>
-            </HBox>
 
-            <ObjectHeader title="Purchase Requisition Info" number="{Banfn}" numberUnit="PR No." intro="Detail Overview"/>
-            <ObjectAttribute title="Document Type" text="{Bsart}"/>
-            <ObjectAttribute title="Purchasing Group" text="{Ekgrp}"/>
-            <ObjectAttribute title="Created By" text="{Ernam}"/>
-            <ObjectAttribute title="Requisition Date" text="{path:'Badat', formatter:'.formatter.dateFormat'}"/>
-            <ObjectStatus title="Status" text="{path:'Frgkz', formatter:'.formatter.statusText'}"
-                          state="{path:'Frgkz', formatter:'.formatter.statusState'}"/>
+            <!-- Card: PR Header Info -->
+            <Panel
+              class="sapUiNoContentPadding sapUiResponsiveContentPadding sapUiSizeCompact sapUiMediumMarginBottom prHeaderCard"
+              width="100%">
+              <VBox class="sapUiSmallMargin sapUiSizeCompact">
+                <HBox justifyContent="SpaceBetween" alignItems="Center" class="sapUiTinyMarginBottom">
+                  <Text text="{path:'Banfn', formatter:'.formatter.padBanfn'}" class="prHeaderTitle"/>
+                  <Button icon="sap-icon://decline" press="onCloseDetail" type="Transparent"/>
+                </HBox>
+
+                <Text text="{Bsart}" class="prHeaderSubTitle"/>
+
+                <HBox class="sapUiTinyMarginTop" wrap="Wrap">
+                  <Text text="{= 'Plant: ' + ${Ekgrp} + '   •   Created By: ' + ${Ernam} + '   •   Req. Date: ' + ${path:'Badat', formatter:'.formatter.dateFormat'} }" class="prHeaderInfoLine"/>
+                </HBox>
+
+                <HBox class="sapUiTinyMarginTop" alignItems="Center">
+                  <Text text="Status:" class="prHeaderLabel"/>
+                  <ObjectStatus
+                    text="{parts:['StatusPercent'], formatter:'.formatter.detailPercentStatusText'}"
+                    state="{parts:['StatusPercent'], formatter:'.formatter.detailPercentStatusState'}"
+                    class="sapUiTinyMarginBegin"/>
+                </HBox>
+              </VBox>
+            </Panel>
+
+            <!-- Card: Items List -->
+            <Panel headerText="📦 Items" class="sapUiNoContentPadding sapUiResponsiveContentPadding sapUiSizeCompact" width="100%">
+              <Table id="tblPRItems" items="{path:'/Items'}" class="sapUiSizeCompact" width="100%">
+                <columns>
+                  <Column><Text text="Item"/></Column>
+                  <Column><Text text="Material"/></Column>
+                  <Column><Text text="Quantity"/></Column>
+                  <Column><Text text="Requisition Date"/></Column>
+                  <Column><Text text="Status"/></Column>
+                </columns>
+                <items>
+                  <ColumnListItem>
+                    <cells>
+                      <Text text="{Bnfpo}"/>
+                      <Text text="{Txz01}"/>
+                      <Text text="{path:'Menge', formatter:'.formatter.quantityFormat'}" textAlign="End"/>
+                      <Text text="{path:'Badat', formatter:'.formatter.dateFormat'}"/>
+                      <Text text="{parts:['Frgkz'], formatter:'.formatter.detailStatusText'}"/>
+                    </cells>
+                  </ColumnListItem>
+                </items>
+              </Table>
+            </Panel>
+
           </VBox>
         </l:SplitPane>
 
