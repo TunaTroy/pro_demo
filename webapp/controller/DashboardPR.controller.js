@@ -1253,6 +1253,7 @@ sap.ui.define(
           })
         );
 
+        
         oVizFrame.setVizProperties({
           title: {
             text: "PO Status Overview",

@@ -73,7 +73,7 @@
           </VBox>
         </HBox>
 
-        <!-- 🟡 Biểu đồ PR theo tháng -->
+        <!--  Biểu đồ PR theo tháng -->
         <VBox class="sapUiSmallMargin">
           <HBox alignItems="Center" justifyContent="SpaceBetween">
             <Text text="Biểu đồ PR theo tháng" class="sapUiTinyMarginBegin sapUiBold sapUiSmallMarginTop"/>
@@ -90,7 +90,7 @@
             width="100%"/>
         </VBox>
 
-        <!-- 🟠 Top Requester Table -->
+        <!--  Top Requester Table -->
         <VBox id="topRequesterSection" class="topRequesterCard" width="100%">
           <HBox alignItems="Center" justifyContent="SpaceBetween" class="topRequesterHeader">
             <Title text="Top Request Purchase Requisition by Employee"/>
