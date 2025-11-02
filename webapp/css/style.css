@@ -518,3 +518,33 @@
   border-collapse: separate;
 }
 
+.prHeaderCard {
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  background-color: #f9fafb;
+}
+
+.prHeaderTitle {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #0a3556;
+}
+
+.prHeaderSubTitle {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #2b5b84;
+  margin-top: -4px;
+}
+
+.prHeaderInfoLine {
+  font-size: 0.85rem;
+  color: #5a6a7a;
+  line-height: 1.4;
+}
+
+.prHeaderLabel {
+  font-size: 0.9rem;
+  color: #2e3c46;
+  font-weight: 600;
+}
