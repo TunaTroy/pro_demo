@@ -359,6 +359,28 @@ sap.ui.define(
         this.byId("tblPRList").removeSelections();
       },
 
+
+      onSelectItem: function (oEvent) {
+        const oSelectedItem = oEvent.getParameter("listItem");
+        const oCtx = oSelectedItem.getBindingContext();
+        if (!oCtx) return;
+
+        const oItemData = oCtx.getObject();
+        const oDetailPanelModel = this.byId("detailPanel").getModel();
+        const sBanfn = oDetailPanelModel.getProperty("/Banfn");
+        const sBnfpo = oItemData.Bnfpo;
+
+        const oRouter = sap.ui.core.UIComponent.getRouterFor(this);
+        oRouter.navTo("PRItemDetail", {
+          Banfn: sBanfn,
+          Bnfpo: sBnfpo,
+        });
+      },
+
+     
+
+
+
       // =========================================================
       // EXPORT TO EXCEL
       // =========================================================

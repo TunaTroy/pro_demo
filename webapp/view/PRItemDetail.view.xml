@@ -1,0 +1,32 @@
+<mvc:View
+  controllerName="demodashboard.controller.PRItemDetail"
+  xmlns:mvc="sap.ui.core.mvc"
+  xmlns="sap.m"
+  displayBlock="true">
+
+  <Page title="PR Item Detail">
+    <headerContent>
+      <Button icon="sap-icon://nav-back" press="onNavBack" type="Transparent" />
+    </headerContent>
+
+    <content>
+      <ObjectHeader
+        title="{= 'PR ' + ${Banfn}}"
+        number="{Bnfpo}"
+        numberUnit="Item"
+        intro="{Txz01}"
+        class="sapUiMediumMarginBottom">
+
+        <attributes>
+          <ObjectAttribute title="Material" text="{Matnr}" />
+          <ObjectAttribute title="Description" text="{Txz01}" />
+          <ObjectAttribute title="Quantity" text="{Menge}" />
+          <ObjectAttribute title="Unit" text="{Meins}" />
+          <ObjectAttribute title="Requisition Date" text="{path:'Badat', formatter:'.formatter.dateFormat'}" />
+          <ObjectAttribute title="Created By" text="{Ernam}" />
+          <ObjectAttribute title="Status" text="{path:'Frgkz', formatter:'.formatter.detailStatusText'}" />
+        </attributes>
+      </ObjectHeader>
+    </content>
+  </Page>
+</mvc:View>

@@ -154,7 +154,7 @@
 
             <!-- Card: Items List -->
             <Panel headerText="📦 Items" class="sapUiNoContentPadding sapUiResponsiveContentPadding sapUiSizeCompact" width="100%">
-              <Table id="tblPRItems" items="{path:'/Items'}" class="sapUiSizeCompact" width="100%">
+              <Table id="tblPRItems" mode="SingleSelectMaster" selectionChange="onSelectItem" items="{path:'/Items'}" class="sapUiSizeCompact" width="100%">
                 <columns>
                   <Column><Text text="Item"/></Column>
                   <Column><Text text="Material"/></Column>
@@ -163,7 +163,7 @@
                   <Column><Text text="Status"/></Column>
                 </columns>
                 <items>
-                  <ColumnListItem>
+                  <ColumnListItem press="onSelectItem">
                     <cells>
                       <Text text="{Bnfpo}"/>
                       <Text text="{Txz01}"/>
@@ -178,6 +178,8 @@
 
           </VBox>
         </l:SplitPane>
+
+
 
       </l:PaneContainer>
     </l:ResponsiveSplitter>

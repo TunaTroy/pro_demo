@@ -121,12 +121,12 @@
           ]
         },
         {
-          "name": "PRDetail",
-          "pattern": "PRDetail/{PRId}",
-          "target": [
-            "TargetPRDetail"
-          ]
+      "name": "PRItemDetail",
+      "pattern": "PRItemDetail/{Banfn}/{Bnfpo}",
+      "target": ["TargetPRItemDetail"]
         }
+        
+
       ],
       "targets": {
         "TargetLogin": {
@@ -150,12 +150,12 @@
           "viewId": "PRList",
           "viewName": "PRList"
         },
-        "TargetPRDetail": {
+        "TargetPRItemDetail": {
           "viewType": "XML",
           "transition": "slide",
           "clearControlAggregation": false,
-          "viewId": "PRDetail",
-          "viewName": "PRDetail"
+          "viewId": "PRItemDetail",
+          "viewName": "PRItemDetail"
         }
       }
     },
