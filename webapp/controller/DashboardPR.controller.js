@@ -27,6 +27,32 @@ sap.ui.define(
           PO: false,
           RFQ: false,
         };
+
+        // ==================== PHÂN QUYỀN ROLE ====================
+        const oRoleModel = this.getOwnerComponent().getModel("userRole");
+        this._userRole = oRoleModel ? oRoleModel.getProperty("/role") : null;
+        this._userId = oRoleModel ? oRoleModel.getProperty("/userid") : null;
+
+        console.log(
+          "🔑 User Role loaded in DashboardPR:",
+          this._userRole,
+          this._userId
+        );
+
+        // Nếu chưa có model (do async) -> chờ model load xong rồi áp dụng
+        if (!this._userRole) {
+          const oModelCheck = this.getOwnerComponent().getModel("userRole");
+          if (oModelCheck) {
+            oModelCheck.attachRequestCompleted(() => {
+              this._userRole = oModelCheck.getProperty("/role");
+              this._applyRoleVisibility();
+            });
+          }
+        } else {
+          this._applyRoleVisibility();
+        }
+        // =========================================================
+
         // 🔹 Tạo danh sách năm cho filter PR
         const currentYear = new Date().getFullYear();
         const aYears = [];
@@ -56,6 +82,34 @@ sap.ui.define(
         this._reloadChartsOnly("thisYear");
         this._currentPoType = "F";
         this._currentRequesterSort = "totalPR";
+      },
+
+      _applyRoleVisibility: function () {
+        const role = this._userRole;
+
+        if (!role) {
+          console.warn("⚠️ Không có role, hiển thị toàn bộ mặc định");
+          return;
+        }
+
+        console.log("👔 Áp dụng phân quyền cho role:", role);
+
+        // 🔸 CEO có full quyền
+        if (role === "CEO") {
+          // Không ẩn gì cả
+          this.getView().byId("dashboard").setBusy(false);
+          return;
+        }
+
+        // 🔸 Các role khác (sẽ bổ sung sau)
+        if (role === "Man1") {
+          // Ví dụ: chỉ ẩn bảng top requester
+          this.byId("topRequesterSection").setVisible(false);
+        } else if (role === "Emp1" || role === "Emp2") {
+          // Ví dụ: chỉ cho xem một số chart
+          this.byId("kpiContainer").setVisible(false);
+          this.byId("topRequesterSection").setVisible(false);
+        }
       },
 
       onTimeFilterChange: function (oEvent) {

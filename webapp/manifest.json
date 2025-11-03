@@ -27,7 +27,6 @@
       }
     }
   },
-
   "sap.ui": {
     "technology": "UI5",
     "icons": {
@@ -100,15 +99,8 @@
       },
       "routes": [
         {
-          "name": "Login",
-          "pattern": "",
-          "target": [
-            "TargetLogin"
-          ]
-        },
-        {
           "name": "DashboardPR",
-          "pattern": "DashboardPR",
+          "pattern": "",
           "target": [
             "TargetDashboardPR"
           ]
@@ -129,13 +121,6 @@
         }
       ],
       "targets": {
-        "TargetLogin": {
-          "viewType": "XML",
-          "transition": "slide",
-          "clearControlAggregation": false,
-          "viewId": "Login",
-          "viewName": "Login"
-        },
         "TargetDashboardPR": {
           "viewType": "XML",
           "transition": "slide",
