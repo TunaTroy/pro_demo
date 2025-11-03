@@ -163,7 +163,7 @@
                   <Column><Text text="Status"/></Column>
                 </columns>
                 <items>
-                  <ColumnListItem press="onSelectItem">
+                  <ColumnListItem>
                     <cells>
                       <Text text="{Bnfpo}"/>
                       <Text text="{Txz01}"/>

@@ -1,9 +1,8 @@
 sap.ui.define([
   "sap/ui/core/mvc/Controller",
-  "sap/ui/model/odata/v2/ODataModel",
   "sap/m/MessageToast",
   "sap/ui/core/routing/History"
-], function (Controller, ODataModel, MessageToast, History) {
+], function (Controller, MessageToast, History) {
   "use strict";
 
   return Controller.extend("demodashboard.controller.PRItemDetail", {
@@ -13,31 +12,36 @@ sap.ui.define([
     },
 
     _onObjectMatched: function (oEvent) {
-  const sBanfn = oEvent.getParameter("arguments").Banfn;
-  const sBnfpo = oEvent.getParameter("arguments").Bnfpo;
+      const sBanfn = oEvent.getParameter("arguments").Banfn;
+      const sBnfpo = oEvent.getParameter("arguments").Bnfpo;
 
-  const oModel = new ODataModel("/sap/opu/odata/sap/ZGW_PRO_G18_SRV/", {
-    useBatch: false,
-  });
+      if (!sBanfn || !sBnfpo) {
+        MessageToast.show("Missing PR key params!");
+        return;
+      }
 
-  sap.ui.core.BusyIndicator.show(0);
+      const oModel = this.getOwnerComponent().getModel(); // 🔹 dùng model trong manifest
+      this.getView().setModel(oModel);
 
-  const sPath = `/EbanSet(Banfn='${sBanfn}',Bnfpo='${sBnfpo}')`;
+      const sPath = `/PRsSet(Banfn='${sBanfn}',Bnfpo='${sBnfpo}')`;
+      console.log(" Binding path:", sPath);
 
-  oModel.read(sPath, {
-    success: (oData) => {
-      sap.ui.core.BusyIndicator.hide();
-      const oJSON = new sap.ui.model.json.JSONModel(oData);
-      this.getView().setModel(oJSON);
+      this.getView().bindElement({
+        path: sPath,
+        events: {
+          dataRequested: () => sap.ui.core.BusyIndicator.show(0),
+          dataReceived: (oEvt) => {
+            sap.ui.core.BusyIndicator.hide();
+            const oData = oEvt.getParameter("data");
+            if (!oData) {
+              MessageToast.show("No data found for this item.");
+            } else {
+              console.log("✅ Data bound:", oData);
+            }
+          }
+        }
+      });
     },
-    error: (err) => {
-      sap.ui.core.BusyIndicator.hide();
-      console.error(err);
-      MessageToast.show("❌ Cannot load item detail.");
-    },
-  });
-},
-
 
     onNavBack: function () {
       const oHistory = History.getInstance();
@@ -49,6 +53,6 @@ sap.ui.define([
         const oRouter = sap.ui.core.UIComponent.getRouterFor(this);
         oRouter.navTo("PRList", {}, true);
       }
-    },
+    }
   });
 });
