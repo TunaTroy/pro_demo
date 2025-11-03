@@ -30,7 +30,7 @@
           <Label text="Purchase Req."/>
           <Input id="inpBanfn" placeholder="Search PR No."/>
         </VBox>
-        <VBox width="15rem">
+        <VBox width="12rem">
           <Label text="Document Type"/>
           <Input id="inpBsart" placeholder="Search Doc Type"/>
         </VBox>
@@ -42,7 +42,7 @@
           <Label text="Created By"/>
           <Input id="inpErnam" placeholder="Username"/>
         </VBox>
-        <VBox width="20rem">
+        <VBox width="12rem">
           <Label text="Requisition Date Range"/>
           <DateRangeSelection
             id="inpDateRange"
@@ -53,7 +53,7 @@
             width="100%"/>
         </VBox>
 
-        <HBox width="639%" class="sapUiTinyMarginTop">
+        <HBox class="customMarginTop"  >
           <Button text="Go" type="Emphasized" press="onGoFilter"/>
           <Button text="Clear" icon="sap-icon://refresh" press="onClearFilter" type="Transparent"/>
         </HBox>

@@ -548,3 +548,15 @@
   color: #2e3c46;
   font-weight: 600;
 }
+
+.buttonGo{
+  margin-top: 30px;
+  margin-right: 10px;
+}
+
+.customMarginTop {
+    margin-top: 18px !important;
+    justify-content: 80px; 
+    margin-left: 79px;
+}
+
