@@ -6,33 +6,38 @@ sap.ui.define([
 ], function (Controller, ODataModel, MessageToast, History) {
   "use strict";
 
-  return Controller.extend("demodashboard.controller.PRDetail", {
+  return Controller.extend("demodashboard.controller.PRItemDetail", {
     onInit: function () {
       const oRouter = sap.ui.core.UIComponent.getRouterFor(this);
       oRouter.getRoute("PRItemDetail").attachPatternMatched(this._onObjectMatched, this);
     },
 
     _onObjectMatched: function (oEvent) {
-      const sBanfn = oEvent.getParameter("arguments").Banfn;
-      const sBnfpo = oEvent.getParameter("arguments").Bnfpo;
+  const sBanfn = oEvent.getParameter("arguments").Banfn;
+  const sBnfpo = oEvent.getParameter("arguments").Bnfpo;
 
-      const oModel = new ODataModel("/sap/opu/odata/sap/ZGW_PRO_G18_SRV/", {
-        useBatch: false,
-      });
+  const oModel = new ODataModel("/sap/opu/odata/sap/ZGW_PRO_G18_SRV/", {
+    useBatch: false,
+  });
 
-      sap.ui.core.BusyIndicator.show(0);
-      oModel.read(`/EbanSet(Banfn='${sBanfn}',Bnfpo='${sBnfpo}')`, {
-        success: (oData) => {
-          sap.ui.core.BusyIndicator.hide();
-          const oJSON = new sap.ui.model.json.JSONModel(oData);
-          this.getView().setModel(oJSON);
-        },
-        error: () => {
-          sap.ui.core.BusyIndicator.hide();
-          MessageToast.show("❌ Cannot load item detail.");
-        },
-      });
+  sap.ui.core.BusyIndicator.show(0);
+
+  const sPath = `/EbanSet(Banfn='${sBanfn}',Bnfpo='${sBnfpo}')`;
+
+  oModel.read(sPath, {
+    success: (oData) => {
+      sap.ui.core.BusyIndicator.hide();
+      const oJSON = new sap.ui.model.json.JSONModel(oData);
+      this.getView().setModel(oJSON);
     },
+    error: (err) => {
+      sap.ui.core.BusyIndicator.hide();
+      console.error(err);
+      MessageToast.show("❌ Cannot load item detail.");
+    },
+  });
+},
+
 
     onNavBack: function () {
       const oHistory = History.getInstance();
