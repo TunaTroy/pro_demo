@@ -1,8 +1,9 @@
+
 <edmx:Edmx xmlns:edmx="http://schemas.microsoft.com/ado/2007/06/edmx" xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata" xmlns:sap="http://www.sap.com/Protocols/SAPData" Version="1.0">
 <edmx:DataServices m:DataServiceVersion="2.0">
 <Schema xmlns="http://schemas.microsoft.com/ado/2008/09/edm" Namespace="ZGW_PRO_G18_SRV" xml:lang="en" sap:schema-version="1">
 <Annotation xmlns="http://docs.oasis-open.org/odata/ns/edm" Term="Core.SchemaVersion" String="1.0.0"/>
-<EntityType Name="ProcurementItem" sap:content-version="1">
+<EntityType Name="ProcurementItemSet" sap:content-version="1">
 <Key>
 <PropertyRef Name="Ebeln"/>
 <PropertyRef Name="Ebelp"/>
@@ -22,16 +23,16 @@
 <Property Name="Brtwr" Type="Edm.Decimal" Nullable="false" Precision="14" Scale="2" sap:unicode="false" sap:label="Gross value" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
 <Property Name="Agdat" Type="Edm.DateTime" Precision="7" sap:unicode="false" sap:label="Quot. Deadline" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
 </EntityType>
-<EntityType Name="PRs" sap:content-version="1">
+<EntityType Name="PRsSet" sap:content-version="1">
 <Key>
 <PropertyRef Name="Banfn"/>
 <PropertyRef Name="Bnfpo"/>
 </Key>
-<Property Name="Peinh" Type="Edm.Decimal" Nullable="false" Precision="5" Scale="0" sap:unicode="false" sap:label="Price unit" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
-<Property Name="Preis" Type="Edm.Decimal" Nullable="false" Precision="12" Scale="3" sap:unicode="false" sap:unit="Waers" sap:label="Valuation Price" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
-<Property Name="Lifnr" Type="Edm.String" Nullable="false" MaxLength="10" sap:unicode="false" sap:label="Desired Vendor" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
 <Property Name="Banfn" Type="Edm.String" Nullable="false" MaxLength="10" sap:unicode="false" sap:label="Purchase Req." sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+<Property Name="Lifnr" Type="Edm.String" Nullable="false" MaxLength="10" sap:unicode="false" sap:label="Desired Vendor" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+<Property Name="Preis" Type="Edm.Decimal" Nullable="false" Precision="12" Scale="3" sap:unicode="false" sap:unit="Waers" sap:label="Valuation Price" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
 <Property Name="Bnfpo" Type="Edm.String" Nullable="false" MaxLength="5" sap:unicode="false" sap:label="Requisn. item" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+<Property Name="Peinh" Type="Edm.Decimal" Nullable="false" Precision="5" Scale="0" sap:unicode="false" sap:label="Price unit" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
 <Property Name="Bsart" Type="Edm.String" Nullable="false" MaxLength="4" sap:unicode="false" sap:label="Document Type" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
 <Property Name="Frgkz" Type="Edm.String" Nullable="false" MaxLength="1" sap:unicode="false" sap:label="Release ind." sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
 <Property Name="Frgst" Type="Edm.String" Nullable="false" MaxLength="2" sap:unicode="false" sap:label="Rel. strategy" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
@@ -44,17 +45,17 @@
 <Property Name="Matkl" Type="Edm.String" Nullable="false" MaxLength="9" sap:unicode="false" sap:label="Material Group" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
 <Property Name="Menge" Type="Edm.Decimal" Nullable="false" Precision="13" Scale="3" sap:unicode="false" sap:unit="Meins" sap:label="Quantity" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
 <Property Name="Meins" Type="Edm.String" Nullable="false" MaxLength="3" sap:unicode="false" sap:label="Unit of Measure" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false" sap:semantics="unit-of-measure"/>
-<Property Name="Badat" Type="Edm.DateTime" Nullable="false" Precision="7" sap:unicode="false" sap:label="Requisn Date" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
-<Property Name="Lfdat" Type="Edm.DateTime" Nullable="false" Precision="7" sap:unicode="false" sap:label="Delivery Date" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+<Property Name="Badat" Type="Edm.DateTime" Precision="7" sap:unicode="false" sap:label="Requisn Date" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+<Property Name="Lfdat" Type="Edm.DateTime" Precision="7" sap:unicode="false" sap:label="Delivery Date" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
 <Property Name="Pstyp" Type="Edm.String" Nullable="false" MaxLength="1" sap:unicode="false" sap:label="Item Category" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
 <Property Name="Wepos" Type="Edm.Boolean" Nullable="false" sap:unicode="false" sap:label="Goods Receipt" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
 <Property Name="Repos" Type="Edm.Boolean" Nullable="false" sap:unicode="false" sap:label="Invoice Receipt" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
 <Property Name="Ekorg" Type="Edm.String" Nullable="false" MaxLength="4" sap:unicode="false" sap:label="Purchasing Org." sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
 <Property Name="Waers" Type="Edm.String" Nullable="false" MaxLength="5" sap:unicode="false" sap:label="Currency" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false" sap:semantics="currency-code"/>
-<Property Name="Frgdt" Type="Edm.DateTime" Nullable="false" Precision="7" sap:unicode="false" sap:label="Purchase Req Release Date" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+<Property Name="Frgdt" Type="Edm.DateTime" Precision="7" sap:unicode="false" sap:label="Purchase Req Release Date" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
 <Property Name="Spras" Type="Edm.String" Nullable="false" MaxLength="2" sap:unicode="false" sap:label="Language" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
 </EntityType>
-<EntityType Name="ProcurementHeader" sap:content-version="1">
+<EntityType Name="ProcurementHeaderSet" sap:content-version="1">
 <Key>
 <PropertyRef Name="Ebeln"/>
 </Key>
@@ -73,20 +74,29 @@
 <Property Name="Waers" Type="Edm.String" Nullable="false" MaxLength="5" sap:unicode="false" sap:label="Currency" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false" sap:semantics="currency-code"/>
 <Property Name="Angnr" Type="Edm.String" Nullable="false" MaxLength="10" sap:unicode="false" sap:label="Quotation" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
 <Property Name="Frgsx" Type="Edm.String" Nullable="false" MaxLength="2" sap:unicode="false" sap:label="Rel. Strategy" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+<Property Name="Frgke" Type="Edm.String" Nullable="false" MaxLength="8" sap:unicode="false" sap:label="Release ind." sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
 <Property Name="Frgzu" Type="Edm.String" Nullable="false" MaxLength="8" sap:unicode="false" sap:label="Release State" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
 </EntityType>
-<EntityType Name="Vendors" sap:content-version="1">
+<EntityType Name="VendorsSet" sap:content-version="1">
 <Key>
 <PropertyRef Name="Lifnr"/>
 </Key>
 <Property Name="Lifnr" Type="Edm.String" Nullable="false" MaxLength="10" sap:unicode="false" sap:label="Supplier" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
 <Property Name="Name1" Type="Edm.String" Nullable="false" MaxLength="35" sap:unicode="false" sap:label="Name" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
 </EntityType>
+<EntityType Name="Login" sap:content-version="1">
+<Key>
+<PropertyRef Name="Userid"/>
+</Key>
+<Property Name="Userid" Type="Edm.String" Nullable="false" MaxLength="12" sap:unicode="false" sap:label="User Name" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+<Property Name="Role" Type="Edm.String" Nullable="false" MaxLength="30" sap:unicode="false" sap:label="Role name" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+</EntityType>
 <EntityContainer Name="ZGW_PRO_G18_SRV_Entities" m:IsDefaultEntityContainer="true" sap:supported-formats="atom json xlsx">
-<EntitySet Name="ProcurementItemSet" EntityType="ZGW_PRO_G18_SRV.ProcurementItem" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:pageable="false" sap:content-version="1"/>
-<EntitySet Name="PRsSet" EntityType="ZGW_PRO_G18_SRV.PRs" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:pageable="false" sap:content-version="1"/>
-<EntitySet Name="ProcurementHeaderSet" EntityType="ZGW_PRO_G18_SRV.ProcurementHeader" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:pageable="false" sap:content-version="1"/>
-<EntitySet Name="VendorsSet" EntityType="ZGW_PRO_G18_SRV.Vendors" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:pageable="false" sap:content-version="1"/>
+<EntitySet Name="ProcurementItemSet" EntityType="ZGW_PRO_G18_SRV.ProcurementItemSet" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:pageable="false" sap:content-version="1"/>
+<EntitySet Name="PRsSet" EntityType="ZGW_PRO_G18_SRV.PRsSet" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:pageable="false" sap:content-version="1"/>
+<EntitySet Name="ProcurementHeaderSet" EntityType="ZGW_PRO_G18_SRV.ProcurementHeaderSet" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:pageable="false" sap:content-version="1"/>
+<EntitySet Name="VendorsSet" EntityType="ZGW_PRO_G18_SRV.VendorsSet" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:pageable="false" sap:content-version="1"/>
+<EntitySet Name="LoginSet" EntityType="ZGW_PRO_G18_SRV.Login" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:pageable="false" sap:content-version="1"/>
 </EntityContainer>
 <atom:link xmlns:atom="http://www.w3.org/2005/Atom" rel="self" href="http://s35lp1.ucc.cit.tum.de:8000/sap/opu/odata/sap/ZGW_PRO_G18_SRV/$metadata"/>
 <atom:link xmlns:atom="http://www.w3.org/2005/Atom" rel="latest-version" href="http://s35lp1.ucc.cit.tum.de:8000/sap/opu/odata/sap/ZGW_PRO_G18_SRV/$metadata"/>
