@@ -18,48 +18,52 @@ sap.ui.define(
        * @override
        */
       init: function () {
-    // 1️⃣ Gọi init gốc
-    UIComponent.prototype.init.apply(this, arguments);
+        UIComponent.prototype.init.apply(this, arguments);
+        this.getRouter().initialize();
+        this.setModel(models.createDeviceModel(), "device");
 
-    // 2️⃣ Kích hoạt routing
-    this.getRouter().initialize();
+        var oModel = this.getModel("mainService") || this.getModel();
+        var that = this;
 
-    // 3️⃣ Tạo model thiết bị
-    this.setModel(models.createDeviceModel(), "device");
+        // 🔹 1. Gọi API /sap/bc/ui2/start_up để lấy user hiện tại trong SAP Gateway
+        $.ajax({
+          url: "/sap/bc/ui2/start_up",
+          method: "GET",
+          success: function (oResponse) {
+            // API này trả về object có field "id" (user hiện tại, ví dụ "LEARN-489")
+            var sUserId = oResponse.id || "";
+            console.log("🟢 User login hiện tại:", sUserId);
 
-    // 4️⃣ Đảm bảo model chính (OData) tồn tại
-    var oModel = this.getModel("mainService") || this.getModel();
-    if (!oModel) {
-        console.error("❌ Không tìm thấy OData model 'mainService'");
-        return;
-    }
-
-    // 5️⃣ Gọi LoginSet lấy role
-    var sUserId = "LEARN-488"; // CEO user
-    var that = this;
-
-    console.log("🔄 Đang gọi LoginSet cho user:", sUserId);
-
-    oModel.read("/LoginSet('" + sUserId + "')", {
-        success: function (oData) {
-            console.log("✅ Role user:", oData.Role);
-
-            // Lưu vào model để sử dụng toàn app
-            var oRoleModel = new sap.ui.model.json.JSONModel({
-                role: oData.Role,
-                userid: oData.Userid
+            // 🔹 2. Gọi OData LoginSet để lấy role của user đó
+            oModel.read("/LoginSet('" + sUserId + "')", {
+              success: function (oData) {
+                console.log("✅ Role user:", oData.Role);
+                var oRoleModel = new sap.ui.model.json.JSONModel({
+                  role: oData.Role,
+                  userid: oData.Userid,
+                });
+                that.setModel(oRoleModel, "userRole");
+                sap.m.MessageToast.show(
+                  "Xin chào " + oData.Userid + " (" + oData.Role + ")"
+                );
+              },
+              error: function (oError) {
+                console.error("❌ Lỗi lấy Role:", oError);
+                sap.m.MessageToast.show(
+                  "Không thể lấy thông tin role người dùng!"
+                );
+              },
             });
-            that.setModel(oRoleModel, "userRole");
-
-            sap.m.MessageToast.show("Xin chào " + oData.Userid + " (" + oData.Role + ")");
-        },
-        error: function (oError) {
-            console.error("❌ Không thể lấy role người dùng:", oError);
-            sap.m.MessageToast.show("Không thể lấy thông tin role người dùng!");
-        }
-    });
-},
-
+          },
+          error: function (err) {
+            console.error(
+              "❌ Không thể lấy user từ /sap/bc/ui2/start_up:",
+              err
+            );
+            sap.m.MessageToast.show("Không thể xác định người dùng hiện tại!");
+          },
+        });
+      },
     });
   }
 );

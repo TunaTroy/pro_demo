@@ -1,5 +1,4 @@
 # yaml-language-server: $schema=https://sap.github.io/ui5-tooling/schema/ui5.yaml.json
-
 specVersion: "3.1"
 metadata:
   name: demodashboard
@@ -9,7 +8,7 @@ server:
     - name: fiori-tools-proxy
       afterMiddleware: compression
       configuration:
-        ignoreCertErrors: false # If set to true, certificate errors will be ignored. E.g. self-signed certificates will be accepted
+        ignoreCertErrors: true   # 👈 đổi sang true để tránh lỗi SSL nếu cert tự ký
         ui5:
           path:
             - /resources
@@ -19,6 +18,7 @@ server:
           - path: /sap
             url: https://s35.gb.ucc.cit.tum.de
             client: '302'
+            destination: UCC_Backend_G18   # 👈 tùy chọn, đặt tên backend rõ ràng
     - name: fiori-tools-appreload
       afterMiddleware: compression
       configuration:
