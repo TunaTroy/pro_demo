@@ -287,7 +287,7 @@ sap.ui.define(
 
         // 3) Đọc EBAN theo Banfn rồi lọc giao với list trái
         sap.ui.core.BusyIndicator.show(0);
-        oModel.read("/EbanSet", {
+        oModel.read("/ebanSet", {
           filters: [
             new sap.ui.model.Filter(
               "Banfn",
