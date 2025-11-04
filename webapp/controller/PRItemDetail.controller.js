@@ -20,11 +20,11 @@ sap.ui.define([
         return;
       }
 
-      const oModel = this.getOwnerComponent().getModel(); // 🔹 dùng model trong manifest
+      const oModel = this.getOwnerComponent().getModel();
       this.getView().setModel(oModel);
 
       const sPath = `/PRsSet(Banfn='${sBanfn}',Bnfpo='${sBnfpo}')`;
-      console.log(" Binding path:", sPath);
+      console.log("🔗 Binding path:", sPath);
 
       this.getView().bindElement({
         path: sPath,
@@ -35,9 +35,17 @@ sap.ui.define([
             const oData = oEvt.getParameter("data");
             if (!oData) {
               MessageToast.show("No data found for this item.");
-            } else {
-              console.log("✅ Data bound:", oData);
+              return;
             }
+
+            console.log("✅ Data bound:", oData);
+
+            // Format lại PR và Item
+            const oHeader = this.getView().byId("objHeader");
+            const sFormattedPR = oData.Banfn.toString().padStart(10, "0");
+            const sFormattedItem = oData.Bnfpo.toString().padStart(5, "0");
+            oHeader.setTitle(`PR ${sFormattedPR}`);
+            oHeader.setNumber(sFormattedItem);
           }
         }
       });
@@ -53,6 +61,31 @@ sap.ui.define([
         const oRouter = sap.ui.core.UIComponent.getRouterFor(this);
         oRouter.navTo("PRList", {}, true);
       }
-    }
+    },
+
+
+    getItemCategoryText: function (sPstyp) {
+  if (!sPstyp) return "";
+
+  const mPstypTexts = {
+    "0": "Standard",
+    "1": "Limit",
+    "2": "Consignment",
+    "3": "Subcontracting",
+    "4": "Material unknown",
+    "5": "Third-party",
+    "6": "Text",
+    "7": "Stock transfer",
+    "8": "Material group",
+    "9": "Service",
+    "A": "Enhanced Limit",
+    "C": "Stock prov. by cust.",
+    "P": "Return.trans.pack."
+  };
+
+  // Trả về text mô tả, hoặc giá trị gốc nếu không khớp
+  return mPstypTexts[sPstyp] || sPstyp;
+},
+
   });
 });
