@@ -147,6 +147,8 @@ sap.ui.define(
         this.getView().setModel(oModel);
         this.byId("detailPanel").setVisible(false);
         this.onGoFilter();
+        // ===== Load Cache for ValueHelp =====
+        this._loadCaches();
       },
 
       // =========================================================
@@ -157,37 +159,103 @@ sap.ui.define(
         const oModel = oView.getModel();
         const oTable = oView.byId("tblPRList");
 
-        const sBanfn = oView.byId("inpBanfn").getValue().trim();
-        const sBsart = oView.byId("inpBsart").getValue().trim();
-        const sEkgrp = oView.byId("inpEkgrp").getValue().trim();
-        const sErnam = oView.byId("inpErnam").getValue().trim();
+        // 🔹 Chuẩn hóa lại các trường: nếu người dùng đã xóa text thì clear luôn selectedKey
+        ["inpBanfn", "inpBsart", "inpEkgrp", "inpErnam"].forEach((id) => {
+          const oInp = oView.byId(id);
+          if (oInp && !oInp.getValue().trim()) oInp.data("selectedKey", "");
+        });
 
+        // Lấy giá trị thực từ field (ưu tiên selectedKey nếu có)
+        const getKey = (id) => {
+          const oInp = oView.byId(id);
+          const key = oInp?.data("selectedKey")?.trim();
+          return key && key !== "" ? key : oInp?.getValue()?.trim();
+        };
+
+        const sBanfn = getKey("inpBanfn");
+        let sBsart = getKey("inpBsart");
+        const sEkgrp = getKey("inpEkgrp");
+        const sErnam = getKey("inpErnam");
+
+        // 🧩 Nếu user gõ tay hoặc chọn từ value help → lọc code Bsart trong ngoặc
+        if (sBsart && sBsart.includes("(")) {
+          const match = sBsart.match(/\(([^)]+)\)$/);
+          if (match && match[1]) {
+            sBsart = match[1]; // chỉ lấy phần code trong ngoặc
+          }
+        }
+
+        const oDateRange = oView.byId("inpDateRange");
+        const dFrom = oDateRange?.getDateValue();
+        const dTo = oDateRange?.getSecondDateValue();
+
+        // 🔹 Tạo mảng filter
         const aFilters = [];
         if (sBanfn)
-          aFilters.push(new Filter("Banfn", FilterOperator.Contains, sBanfn));
+          aFilters.push(
+            new sap.ui.model.Filter(
+              "Banfn",
+              sap.ui.model.FilterOperator.Contains,
+              sBanfn
+            )
+          );
         if (sBsart)
-          aFilters.push(new Filter("Bsart", FilterOperator.Contains, sBsart));
+          aFilters.push(
+            new sap.ui.model.Filter(
+              "Bsart",
+              sap.ui.model.FilterOperator.EQ,
+              sBsart
+            )
+          );
         if (sEkgrp)
-          aFilters.push(new Filter("Ekgrp", FilterOperator.Contains, sEkgrp));
+          aFilters.push(
+            new sap.ui.model.Filter(
+              "Ekgrp",
+              sap.ui.model.FilterOperator.Contains,
+              sEkgrp
+            )
+          );
         if (sErnam)
-          aFilters.push(new Filter("Ernam", FilterOperator.Contains, sErnam));
+          aFilters.push(
+            new sap.ui.model.Filter(
+              "Ernam",
+              sap.ui.model.FilterOperator.EQ,
+              sErnam.toUpperCase()
+            )
+          );
+        if (dFrom && dTo)
+          aFilters.push(
+            new sap.ui.model.Filter(
+              "Badat",
+              sap.ui.model.FilterOperator.BT,
+              dFrom,
+              dTo
+            )
+          );
+        else if (dFrom)
+          aFilters.push(
+            new sap.ui.model.Filter(
+              "Badat",
+              sap.ui.model.FilterOperator.GE,
+              dFrom
+            )
+          );
+        else if (dTo)
+          aFilters.push(
+            new sap.ui.model.Filter(
+              "Badat",
+              sap.ui.model.FilterOperator.LE,
+              dTo
+            )
+          );
 
-        // 🔹 DATE RANGE FILTER
-        const oDateRange = oView.byId("inpDateRange");
-        if (oDateRange) {
-          const dFrom = oDateRange.getDateValue();
-          const dTo = oDateRange.getSecondDateValue();
-          if (dFrom && dTo)
-            aFilters.push(new Filter("Badat", FilterOperator.BT, dFrom, dTo));
-          else if (dFrom)
-            aFilters.push(new Filter("Badat", FilterOperator.GE, dFrom));
-          else if (dTo)
-            aFilters.push(new Filter("Badat", FilterOperator.LE, dTo));
-        }
+        // 🔸 Nếu không có bất kỳ filter nào → load toàn bộ danh sách
+        const bNoFilter =
+          !sBanfn && !sBsart && !sEkgrp && !sErnam && !dFrom && !dTo;
 
         sap.ui.core.BusyIndicator.show(0);
         oModel.read("/PRsSet", {
-          filters: aFilters,
+          filters: bNoFilter ? [] : aFilters,
           urlParameters: { $top: 10000, $orderby: "Banfn asc" },
           success: (data) => {
             sap.ui.core.BusyIndicator.hide();
@@ -218,14 +286,16 @@ sap.ui.define(
               g.StatusDisplay = g.StatusPercent + "%";
             });
 
-            oTable.setModel(new JSONModel({ groups }));
-            MessageToast.show(
-              `✅ Loaded ${groups.length} PRs (${all.length} records).`
+            oTable.setModel(new sap.ui.model.json.JSONModel({ groups }));
+            sap.m.MessageToast.show(
+              bNoFilter
+                ? `📋 Loaded all ${groups.length} PRs (${all.length} records).`
+                : `✅ Loaded ${groups.length} filtered PRs (${all.length} records).`
             );
           },
           error: () => {
             sap.ui.core.BusyIndicator.hide();
-            MessageToast.show("❌ Error loading data from server.");
+            sap.m.MessageToast.show("❌ Error loading data from server.");
           },
         });
       },
@@ -235,11 +305,23 @@ sap.ui.define(
       // =========================================================
       onClearFilter: function () {
         const oView = this.getView();
+
+        // 🔹 Reset toàn bộ các input filter
         ["inpBanfn", "inpBsart", "inpEkgrp", "inpErnam"].forEach((id) => {
-          if (oView.byId(id)) oView.byId(id).setValue("");
+          const oInp = oView.byId(id);
+          if (oInp) {
+            oInp.setValue(""); // clear text hiển thị
+            oInp.data("selectedKey", ""); // clear key ẩn (giá trị thật)
+          }
         });
-        if (oView.byId("inpDateRange")) oView.byId("inpDateRange").setValue("");
+
+        // 🔹 Reset DateRange
+        const oDateRange = oView.byId("inpDateRange");
+        if (oDateRange) oDateRange.setValue("");
+
+        // 🔹 Reload lại data
         this.onGoFilter();
+
         MessageToast.show("🔄 Filters cleared.");
       },
 
@@ -359,26 +441,32 @@ sap.ui.define(
         this.byId("tblPRList").removeSelections();
       },
 
-
       onSelectItem: function (oEvent) {
-        const oSelectedItem = oEvent.getParameter("listItem");
-        const oCtx = oSelectedItem.getBindingContext();
-        if (!oCtx) return;
+  const oSelectedItem = oEvent.getParameter("listItem");
+  const oCtx = oSelectedItem.getBindingContext();
+  if (!oCtx) return;
 
-        const oItemData = oCtx.getObject();
-        const oDetailPanelModel = this.byId("detailPanel").getModel();
-        const sBanfn = oDetailPanelModel.getProperty("/Banfn");
-        const sBnfpo = oItemData.Bnfpo;
+  // 🔹 Dữ liệu dòng item được chọn trong bảng Items
+  const oItemData = oCtx.getObject();
 
-        const oRouter = sap.ui.core.UIComponent.getRouterFor(this);
-        oRouter.navTo("PRItemDetail", {
-          Banfn: sBanfn,
-          Bnfpo: sBnfpo,
-        });
-      },
+  // 🔹 Lấy Banfn từ model của panel chi tiết
+  const oDetailPanelModel = this.byId("detailPanel").getModel();
+  let sBanfn = oDetailPanelModel.getProperty("/Banfn");
+  let sBnfpo = oItemData.Bnfpo;
 
-     
+  // 🔹 Đảm bảo key đúng định dạng backend (Banfn = CHAR(10), Bnfpo = CHAR(5))
+  if (sBanfn) sBanfn = sBanfn.toString().padStart(10, "0");
+  if (sBnfpo) sBnfpo = sBnfpo.toString().padStart(5, "0");
 
+  console.log("➡️ Navigating to PRItemDetail with:", sBanfn, sBnfpo);
+
+  // 🔹 Điều hướng sang màn PRItemDetail
+  const oRouter = sap.ui.core.UIComponent.getRouterFor(this);
+  oRouter.navTo("PRItemDetail", {
+    Banfn: sBanfn,
+    Bnfpo: sBnfpo
+  });
+},
 
 
       // =========================================================
@@ -407,6 +495,348 @@ sap.ui.define(
           .build()
           .then(() => MessageToast.show("✅ Export successful!"))
           .finally(() => oSheet.destroy());
+      },
+
+      // =========================================================
+      // CACHES FOR VALUE HELP
+      // =========================================================
+      _loadCaches: function () {
+        const oModel = this.getView().getModel();
+        const that = this;
+
+        oModel.read("/DocTypeSet", {
+          success: (d) => {
+            that._oDocTypeCache = new JSONModel(d.results);
+          },
+          error: () => console.warn("DocTypeSet not loaded"),
+        });
+
+        oModel.read("/PurchGroupSet", {
+          success: (d) => {
+            that._oPurchGroupCache = new JSONModel(d.results);
+          },
+          error: () => console.warn("PurchGroupSet not loaded"),
+        });
+
+        oModel.read("/UserSet", {
+          success: (d) => {
+            that._oUserCache = new JSONModel(d.results);
+          },
+          error: () => console.warn("UserSet not loaded"),
+        });
+      },
+
+      // =========================================================
+      // VALUE HELP DIALOGS
+      // =========================================================
+      onValueHelpBanfn: function () {
+        const oView = this.getView();
+        const oModel = oView.getModel();
+
+        // Hàm pad số PR cho đẹp (10 ký tự)
+        const padBanfn = (sBanfn) =>
+          String(sBanfn || "")
+            .trim()
+            .padStart(10, "0");
+
+        if (!this._oBanfnDialog) {
+          this._oBanfnDialog = new sap.m.SelectDialog({
+            title: "Select Purchase Requisition",
+            search: (e) => {
+              const sVal = e.getParameter("value")?.trim();
+              e.getSource()
+                .getBinding("items")
+                .filter([
+                  new sap.ui.model.Filter(
+                    "Banfn",
+                    sap.ui.model.FilterOperator.Contains,
+                    sVal
+                  ),
+                ]);
+            },
+            confirm: (e) => {
+              const oItem = e.getParameter("selectedItem");
+              if (oItem) {
+                const sBanfn = oItem.getTitle();
+                oView.byId("inpBanfn").setValue(sBanfn);
+                oView.byId("inpBanfn").data("selectedKey", sBanfn);
+              }
+            },
+            items: {
+              path: "/uniqueBanfn",
+              template: new sap.m.StandardListItem({
+                title: "{Banfn}",
+              }),
+            },
+          });
+        }
+
+        // 🔹 Đọc dữ liệu PRsSet rồi lọc unique Banfn và pad 10 ký tự
+        sap.ui.core.BusyIndicator.show(0);
+        oModel.read("/PRsSet", {
+          urlParameters: { $top: 5000, $orderby: "Banfn asc" },
+          success: (data) => {
+            sap.ui.core.BusyIndicator.hide();
+
+            const unique = [];
+            const seen = new Set();
+            (data.results || []).forEach((row) => {
+              const padded = padBanfn(row.Banfn);
+              if (!seen.has(padded)) {
+                seen.add(padded);
+                unique.push({ Banfn: padded });
+              }
+            });
+
+            const oLocalModel = new sap.ui.model.json.JSONModel({
+              uniqueBanfn: unique,
+            });
+            this._oBanfnDialog.setModel(oLocalModel);
+            this._oBanfnDialog.open();
+          },
+          error: () => {
+            sap.ui.core.BusyIndicator.hide();
+            sap.m.MessageToast.show(
+              "❌ Cannot load Purchase Requisition list."
+            );
+          },
+        });
+      },
+
+      onValueHelpBsart: function () {
+        const oView = this.getView();
+        const oModel = oView.getModel();
+
+        // 🧩 Mapping mô tả Document Type — giống formatter.docTypeText
+        const docTypeMap = {
+          NB: "Purchase Requisition",
+          ZNB1: "Service PR Type 1",
+          ZNB2: "Service PR Type 2",
+          ZNB3: "Maintenance PR",
+          ZNB4: "Material Request",
+          ZNB5: "Internal Purchase",
+          ZNB6: "Stock PR",
+          ZNB7: "Subcontracting PR",
+          ZNB8: "External Purchase",
+          ZNB9: "Repair PR",
+          AN: "Quotation Request",
+          UB: "Stock Transfer",
+        };
+
+        // Nếu dialog chưa tạo → tạo mới
+        if (!this._oBsartDialog) {
+          this._oBsartDialog = new sap.m.SelectDialog({
+            title: "Select Document Type",
+            search: (e) => {
+              const sVal = e.getParameter("value")?.trim().toUpperCase();
+              e.getSource()
+                .getBinding("items")
+                .filter([
+                  new sap.ui.model.Filter(
+                    "Bsart",
+                    sap.ui.model.FilterOperator.Contains,
+                    sVal
+                  ),
+                ]);
+            },
+            confirm: (e) => {
+              const oItem = e.getParameter("selectedItem");
+              if (oItem) {
+                const sBsart = oItem.getTitle();
+                const sDesc = oItem.getDescription();
+                const display = `${sDesc} (${sBsart})`;
+                oView.byId("inpBsart").setValue(display);
+                oView.byId("inpBsart").data("selectedKey", sBsart);
+              }
+            },
+            items: {
+              path: "/DocTypes",
+              template: new sap.m.StandardListItem({
+                title: "{Bsart}",
+                description: "{Batxt}",
+              }),
+            },
+          });
+        }
+
+        // 🔹 Load trực tiếp từ OData PRsSet rồi lọc unique Bsart
+        sap.ui.core.BusyIndicator.show(0);
+        oModel.read("/PRsSet", {
+          urlParameters: { $top: 10000 },
+          success: (data) => {
+            sap.ui.core.BusyIndicator.hide();
+            const seen = new Set();
+            const unique = [];
+
+            (data.results || []).forEach((row) => {
+              const code = (row.Bsart || "").trim();
+              if (code && !seen.has(code)) {
+                seen.add(code);
+                unique.push({
+                  Bsart: code,
+                  Batxt: docTypeMap[code] || "Unknown Type",
+                });
+              }
+            });
+
+            // 🔸 Sort cho đẹp
+            unique.sort((a, b) => a.Bsart.localeCompare(b.Bsart));
+
+            const oLocalModel = new sap.ui.model.json.JSONModel({
+              DocTypes: unique,
+            });
+            this._oBsartDialog.setModel(oLocalModel);
+            this._oBsartDialog.open();
+          },
+          error: () => {
+            sap.ui.core.BusyIndicator.hide();
+            sap.m.MessageToast.show("❌ Cannot load Document Type list.");
+          },
+        });
+      },
+
+      onValueHelpEkgrp: function () {
+        const oView = this.getView();
+        const oModel = oView.getModel();
+
+        if (!this._oEkgrpDialog) {
+          this._oEkgrpDialog = new sap.m.SelectDialog({
+            title: "Select Purchasing Group",
+            search: (e) => {
+              const sVal = e.getParameter("value")?.trim().toUpperCase();
+              e.getSource()
+                .getBinding("items")
+                .filter([
+                  new sap.ui.model.Filter(
+                    "Ekgrp",
+                    sap.ui.model.FilterOperator.Contains,
+                    sVal
+                  ),
+                ]);
+            },
+            confirm: (e) => {
+              const oItem = e.getParameter("selectedItem");
+              if (oItem) {
+                const sEkgrp = oItem.getTitle();
+                const sDesc = oItem.getDescription();
+                oView.byId("inpEkgrp").setValue(sDesc);
+                oView.byId("inpEkgrp").data("selectedKey", sEkgrp);
+              }
+            },
+            items: {
+              path: "/PurchGroups",
+              template: new sap.m.StandardListItem({
+                title: "{Ekgrp}",
+                description: "{Eknam}",
+              }),
+            },
+          });
+        }
+
+        // 🔹 Load trực tiếp từ OData PRsSet rồi lọc unique EKGRP
+        sap.ui.core.BusyIndicator.show(0);
+        oModel.read("/PRsSet", {
+          urlParameters: { $top: 10000 },
+          success: (data) => {
+            sap.ui.core.BusyIndicator.hide();
+            const seen = new Set();
+            const unique = [];
+
+            (data.results || []).forEach((row) => {
+              const code = (row.Ekgrp || "").trim();
+              const name = (row.Eknam || "").trim();
+              if (code && !seen.has(code)) {
+                seen.add(code);
+                unique.push({
+                  Ekgrp: code,
+                  Eknam: name || code, // fallback hiển thị code nếu thiếu tên
+                });
+              }
+            });
+
+            // 🔸 Sort cho đẹp
+            unique.sort((a, b) => a.Ekgrp.localeCompare(b.Ekgrp));
+
+            const oLocalModel = new sap.ui.model.json.JSONModel({
+              PurchGroups: unique,
+            });
+            this._oEkgrpDialog.setModel(oLocalModel);
+            this._oEkgrpDialog.open();
+          },
+          error: () => {
+            sap.ui.core.BusyIndicator.hide();
+            sap.m.MessageToast.show("❌ Cannot load Purchasing Group list.");
+          },
+        });
+      },
+
+      onValueHelpErnam: function () {
+        const oView = this.getView();
+        const oModel = oView.getModel();
+
+        if (!this._oErnamDialog) {
+          this._oErnamDialog = new sap.m.SelectDialog({
+            title: "Select Created By",
+            search: (e) => {
+              const sVal = e.getParameter("value")?.trim().toUpperCase();
+              e.getSource()
+                .getBinding("items")
+                .filter([
+                  new sap.ui.model.Filter(
+                    "Ernam",
+                    sap.ui.model.FilterOperator.Contains,
+                    sVal
+                  ),
+                ]);
+            },
+            confirm: (e) => {
+              const oItem = e.getParameter("selectedItem");
+              if (oItem) {
+                const sErnam = oItem.getTitle();
+                oView.byId("inpErnam").setValue(sErnam);
+                oView.byId("inpErnam").data("selectedKey", sErnam);
+              }
+            },
+            items: {
+              path: "/Users",
+              template: new sap.m.StandardListItem({
+                title: "{Ernam}",
+              }),
+            },
+          });
+        }
+
+        // 🔹 Load trực tiếp từ OData PRsSet rồi lọc unique ERNAM
+        sap.ui.core.BusyIndicator.show(0);
+        oModel.read("/PRsSet", {
+          urlParameters: { $top: 10000 },
+          success: (data) => {
+            sap.ui.core.BusyIndicator.hide();
+            const seen = new Set();
+            const unique = [];
+
+            (data.results || []).forEach((row) => {
+              const code = (row.Ernam || "").trim();
+              if (code && !seen.has(code)) {
+                seen.add(code);
+                unique.push({ Ernam: code });
+              }
+            });
+
+            // 🔸 Sort cho đẹp
+            unique.sort((a, b) => a.Ernam.localeCompare(b.Ernam));
+
+            const oLocalModel = new sap.ui.model.json.JSONModel({
+              Users: unique,
+            });
+            this._oErnamDialog.setModel(oLocalModel);
+            this._oErnamDialog.open();
+          },
+          error: () => {
+            sap.ui.core.BusyIndicator.hide();
+            sap.m.MessageToast.show("❌ Cannot load Created By list.");
+          },
+        });
       },
 
       onNavHome: function () {

@@ -21,48 +21,64 @@
   <content>
 
     <!-- 🔍 FILTER PANEL -->
-    <Panel
-      headerText="Filter Criteria"
-      expandable="true"
-      class="sapUiNoContentPadding sapUiResponsiveContentPadding sapUiSizeCompact filterPanel">
-      <l:Grid defaultSpan="L2 M4 S6" hSpacing="1" vSpacing="0.5" class="sapUiTinyMarginBottom">
-        <VBox width="12rem">
-          <Label text="Purchase Req."/>
-          <Input id="inpBanfn" placeholder="Search PR No."/>
-        </VBox>
-        <VBox width="12rem">
-          <Label text="Document Type"/>
-          <Input id="inpBsart" placeholder="Search Doc Type"/>
-        </VBox>
-        <VBox width="12rem">
-          <Label text="Purchasing Group"/>
-          <Input id="inpEkgrp" placeholder="Enter Group"/>
-        </VBox>
-        <VBox width="12rem">
-          <Label text="Created By"/>
-          <Input id="inpErnam" placeholder="Username"/>
-        </VBox>
-        <VBox width="12rem">
-          <Label text="Requisition Date Range"/>
-          <DateRangeSelection
-            id="inpDateRange"
-            delimiter=" to "
-            displayFormat="dd/MM/yyyy"
-            valueFormat="yyyy-MM-dd"
-            placeholder="Select date range"
-            width="100%"/>
-        </VBox>
+<Panel
+  headerText="Filter Criteria"
+  expandable="true"
+  class="sapUiNoContentPadding sapUiResponsiveContentPadding sapUiSizeCompact filterPanel">
+  <l:Grid defaultSpan="L2 M4 S6" hSpacing="1" vSpacing="0.5" class="sapUiTinyMarginBottom">
 
-        <HBox class="customMarginTop"  >
-          <Button text="Go" type="Emphasized" press="onGoFilter"/>
-          <Button text="Clear" icon="sap-icon://refresh" press="onClearFilter" type="Transparent"/>
-        </HBox>
-      </l:Grid>
-    </Panel>
+    <VBox width="12rem">
+      <Label text="Purchase Req."/>
+      <Input id="inpBanfn"
+             placeholder="Select PR No."
+             showValueHelp="true"
+             valueHelpRequest="onValueHelpBanfn"/>
+    </VBox>
 
-    <Toolbar design="Transparent">
-      <ToolbarSeparator width="100%" style="border-bottom: 1px solid #d9d9d9;"/>
-    </Toolbar>
+    <VBox width="12rem">
+      <Label text="Document Type"/>
+      <Input id="inpBsart"
+             placeholder="Select Doc Type"
+             showValueHelp="true"
+             valueHelpRequest="onValueHelpBsart"/>
+    </VBox>
+
+    <VBox width="12rem">
+      <Label text="Purchasing Group"/>
+      <Input id="inpEkgrp"
+             placeholder="Select Group"
+             showValueHelp="true"
+             valueHelpRequest="onValueHelpEkgrp"/>
+    </VBox>
+
+    <VBox width="12rem">
+      <Label text="Created By"/>
+      <Input id="inpErnam"
+             placeholder="Select User"
+             showValueHelp="true"
+             valueHelpRequest="onValueHelpErnam"/>
+    </VBox>
+
+    <VBox width="14rem">
+      <Label text="Requisition Date Range"/>
+      <DateRangeSelection
+        id="inpDateRange"
+        delimiter=" to "
+        displayFormat="dd/MM/yyyy"
+        valueFormat="yyyy-MM-dd"
+        placeholder="Select date range"
+        width="100%"/>
+    </VBox>
+
+    <HBox class="customMarginTop">
+      <Button text="Go" type="Emphasized" press="onGoFilter"/>
+      <Button text="Clear" icon="sap-icon://refresh" press="onClearFilter" type="Transparent"/>
+    </HBox>
+  </l:Grid>
+</Panel>
+
+
+    
 
     <!-- 📋 TABLE + DETAIL -->
     <l:ResponsiveSplitter id="_IDGenResponsiveSplitter" defaultPane="paneMaster">
