@@ -377,7 +377,7 @@ sap.ui.define(
   // Hiện BusyIndicator trong khi load
   sap.ui.core.BusyIndicator.show(0);
 
-  oMainModel.read("/ProcurementItemSet", {
+  oMainModel.read("/ebanSet", {
     filters: [
       new sap.ui.model.Filter("Banfn", sap.ui.model.FilterOperator.EQ, sBanfn),
     ],
@@ -468,32 +468,31 @@ sap.ui.define(
       },
 
       onSelectItem: function (oEvent) {
-  const oSelectedItem = oEvent.getParameter("listItem");
-  const oCtx = oSelectedItem.getBindingContext();
-  if (!oCtx) return;
+        const oSelectedItem = oEvent.getParameter("listItem");
+        const oCtx = oSelectedItem.getBindingContext();
+        if (!oCtx) return;
 
-  // 🔹 Dữ liệu dòng item được chọn trong bảng Items
-  const oItemData = oCtx.getObject();
+        // 🔹 Dữ liệu dòng item được chọn trong bảng Items
+        const oItemData = oCtx.getObject();
 
-  // 🔹 Lấy Banfn từ model của panel chi tiết
-  const oDetailPanelModel = this.byId("detailPanel").getModel();
-  let sBanfn = oDetailPanelModel.getProperty("/Banfn");
-  let sBnfpo = oItemData.Bnfpo;
+        // 🔹 Lấy Banfn từ model của panel chi tiết
+        const oDetailPanelModel = this.byId("detailPanel").getModel();
+        let sBanfn = oDetailPanelModel.getProperty("/Banfn");
+        let sBnfpo = oItemData.Bnfpo;
 
-  // 🔹 Đảm bảo key đúng định dạng backend (Banfn = CHAR(10), Bnfpo = CHAR(5))
-  if (sBanfn) sBanfn = sBanfn.toString().padStart(10, "0");
-  if (sBnfpo) sBnfpo = sBnfpo.toString().padStart(5, "0");
+        // 🔹 Đảm bảo key đúng định dạng backend (Banfn = CHAR(10), Bnfpo = CHAR(5))
+        if (sBanfn) sBanfn = sBanfn.toString().padStart(10, "0");
+        if (sBnfpo) sBnfpo = sBnfpo.toString().padStart(5, "0");
 
-  console.log("➡️ Navigating to PRItemDetail with:", sBanfn, sBnfpo);
+        console.log("➡️ Navigating to PRItemDetail with:", sBanfn, sBnfpo);
 
-  // 🔹 Điều hướng sang màn PRItemDetail
-  const oRouter = sap.ui.core.UIComponent.getRouterFor(this);
-  oRouter.navTo("PRItemDetail", {
-    Banfn: sBanfn,
-    Bnfpo: sBnfpo
-  });
-},
-
+        // 🔹 Điều hướng sang màn PRItemDetail
+        const oRouter = sap.ui.core.UIComponent.getRouterFor(this);
+        oRouter.navTo("PRItemDetail", {
+          Banfn: sBanfn,
+          Bnfpo: sBnfpo,
+        });
+      },
 
       // =========================================================
       // EXPORT TO EXCEL
@@ -861,6 +860,222 @@ sap.ui.define(
           error: () => {
             sap.ui.core.BusyIndicator.hide();
             sap.m.MessageToast.show("❌ Cannot load Created By list.");
+          },
+        });
+      },
+
+      // =========================================================
+      // APPROVAL HANDLERS (Right Detail Panel)
+      // =========================================================
+      onApprovePR: async function () {
+        const oDetail = this.byId("detailPanel");
+        const oDetailModel = oDetail.getModel();
+        const aItems = oDetailModel?.getProperty("/Items") || [];
+        const sBanfn = oDetailModel?.getProperty("/Banfn");
+
+        if (!aItems.length) {
+          return sap.m.MessageToast.show("⚠️ No items to approve.");
+        }
+
+        // 🔹 Lọc các item đang pending (C)
+        const aPendingItems = aItems.filter((it) => it.Frgkz === "C");
+        const aLockedItems = aItems.filter(
+          (it) => it.Frgkz === "R" || it.Frgkz === "X"
+        );
+
+        if (aPendingItems.length === 0) {
+          return sap.m.MessageToast.show("ℹ️ All items already processed.");
+        }
+
+        sap.m.MessageBox.confirm(
+          `Approve ${aPendingItems.length} pending item(s) for PR ${sBanfn}?`,
+          {
+            onClose: async (sAction) => {
+              if (sAction !== sap.m.MessageBox.Action.OK) return;
+
+              sap.ui.core.BusyIndicator.show(0);
+              const oModel = this.getView().getModel();
+
+              // 🔸 SET HEADERS & CSRF TOKEN
+              oModel.setHeaders({
+                "Content-Type": "application/json",
+                Accept: "application/json",
+                "X-Requested-With": "XMLHttpRequest",
+              });
+              oModel.refreshSecurityToken();
+
+              let iSuccess = 0,
+                iFail = 0;
+
+              for (const item of aPendingItems) {
+                const sBanfnPadded = String(item.Banfn).padStart(10, "0");
+                const sBnfpoPadded = String(item.Bnfpo).padStart(5, "0");
+
+                const sPath = `/PRsSet(Banfn='${sBanfnPadded}',Bnfpo='${sBnfpoPadded}')`;
+
+                // 🔹 CHỮ THƯỜNG cho field name
+                const oPayload = {
+                  Banfn: sBanfnPadded,
+                  Bnfpo: sBnfpoPadded,
+                  Frgkz: "R", // Approved
+                };
+
+                await new Promise((resolve) => {
+                  oModel.update(sPath, oPayload, {
+                    success: function () {
+                      iSuccess++;
+                      console.log("✅ Approved:", sPath);
+                      resolve();
+                    },
+                    error: function (err) {
+                      iFail++;
+                      console.error("❌ Approve failed:", err);
+                      resolve();
+                    },
+                  });
+                });
+              }
+
+              sap.ui.core.BusyIndicator.hide();
+              let sMsg = `Approved ${iSuccess} item(s).`;
+              if (iFail > 0) sMsg += ` ${iFail} failed.`;
+              if (aLockedItems.length > 0)
+                sMsg += ` Skipped ${aLockedItems.length} locked.`;
+
+              sap.m.MessageBox.success(sMsg);
+
+              // 🔁 Refresh lại PR
+              await this._refreshAfterAction(sBanfn);
+            },
+          }
+        );
+      },
+
+      // =========================================================
+      // REJECT HANDLER
+      // =========================================================
+      onRejectPR: async function () {
+        const oDetail = this.byId("detailPanel");
+        const oDetailModel = oDetail.getModel();
+        const aItems = oDetailModel?.getProperty("/Items") || [];
+        const sBanfn = oDetailModel?.getProperty("/Banfn");
+
+        if (!aItems.length) {
+          return sap.m.MessageToast.show("⚠️ No items to reject.");
+        }
+
+        // 🔹 Chỉ lấy những item đang Pending (C)
+        const aPendingItems = aItems.filter((it) => it.Frgkz === "C");
+        const aLockedItems = aItems.filter(
+          (it) => it.Frgkz === "R" || it.Frgkz === "X"
+        );
+
+        if (aPendingItems.length === 0) {
+          return sap.m.MessageToast.show(
+            "ℹ️ All items are already approved or rejected. Nothing to reject."
+          );
+        }
+
+        sap.m.MessageBox.confirm(
+          `Reject ${aPendingItems.length} pending item(s) for PR ${sBanfn}?`,
+          {
+            onClose: async (sAction) => {
+              if (sAction !== sap.m.MessageBox.Action.OK) return;
+
+              sap.ui.core.BusyIndicator.show(0);
+              const oModel = this.getView().getModel();
+
+              oModel.setHeaders({
+                "Content-Type": "application/json",
+                Accept: "application/json",
+                "X-Requested-With": "XMLHttpRequest",
+              });
+              oModel.refreshSecurityToken();
+
+              let iSuccess = 0,
+                iFail = 0;
+
+              for (const item of aPendingItems) {
+                const sBanfnPadded = String(item.Banfn).padStart(10, "0");
+                const sBnfpoPadded = String(item.Bnfpo).padStart(5, "0");
+
+                const sPath = `/PRsSet(Banfn='${sBanfnPadded}',Bnfpo='${sBnfpoPadded}')`;
+
+                const oPayload = {
+                  Banfn: sBanfnPadded,
+                  Bnfpo: sBnfpoPadded,
+                  Frgkz: "X", // Rejected
+                };
+
+                await new Promise((resolve) => {
+                  oModel.update(sPath, oPayload, {
+                    success: function () {
+                      iSuccess++;
+                      console.log("❌ Rejected:", sPath);
+                      resolve();
+                    },
+                    error: function (err) {
+                      iFail++;
+                      console.error("Reject failed:", err);
+                      resolve();
+                    },
+                  });
+                });
+              }
+
+              sap.ui.core.BusyIndicator.hide();
+
+              let sMsg = `Rejected ${iSuccess} item(s).`;
+              if (iFail > 0) sMsg += ` ${iFail} failed.`;
+              if (aLockedItems.length > 0)
+                sMsg += ` Skipped ${aLockedItems.length} already processed item(s).`;
+
+              sap.m.MessageBox.warning(sMsg);
+
+              // 🔁 Refresh lại PR
+              await this._refreshAfterAction(sBanfn);
+            },
+          }
+        );
+      },
+
+      /**
+       * Reload lại list + detail sau khi approve/reject
+       */
+      _refreshAfterAction: async function (sBanfn) {
+        const oModel = this.getView().getModel();
+        const oDetail = this.byId("detailPanel");
+
+        // 🔹 Reload danh sách bên trái
+        await new Promise((resolve) => {
+          this.onGoFilter();
+          setTimeout(resolve, 500); // delay nhẹ cho sync
+        });
+
+        // 🔹 Gọi lại EBAN để refresh panel bên phải
+        sap.ui.core.BusyIndicator.show(0);
+        oModel.read("/PRsSet", {
+          filters: [
+            new sap.ui.model.Filter(
+              "Banfn",
+              sap.ui.model.FilterOperator.EQ,
+              sBanfn
+            ),
+          ],
+          success: (oData) => {
+            sap.ui.core.BusyIndicator.hide();
+            const aItems = oData?.results || [];
+            const oDetailModel = oDetail.getModel();
+            oDetailModel.setProperty("/Items", aItems);
+            oDetail.setModel(oDetailModel);
+            oDetail.bindElement("/");
+            oDetail.invalidate();
+            sap.m.MessageToast.show("🔄 Refreshed PR details.");
+            sap.m.MessageToast.show(`✅ PR ${sBanfn} refreshed successfully`);
+          },
+          error: () => {
+            sap.ui.core.BusyIndicator.hide();
+            sap.m.MessageToast.show("⚠️ Could not refresh EBAN items.");
           },
         });
       },

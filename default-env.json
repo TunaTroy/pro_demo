@@ -1,0 +1,10 @@
+{
+  "destinations": [
+    {
+      "name": "UCC_Backend_G18",
+      "url": "https://s35.gb.ucc.cit.tum.de",
+      "client": "302",
+      "forwardAuthToken": true
+    }
+  ]
+}
