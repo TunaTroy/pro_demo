@@ -95,17 +95,17 @@ sap.ui.define(
         console.log("👔 Áp dụng phân quyền cho role:", role);
 
         // 🔸 CEO có full quyền
-        if (role === "CEO") {
+        if (role === "BASIS") {
           // Không ẩn gì cả
           this.getView().byId("dashboard").setBusy(false);
           return;
         }
 
         // 🔸 Các role khác (sẽ bổ sung sau)
-        if (role === "Man1") {
+        if (role === "T") {
           // Ví dụ: chỉ ẩn bảng top requester
           this.byId("topRequesterSection").setVisible(false);
-        } else if (role === "Emp1" || role === "Emp2") {
+        } else if (role === "T" || role === "T") {
           // Ví dụ: chỉ cho xem một số chart
           this.byId("kpiContainer").setVisible(false);
           this.byId("topRequesterSection").setVisible(false);
