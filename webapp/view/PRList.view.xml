@@ -4,7 +4,6 @@
   xmlns="sap.m"
   xmlns:l="sap.ui.layout"
   xmlns:core="sap.ui.core"
-  xmlns:f="sap.ui.layout.form"
   displayBlock="true">
 
 <Page id="prlist" title="📄 Purchase Requisition List">
@@ -13,7 +12,7 @@
   <headerContent>
     <HBox alignItems="Center" justifyContent="End" class="sapUiTinyMarginEnd sapUiTinyMarginTop">
       <Button icon="sap-icon://home" text="Home" press="onNavHome" type="Transparent"/>
-      <Button icon="sap-icon://refresh" text="Reload" press="onReload" type="Transparent"/>
+      <Button icon="sap-icon://refresh" text="Reload" press="onGoFilter" type="Transparent"/>
       <Button icon="sap-icon://excel-attachment" text="Export Excel" press="onExportExcel" type="Transparent"/>
     </HBox>
   </headerContent>
@@ -21,67 +20,53 @@
   <content>
 
     <!-- 🔍 FILTER PANEL -->
-<Panel
-  headerText="Filter Criteria"
-  expandable="true"
-  class="sapUiNoContentPadding sapUiResponsiveContentPadding sapUiSizeCompact filterPanel">
-  <l:Grid defaultSpan="L2 M4 S6" hSpacing="1" vSpacing="0.5" class="sapUiTinyMarginBottom">
+    <Panel headerText="Filter Criteria" expandable="true"
+           class="sapUiNoContentPadding sapUiResponsiveContentPadding sapUiSizeCompact filterPanel">
+      <l:Grid defaultSpan="L2 M4 S6" hSpacing="1" vSpacing="0.5" class="sapUiTinyMarginBottom">
 
-    <VBox width="12rem">
-      <Label text="Purchase Req."/>
-      <Input id="inpBanfn"
-             placeholder="Select PR No."
-             showValueHelp="true"
-             valueHelpRequest="onValueHelpBanfn"/>
-    </VBox>
+        <VBox width="12rem">
+          <Label text="Purchase Req."/>
+          <Input id="inpBanfn" placeholder="Select PR No."
+                 showValueHelp="true" valueHelpRequest="onValueHelpBanfn"/>
+        </VBox>
 
-    <VBox width="12rem">
-      <Label text="Document Type"/>
-      <Input id="inpBsart"
-             placeholder="Select Doc Type"
-             showValueHelp="true"
-             valueHelpRequest="onValueHelpBsart"/>
-    </VBox>
+        <VBox width="12rem">
+          <Label text="Document Type"/>
+          <Input id="inpBsart" placeholder="Select Doc Type"
+                 showValueHelp="true" valueHelpRequest="onValueHelpBsart"/>
+        </VBox>
 
-    <VBox width="12rem">
-      <Label text="Purchasing Group"/>
-      <Input id="inpEkgrp"
-             placeholder="Select Group"
-             showValueHelp="true"
-             valueHelpRequest="onValueHelpEkgrp"/>
-    </VBox>
+        <VBox width="12rem">
+          <Label text="Purchasing Group"/>
+          <Input id="inpEkgrp" placeholder="Select Group"
+                 showValueHelp="true" valueHelpRequest="onValueHelpEkgrp"/>
+        </VBox>
 
-    <VBox width="12rem">
-      <Label text="Created By"/>
-      <Input id="inpErnam"
-             placeholder="Select User"
-             showValueHelp="true"
-             valueHelpRequest="onValueHelpErnam"/>
-    </VBox>
+        <VBox width="12rem">
+          <Label text="Created By"/>
+          <Input id="inpErnam" placeholder="Select User"
+                 showValueHelp="true" valueHelpRequest="onValueHelpErnam"/>
+        </VBox>
 
-    <VBox width="14rem">
-      <Label text="Requisition Date Range"/>
-      <DateRangeSelection
-        id="inpDateRange"
-        delimiter=" to "
-        displayFormat="dd/MM/yyyy"
-        valueFormat="yyyy-MM-dd"
-        placeholder="Select date range"
-        width="100%"/>
-    </VBox>
+        <VBox width="14rem">
+          <Label text="Requisition Date Range"/>
+          <DateRangeSelection id="inpDateRange"
+                              delimiter=" to "
+                              displayFormat="dd/MM/yyyy"
+                              valueFormat="yyyy-MM-dd"
+                              placeholder="Select date range"
+                              width="100%"/>
+        </VBox>
 
-    <HBox class="customMarginTop">
-      <Button text="Go" type="Emphasized" press="onGoFilter"/>
-      <Button text="Clear" icon="sap-icon://refresh" press="onClearFilter" type="Transparent"/>
-    </HBox>
-  </l:Grid>
-</Panel>
-
-
-    
+        <HBox class="customMarginTop">
+          <Button text="Go" type="Emphasized" press="onGoFilter"/>
+          <Button text="Clear" icon="sap-icon://refresh" press="onClearFilter" type="Transparent"/>
+        </HBox>
+      </l:Grid>
+    </Panel>
 
     <!-- 📋 TABLE + DETAIL -->
-    <l:ResponsiveSplitter id="_IDGenResponsiveSplitter" defaultPane="paneMaster">
+    <l:ResponsiveSplitter defaultPane="paneMaster">
       <l:PaneContainer orientation="Horizontal">
 
         <!-- LEFT TABLE -->
@@ -90,16 +75,15 @@
             <l:SplitterLayoutData id="layoutMaster" size="100%" resizable="true"/>
           </l:layoutData>
 
-          <Table
-            id="tblPRList"
-            items="{ path: '/groups' }"
-            mode="SingleSelectLeft"
-            selectionChange="onSelectPR"
-            class="sapUiSizeCompact stickyTable"
-            growing="true"
-            growingThreshold="100"
-            growingScrollToLoad="true"
-            width="100%">
+          <Table id="tblPRList"
+                 items="{ path: '/groups' }"
+                 mode="SingleSelectLeft"
+                 selectionChange="onSelectPR"
+                 class="sapUiSizeCompact stickyTable"
+                 growing="true"
+                 growingThreshold="100"
+                 growingScrollToLoad="true"
+                 width="100%">
 
             <noData>
               <IllustratedMessage
@@ -109,29 +93,27 @@
             </noData>
 
             <columns>
-              <Column hAlign="Begin"><Text text="Purchase Requisition"/></Column>
+              <Column><Text text="Purchase Requisition"/></Column>
               <Column><Text text="Document Type"/></Column>
-              <Column hAlign="Center"><Text text="Purchasing Group"/></Column>
+              <Column><Text text="Purchasing Group"/></Column>
               <Column><Text text="Created By"/></Column>
               <Column><Text text="Requisition Date"/></Column>
-              <Column hAlign="Center" width="7rem"><Text text="Item Count"/></Column>
-              <Column hAlign="Center" width="12rem"><Text text="Status"/></Column>
+              <Column><Text text="Item Count"/></Column>
+              <Column><Text text="Status"/></Column>
             </columns>
 
             <items>
               <ColumnListItem type="Active" press="onSelectPR" vAlign="Top">
                 <cells>
-                  <Link text="{path:'Banfn', formatter:'.formatter.padBanfn'}" textAlign="Begin"/>
+                  <Link text="{path:'Banfn', formatter:'.formatter.padBanfn'}"/>
                   <Text text="{path:'Bsart', formatter:'.formatter.docTypeText'}"/>
                   <Text text="{Ekgrp}"/>
                   <Text text="{Ernam}"/>
                   <Text text="{path:'Badat', formatter:'.formatter.dateFormat'}"/>
                   <Text text="{ItemCount}"/>
-                  <ProgressIndicator 
-                    percentValue="{StatusPercent}" 
-                    displayValue="{StatusDisplay}" 
-                    showValue="true"
-                    state="{path:'StatusPercent', formatter:'.formatter.statusBarStatePercent'}"/>
+                  <ObjectStatus
+                    text="{path:'Frgkz', formatter:'.formatter.statusText'}"
+                    state="{path:'Frgkz', formatter:'.formatter.statusState'}"/>
                 </cells>
               </ColumnListItem>
             </items>
@@ -140,44 +122,47 @@
 
         <!-- RIGHT DETAIL PANEL -->
         <l:SplitPane id="paneDetail">
-          <VBox id="detailPanel" visible="false" class="sapUiMediumMargin sapUiSizeCompact sapUiNoContentPadding">
+          <VBox id="detailPanel" visible="false"
+                class="sapUiMediumMargin sapUiSizeCompact sapUiNoContentPadding">
 
-            <!-- Card: PR Header Info -->
-            <Panel
-              class="sapUiNoContentPadding sapUiResponsiveContentPadding sapUiSizeCompact sapUiMediumMarginBottom prHeaderCard"
-              width="100%">
+            <Panel class="sapUiNoContentPadding sapUiResponsiveContentPadding sapUiSizeCompact sapUiMediumMarginBottom"
+                   width="100%">
               <VBox class="sapUiSmallMargin sapUiSizeCompact">
                 <HBox justifyContent="SpaceBetween" alignItems="Center" class="sapUiTinyMarginBottom">
-                  <Text text="{path:'Banfn', formatter:'.formatter.padBanfn'}" class="prHeaderTitle"/>
+                  <Text text="{path:'Banfn', formatter:'.formatter.padBanfn'}"/>
                   <Button icon="sap-icon://decline" press="onCloseDetail" type="Transparent"/>
                 </HBox>
 
                 <Text text="{Bsart}" class="prHeaderSubTitle"/>
 
                 <HBox class="sapUiTinyMarginTop" wrap="Wrap">
-                  <Text text="{= 'Plant: ' + ${Ekgrp} + '   •   Created By: ' + ${Ernam} + '   •   Req. Date: ' + ${path:'Badat', formatter:'.formatter.dateFormat'} }" class="prHeaderInfoLine"/>
+                  <Text text="{= 'Group: ' + ${Ekgrp} + ' • Created By: ' + ${Ernam} + ' • Req. Date: ' + ${path:'Badat', formatter:'.formatter.dateFormat'} }"/>
                 </HBox>
 
                 <HBox class="sapUiTinyMarginTop" alignItems="Center">
-                  <Text text="Status:" class="prHeaderLabel"/>
+                  <Text text="Status:"/>
                   <ObjectStatus
-                    text="{parts:['StatusPercent'], formatter:'.formatter.detailPercentStatusText'}"
-                    state="{parts:['StatusPercent'], formatter:'.formatter.detailPercentStatusState'}"
+                    text="{path:'Frgkz', formatter:'.formatter.statusText'}"
+                    state="{path:'Frgkz', formatter:'.formatter.statusState'}"
                     class="sapUiTinyMarginBegin"/>
                 </HBox>
               </VBox>
             </Panel>
 
             <HBox class="sapUiTinyMarginBottom" justifyContent="End">
-  <Button icon="sap-icon://accept" text="Approve All Items" type="Emphasized" press="onApprovePR"/>
-  <Button icon="sap-icon://decline" text="Reject All Items" type="Reject" press="onRejectPR" class="sapUiTinyMarginBegin"/>
-</HBox>
+              <Button icon="sap-icon://accept" text="Approve All Items" type="Emphasized" press="onApprovePR"/>
+              <Button icon="sap-icon://decline" text="Reject All Items" type="Reject" press="onRejectPR" class="sapUiTinyMarginBegin"/>
+            </HBox>
 
-
-            <!-- Card: Items List -->
-            <Panel headerText="📦 Items" class="sapUiNoContentPadding sapUiResponsiveContentPadding sapUiSizeCompact" width="100%">
-              
-              <Table id="tblPRItems" mode="SingleSelectMaster" selectionChange="onSelectItem" items="{path:'/Items'}" class="sapUiSizeCompact" width="100%">
+            <Panel headerText="📦 Items"
+                   class="sapUiNoContentPadding sapUiResponsiveContentPadding sapUiSizeCompact"
+                   width="100%">
+              <Table id="tblPRItems"
+                     mode="SingleSelectMaster"
+                     selectionChange="onSelectItem"
+                     items="{path:'/Items'}"
+                     class="sapUiSizeCompact"
+                     width="100%">
                 <columns>
                   <Column><Text text="Item"/></Column>
                   <Column><Text text="Material"/></Column>
@@ -192,7 +177,9 @@
                       <Text text="{Txz01}"/>
                       <Text text="{path:'Menge', formatter:'.formatter.quantityFormat'}" textAlign="End"/>
                       <Text text="{path:'Badat', formatter:'.formatter.dateFormat'}"/>
-                      <Text text="{parts:['Frgkz'], formatter:'.formatter.detailStatusText'}"/>
+                      <ObjectStatus
+                        text="{path:'Frgkz', formatter:'.formatter.statusText'}"
+                        state="{path:'Frgkz', formatter:'.formatter.statusState'}"/>
                     </cells>
                   </ColumnListItem>
                 </items>
@@ -201,9 +188,6 @@
 
           </VBox>
         </l:SplitPane>
-
-
-
       </l:PaneContainer>
     </l:ResponsiveSplitter>
   </content>
