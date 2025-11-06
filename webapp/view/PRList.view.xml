@@ -168,8 +168,15 @@
               </VBox>
             </Panel>
 
+            <HBox class="sapUiTinyMarginBottom" justifyContent="End">
+  <Button icon="sap-icon://accept" text="Approve All Items" type="Emphasized" press="onApprovePR"/>
+  <Button icon="sap-icon://decline" text="Reject All Items" type="Reject" press="onRejectPR" class="sapUiTinyMarginBegin"/>
+</HBox>
+
+
             <!-- Card: Items List -->
             <Panel headerText="📦 Items" class="sapUiNoContentPadding sapUiResponsiveContentPadding sapUiSizeCompact" width="100%">
+              
               <Table id="tblPRItems" mode="SingleSelectMaster" selectionChange="onSelectItem" items="{path:'/Items'}" class="sapUiSizeCompact" width="100%">
                 <columns>
                   <Column><Text text="Item"/></Column>

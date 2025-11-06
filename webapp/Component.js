@@ -44,7 +44,7 @@ sap.ui.define(
                 });
                 that.setModel(oRoleModel, "userRole");
                 sap.m.MessageToast.show(
-                  "Xin chào " + oData.Userid + " (" + oData.Role + ")"
+                  "Ahihi Đồ Ngốc - " + oData.Userid + " nè! (" + oData.Role + ") "
                 );
               },
               error: function (oError) {

@@ -3,12 +3,13 @@ specVersion: "3.1"
 metadata:
   name: demodashboard
 type: application
+
 server:
   customMiddleware:
     - name: fiori-tools-proxy
       afterMiddleware: compression
       configuration:
-        ignoreCertErrors: true   # 👈 đổi sang true để tránh lỗi SSL nếu cert tự ký
+        ignoreCertErrors: true
         ui5:
           path:
             - /resources
@@ -17,14 +18,15 @@ server:
         backend:
           - path: /sap
             url: https://s35.gb.ucc.cit.tum.de
-            client: '302'
-            destination: UCC_Backend_G18   # 👈 tùy chọn, đặt tên backend rõ ràng
+            client: "302"
+
     - name: fiori-tools-appreload
       afterMiddleware: compression
       configuration:
         port: 35729
         path: webapp
         delay: 300
+
     - name: fiori-tools-preview
       afterMiddleware: fiori-tools-appreload
       configuration:
