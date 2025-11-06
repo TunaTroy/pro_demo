@@ -192,6 +192,87 @@
               </Table>
             </Panel>
 
+
+          <!-- Card: Rejection Reason -->          
+          <!-- <Panel
+  headerText="Note"
+  class="sapUiNoContentPadding sapUiResponsiveContentPadding sapUiSizeCompact sapUiMediumMarginTop prHeaderCard"
+  width="100%">
+  <VBox class="sapUiSmallMargin sapUiSizeCompact">
+    <Text text="Note:" class="prHeaderLabel"/>
+    <Text
+      id="txtPRNote"
+      text="{noteModel>/Note}"
+      wrapping="true"
+      class="sapUiTinyMarginTop sapUiSmallMarginBottom sapUiSmallPadding"
+    />
+  </VBox>
+</Panel> -->
+
+<Panel
+  headerText="Note"
+  class="sapUiNoContentPadding sapUiResponsiveContentPadding sapUiSizeCompact sapUiMediumMarginTop prHeaderCard"
+  width="100%">
+  <VBox class="sapUiSmallMargin sapUiSizeCompact">
+    <!-- Label -->
+    
+
+    <!-- Text hiển thị (read-only) -->
+    <Text
+      id="txtPRNote"
+      text="{noteModel>/Note}"
+      wrapping="true"
+      visible="{= !${noteModel>/Editable} }"
+      class="sapUiTinyMarginTop sapUiSmallMarginBottom sapUiSmallPadding"
+    />
+
+    <!-- TextArea cho edit -->
+    <TextArea
+      id="taPRNoteEdit"
+      value="{noteModel>/Note}"
+      rows="4"
+      width="100%"
+      visible="{noteModel>/Editable}"
+      placeholder="Enter note here..."
+      class="sapUiTinyMarginTop sapUiSmallMarginBottom sapUiSmallPadding"
+    />
+
+    <!-- Nhóm nút -->
+    <HBox class="sapUiTinyMarginTop" justifyContent="End">
+      <Button
+        id="btnEditNote"
+        text="Edit"
+        type="Transparent"
+        icon="sap-icon://edit"
+        visible="{= !${noteModel>/Editable} }"
+        press=".onEditNote"
+      />
+      <Button
+        id="btnSaveNote"
+        text="Save"
+        type="Emphasized"
+        icon="sap-icon://save"
+        visible="{noteModel>/Editable}"
+        press=".onSaveNote"
+      />
+      <Button
+        id="btnCancelEdit"
+        text="Cancel"
+        type="Reject"
+        icon="sap-icon://decline"
+        visible="{noteModel>/Editable}"
+        press=".onCancelEditNote"
+      />
+    </HBox>
+  </VBox>
+</Panel>
+
+
+
+
+    
+
+
           </VBox>
         </l:SplitPane>
 

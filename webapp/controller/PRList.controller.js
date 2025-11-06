@@ -138,18 +138,22 @@ sap.ui.define(
       // =========================================================
       // INIT
       // =========================================================
-      onInit: function () {
+     onInit: function () {
         const sServiceUrl = "/sap/opu/odata/sap/ZGW_PRO_G18_SRV/";
         const oModel = new ODataModel(sServiceUrl, {
           useBatch: false,
           json: true,
+          defaultUpdateMethod: sap.ui.model.odata.UpdateMethod.PUT,
         });
+
         this.getView().setModel(oModel);
         this.byId("detailPanel").setVisible(false);
         this.onGoFilter();
         // ===== Load Cache for ValueHelp =====
         this._loadCaches();
       },
+
+
 
       // =========================================================
       // FILTER + SORT + GROUP
@@ -329,109 +333,131 @@ sap.ui.define(
       // DETAIL PANEL — Header + EBAN items (intersect với list trái)
       // =========================================================
       onSelectPR: function (oEvent) {
-        const oItem = oEvent.getParameter("listItem");
-        const oCtx = oItem.getBindingContext();
-        const oDetail = this.byId("detailPanel");
-        const oLayout = this.byId("layoutMaster");
-        const oModel = this.getView().getModel();
+  const oItem = oEvent.getParameter("listItem");
+  const oCtx = oItem.getBindingContext();
+  const oDetail = this.byId("detailPanel");
+  const oLayout = this.byId("layoutMaster");
+  const oMainModel = this.getView().getModel();
 
-        if (!oCtx) return;
+  if (!oCtx) return;
 
-        const group = oCtx.getObject();
-        const sBanfn = group.Banfn;
+  const group = oCtx.getObject();
+  const sBanfn = group.Banfn;
 
-        // 1) Lấy “item keys” từ dataset bên trái (đã được lọc)
-        //    Key ưu tiên: Bnfpo + (Matnr hoặc Txz01). Fallback: chỉ Bnfpo.
-        const pad5 = (v) =>
-          String(v || "")
-            .trim()
-            .padStart(5, "0");
-        const aLeftItems = Array.isArray(group.Items) ? group.Items : [];
+  // 🟩 Nếu có cache PR đã note (được load từ onInit)
+  const bIsLocked = this._mLockedPRs && this._mLockedPRs[sBanfn] === true;
 
-        const hasMatnrOrTxz = aLeftItems.some((it) => it.Matnr || it.Txz01);
-        const leftKey = (it) => {
-          const k1 = pad5(it.Bnfpo);
-          const k2 = (it.Matnr || it.Txz01 || "").trim();
-          return hasMatnrOrTxz ? `${k1}|${k2}` : k1;
-        };
-        const leftKeySet = new Set(aLeftItems.map(leftKey));
+  // 🟢 Mỗi PR có noteModel riêng — tránh ảnh hưởng PR khác
+  const oNoteModel = new sap.ui.model.json.JSONModel({ Banfn: group.Banfn, Note: "" });
+  this.getView().setModel(oNoteModel, "noteModel");
 
-        // 2) Tạo model header trước
-        const oDetailModel = new sap.ui.model.json.JSONModel({
-          Banfn: group.Banfn,
-          Bsart: group.Bsart,
-          Ekgrp: group.Ekgrp,
-          Ernam: group.Ernam,
-          Badat: group.Badat,
-          Frgkz: group.Frgkz,
-          Items: [], // sẽ cập nhật sau khi gọi EBAN
-        });
+  // Helper để pad số item (5 ký tự)
+  const pad5 = (v) => String(v || "").trim().padStart(5, "0");
+  const aLeftItems = Array.isArray(group.Items) ? group.Items : [];
 
-        // 3) Đọc EBAN theo Banfn rồi lọc giao với list trái
-        sap.ui.core.BusyIndicator.show(0);
-        oModel.read("/ebanSet", {
-          filters: [
-            new sap.ui.model.Filter(
-              "Banfn",
-              sap.ui.model.FilterOperator.EQ,
-              sBanfn
-            ),
-          ],
-          success: (oData) => {
-            sap.ui.core.BusyIndicator.hide();
-            const aEban = oData?.results || [];
+  const hasMatnrOrTxz = aLeftItems.some((it) => it.Matnr || it.Txz01);
+  const leftKey = (it) => {
+    const k1 = pad5(it.Bnfpo);
+    const k2 = (it.Matnr || it.Txz01 || "").trim();
+    return hasMatnrOrTxz ? `${k1}|${k2}` : k1;
+  };
+  const leftKeySet = new Set(aLeftItems.map(leftKey));
 
-            const ebanKey = (it) => {
-              const k1 = pad5(it.Bnfpo);
-              const k2 = (it.Matnr || it.Txz01 || "").trim();
-              return hasMatnrOrTxz ? `${k1}|${k2}` : k1;
-            };
+  // 🔹 Tạo model cho panel detail
+  const oDetailModel = new sap.ui.model.json.JSONModel({
+    Banfn: group.Banfn,
+    Bsart: group.Bsart,
+    Ekgrp: group.Ekgrp,
+    Ernam: group.Ernam,
+    Badat: group.Badat,
+    Frgkz: group.Frgkz,
+    Items: [],
+  });
 
-            // Intersect theo key
-            let aIntersect = aEban.filter((it) => leftKeySet.has(ebanKey(it)));
+  // Hiện BusyIndicator trong khi load
+  sap.ui.core.BusyIndicator.show(0);
 
-            // Nếu intersect rỗng (thiếu field để match), fallback: lọc theo Bnfpo
-            if (aIntersect.length === 0) {
-              const leftBnfpoSet = new Set(
-                aLeftItems.map((it) => pad5(it.Bnfpo))
-              );
-              aIntersect = aEban.filter((it) =>
-                leftBnfpoSet.has(pad5(it.Bnfpo))
-              );
-            }
+  oMainModel.read("/ProcurementItemSet", {
+    filters: [
+      new sap.ui.model.Filter("Banfn", sap.ui.model.FilterOperator.EQ, sBanfn),
+    ],
 
-            // (Optional) Sắp xếp cho đẹp
-            aIntersect.sort((a, b) =>
-              pad5(a.Bnfpo).localeCompare(pad5(b.Bnfpo))
-            );
+    success: (oData) => {
+      sap.ui.core.BusyIndicator.hide();
+      const aEban = oData?.results || [];
 
-            // 4) Bind header + items
-            oDetailModel.setProperty("/Items", aIntersect);
-            oDetail.setModel(oDetailModel);
-            oDetail.bindElement("/");
-            oDetail.setVisible(true);
-            oLayout.setSize("65%");
-            this.byId("txtPRTitle").setText(group.Banfn);
+      const ebanKey = (it) => {
+        const k1 = pad5(it.Bnfpo);
+        const k2 = (it.Matnr || it.Txz01 || "").trim();
+        return hasMatnrOrTxz ? `${k1}|${k2}` : k1;
+      };
 
-            const oItemTable = this.byId("tblPRItems");
-            if (oItemTable) oItemTable.setModel(oDetailModel);
-          },
-          error: () => {
-            sap.ui.core.BusyIndicator.hide();
-            // fallback: hiển thị đúng những gì list trái đang có (nếu EBAN fail)
-            oDetailModel.setProperty("/Items", aLeftItems);
-            oDetail.setModel(oDetailModel);
-            oDetail.bindElement("/");
-            oDetail.setVisible(true);
-            oLayout.setSize("65%");
-            this.byId("txtPRTitle").setText(group.Banfn);
+      // Lọc item thuộc PR
+      let aIntersect = aEban.filter((it) => leftKeySet.has(ebanKey(it)));
 
-            MessageToast.show(
-              `⚠️ Không tải được EBAN cho PR ${sBanfn}. Hiển thị theo danh sách hiện tại.`
-            );
-          },
-        });
-      },
+      // Fallback theo Bnfpo nếu rỗng
+      if (aIntersect.length === 0) {
+        const leftBnfpoSet = new Set(aLeftItems.map((it) => pad5(it.Bnfpo)));
+        aIntersect = aEban.filter((it) => leftBnfpoSet.has(pad5(it.Bnfpo)));
+      }
+
+      // Sort cho đẹp
+      aIntersect.sort((a, b) => pad5(a.Bnfpo).localeCompare(pad5(b.Bnfpo)));
+
+      // Gán model chi tiết
+      oDetailModel.setProperty("/Items", aIntersect);
+      oDetail.setModel(oDetailModel);
+      oDetail.bindElement("/");
+      oDetail.setVisible(true);
+      oLayout.setSize("65%");
+      this.byId("txtPRTitle").setText(group.Banfn);
+
+      // Reset text area của PR mới
+      const oTextArea = this.byId("taRejectReason");
+      if (oTextArea) {
+        if (bIsLocked) { // 🟩 Nếu PR đã có note → khóa text area
+          oTextArea.setEditable(false);
+          oTextArea.setTooltip("Note already saved — cannot be edited.");
+        } else {
+          oTextArea.setEditable(true);
+          oTextArea.setTooltip("Enter rejection reason here...");
+          oTextArea.setValue("");
+        }
+      }
+
+      // 🟩 Nếu PR đã có note → load note và khóa luôn
+      // 🟩 Nếu chưa có note → gọi _loadPRNote để kiểm tra từ backend
+      if (bIsLocked) {
+        this._loadPRNote(sBanfn, true); // true = load locked note
+      } else {
+        this._loadPRNote(sBanfn);
+      }
+
+      // Gán model cho bảng items
+      const oItemTable = this.byId("tblPRItems");
+      if (oItemTable) oItemTable.setModel(oDetailModel);
+    },
+
+    error: () => {
+      sap.ui.core.BusyIndicator.hide();
+
+      // fallback hiển thị dữ liệu hiện tại
+      oDetailModel.setProperty("/Items", aLeftItems);
+      oDetail.setModel(oDetailModel);
+      oDetail.bindElement("/");
+      oDetail.setVisible(true);
+      oLayout.setSize("65%");
+      this.byId("txtPRNote").setText(group.Banfn);
+
+      this._loadPRNote(sBanfn);
+    },
+  });
+},
+
+
+
+
+
 
       onCloseDetail: function () {
         const oDetail = this.byId("detailPanel");
@@ -844,6 +870,114 @@ sap.ui.define(
         if (oRouter) oRouter.navTo("DashBoard");
         else MessageToast.show("🔙 Back to Home");
       },
+
+
+      // Khi manager ấn nút Edit
+onEditNote: function () {
+  const oNoteModel = this.getView().getModel("noteModel");
+  if (!oNoteModel) return;
+
+  oNoteModel.setProperty("/Editable", true);
+  sap.m.MessageToast.show("✏️ Edit mode enabled.");
+},
+
+// Khi manager ấn Cancel
+onCancelEditNote: function () {
+  const oNoteModel = this.getView().getModel("noteModel");
+  if (!oNoteModel) return;
+
+  oNoteModel.setProperty("/Editable", false);
+  sap.m.MessageToast.show("❌ Edit cancelled.");
+},
+
+// Khi manager ấn Save
+onSaveNote: function () {
+  const oModel = this.getView().getModel();
+  const oNoteModel = this.getView().getModel("noteModel");
+
+  const sBanfn = oNoteModel.getProperty("/Banfn");
+  const sNote = oNoteModel.getProperty("/Note");
+
+  if (!sBanfn) return sap.m.MessageToast.show("⚠️ No PR selected.");
+
+  const sKeyBanfn = String(sBanfn).padStart(10, "0");
+  const oEntry = { Banfn: sKeyBanfn, Note: sNote };
+
+  sap.ui.core.BusyIndicator.show(0);
+
+  // Kiểm tra trước khi update
+  oModel.read(`/PRNoteSet(Banfn='${sKeyBanfn}')`, {
+    success: (oData) => {
+      oModel.update(`/PRNoteSet(Banfn='${sKeyBanfn}')`, oEntry, {
+        success: () => {
+          sap.ui.core.BusyIndicator.hide();
+          sap.m.MessageToast.show("✅ Note updated successfully!");
+          oNoteModel.setProperty("/Editable", false);
+        },
+        error: (err) => {
+          sap.ui.core.BusyIndicator.hide();
+          console.error("❌ Update failed:", err);
+          sap.m.MessageToast.show("❌ Failed to update note.");
+        },
+      });
+    },
+    error: () => {
+      // Nếu chưa có note → tạo mới
+      oModel.create("/PRNoteSet", oEntry, {
+        success: () => {
+          sap.ui.core.BusyIndicator.hide();
+          sap.m.MessageToast.show("✅ Note created successfully!");
+          oNoteModel.setProperty("/Editable", false);
+        },
+        error: (err) => {
+          sap.ui.core.BusyIndicator.hide();
+          console.error("❌ Create failed:", err);
+          sap.m.MessageToast.show("❌ Failed to create note.");
+        },
+      });
+    },
+  });
+},
+
+
+
+   _loadPRNote: function (sBanfn) {
+  console.log("📡 Calling OData path:", `/PRNoteSet(Banfn='${sBanfn}')`);
+
+  const oModel = this.getView().getModel();
+  const oNoteModel =
+    this.getView().getModel("noteModel") ||
+    new sap.ui.model.json.JSONModel({ Banfn: sBanfn, Note: "", Editable: false });
+  this.getView().setModel(oNoteModel, "noteModel");
+
+  const sKeyBanfn = String(sBanfn || "").trim().padStart(10, "0");
+
+  oNoteModel.setProperty("/Note", "Loading...");
+  oNoteModel.setProperty("/Editable", false);
+  sap.ui.core.BusyIndicator.show(0);
+
+  oModel.read(`/PRNoteSet(Banfn='${sKeyBanfn}')`, {
+    success: (oData) => {
+      sap.ui.core.BusyIndicator.hide();
+      console.log("📦 Note data loaded:", oData);
+      if (oData && oData.Note && oData.Note.trim() !== "") {
+        oNoteModel.setProperty("/Note", oData.Note);
+      } else {
+        oNoteModel.setProperty("/Note", "— No note available —");
+      }
+      oNoteModel.setProperty("/Editable", false);
+    },
+    error: (err) => {
+      sap.ui.core.BusyIndicator.hide();
+      console.warn("⚠️ Cannot load PR note:", err);
+      oNoteModel.setProperty("/Note", "None");
+      oNoteModel.setProperty("/Editable", false);
+    }
+  });
+},
+
+
+
     });
   }
 );

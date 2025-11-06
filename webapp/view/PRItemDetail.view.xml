@@ -12,14 +12,38 @@
     </headerContent>
 
     <content>
-      <!-- Header hiển thị PR và Item -->
-    <ObjectHeader
-  id="objHeader"
-  title="PR"
-  number="{Bnfpo}"
-  numberUnit="Item"
-  intro="{Txz01}"
-  class="sapUiMediumMarginBottom fioriHeaderBox" />
+
+    <HBox class="customHeaderBox" alignItems="Center" justifyContent="SpaceBetween">
+
+  <!-- 🟩 Cột trái: ẢNH -->
+  <VBox width="25%" alignItems="Center" class="headerImageContainer">
+    <Image
+      src="/images/tuanthanden.jpg"
+      width="140px"
+      height="140px"
+      decorative="false"
+      densityAware="false"
+      class="headerProfileImage" />
+  </VBox>
+
+  <!-- 🟦 Cột phải: THÔNG TIN -->
+  <VBox width="75%" class="headerInfoContainer">
+
+    <Text text="{Txz01}" class="headerIntroText" />
+    <Title text="{= 'PR ' + ${Banfn}}" level="H2" class="headerTitleText" />
+
+
+    <HBox alignItems="Center" class="headerItemBox">
+      <ObjectNumber
+       unit="Item"
+        number="{Bnfpo}"  
+        emphasized="true"
+        class="headerItemNumber" />
+    </HBox>
+
+  </VBox>
+</HBox>
+
 
 
       <!-- GRID CHIA 2 CỘT -->
@@ -42,41 +66,41 @@
 
     <!-- 🟩 CỘT TRÁI -->
     <VBox width="48%" class="sapUiSmallMarginEnd">
-      <Label text="Item Category" />
+      <Label text="Item Category:" />
       <Text text="{path: 'Pstyp', formatter: '.getItemCategoryText'}" />
 
-      <Label text="Requested By" />
+      <Label text="Requested By:" />
       <Text text="{Ernam}" />
 
-      <Label text="Created By (Name)" />
+      <Label text="Created By (Name):" />
       <Text text="{Ernam}" />
 
-      <Label text="Material" />
+      <Label text="Material:" />
       <Link text="{Txz01}" press=".onMaterialPress" />
 
-      <Label text="Short Text" />
+      <Label text="Short Text:" />
       <Text text="{Txz01}" />
 
-      <Label text="Material Group" />
+      <Label text="Material Group:" />
       <Text text="{Matkl}" />
     </VBox>
 
     <!-- 🟦 CỘT PHẢI -->
     <VBox width="48%">
-      <Label text="Valuation Price" />
+      <Label text="Valuation Price:" />
       <Text text="{Preis} {Waers}" />
 
-      <Label text="Price Unit" />
+      <Label text="Price Unit:" />
       <Text text="{Peinh} EA" />
 
-      <Label text="Quantity Requested" />
+      <Label text="Quantity Requested:" />
       <Text text="{Menge} {Meins}" />
 
-      <Label text="Net Value" />
+      <Label text="Net Value:" />
       <Text text="{Netwr} {Waers}" />
 
-      <Label text="Release Status" />
-      <Text text="{Frgkz}" />
+      <Label text="Release Status:" />
+      <Text text="{path: 'Frgkz', formatter: '.getReleaseStatus'}" />
     </VBox>
 
   </HBox>

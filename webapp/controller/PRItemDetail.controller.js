@@ -24,7 +24,7 @@ sap.ui.define([
       this.getView().setModel(oModel);
 
       const sPath = `/PRsSet(Banfn='${sBanfn}',Bnfpo='${sBnfpo}')`;
-      console.log("🔗 Binding path:", sPath);
+      console.log(" Binding path:", sPath);
 
       this.getView().bindElement({
         path: sPath,
@@ -40,16 +40,27 @@ sap.ui.define([
 
             console.log("✅ Data bound:", oData);
 
-            // Format lại PR và Item
+            // 🔹 Lấy các control trong view
             const oHeader = this.getView().byId("objHeader");
-            const sFormattedPR = oData.Banfn.toString().padStart(10, "0");
-            const sFormattedItem = oData.Bnfpo.toString().padStart(5, "0");
-            oHeader.setTitle(`PR ${sFormattedPR}`);
-            oHeader.setNumber(sFormattedItem);
+            const oHeaderTitle = this.getView().byId("prTitle");
+
+            // Không format bằng padStart nữa
+            const sFormattedPR = oData.Banfn;   
+            const sFormattedItem = oData.Bnfpo; 
+            if (oHeader) {
+              oHeader.setNumber(sFormattedItem);
+            }
+
+            if (oHeaderTitle) {
+              oHeaderTitle.setText(`PR ${sFormattedPR}`);
+            }
+
+
           }
         }
       });
     },
+
 
     onNavBack: function () {
       const oHistory = History.getInstance();
@@ -65,27 +76,42 @@ sap.ui.define([
 
 
     getItemCategoryText: function (sPstyp) {
-  if (!sPstyp) return "";
+      if (!sPstyp) return "";
 
-  const mPstypTexts = {
-    "0": "Standard",
-    "1": "Limit",
-    "2": "Consignment",
-    "3": "Subcontracting",
-    "4": "Material unknown",
-    "5": "Third-party",
-    "6": "Text",
-    "7": "Stock transfer",
-    "8": "Material group",
-    "9": "Service",
-    "A": "Enhanced Limit",
-    "C": "Stock prov. by cust.",
-    "P": "Return.trans.pack."
-  };
+      const mPstypTexts = {
+        "0": "Standard",
+        "1": "Limit",
+        "2": "Consignment",
+        "3": "Subcontracting",
+        "4": "Material unknown",
+        "5": "Third-party",
+        "6": "Text",
+        "7": "Stock transfer",
+        "8": "Material group",
+        "9": "Service",
+        "A": "Enhanced Limit",
+        "C": "Stock prov. by cust.",
+        "P": "Return.trans.pack."
+      };
 
-  // Trả về text mô tả, hoặc giá trị gốc nếu không khớp
-  return mPstypTexts[sPstyp] || sPstyp;
-},
+      // Trả về text mô tả, hoặc giá trị gốc nếu không khớp
+      return mPstypTexts[sPstyp] || sPstyp;
+    },
+
+    getReleaseStatus: function (sFrgkz) {
+      if (!sFrgkz) return "";
+
+      const mPstypTexts = {
+        "X": "Rejected",
+        "C": "Pendding.",
+        "R": "Approved."
+      };
+
+      // Trả về text mô tả, hoặc giá trị gốc nếu không khớp
+      return mFrgkzTexts[sFrgkz] ? mFrgkzTexts[sFrgkz] : "Other";
+    },
+
+
 
   });
 });
