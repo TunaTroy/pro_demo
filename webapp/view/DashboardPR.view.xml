@@ -171,6 +171,8 @@
 
         <!-- 🔚 Nút điều hướng -->
         <Button text="Go to PR List" press="onGoToPRList" class="sapUiSmallMarginTop"/>
+        <Button text="Go to RFQ List" press="onGoToRFQList" class="sapUiSmallMarginTop"/>
+        <Button text="Go to PO List" press="onGoToPOList" class="sapUiSmallMarginTop"/>
         
       </VBox>
     </content>

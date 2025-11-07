@@ -113,12 +113,26 @@
           ]
         },
         {
-      "name": "PRItemDetail",
-      "pattern": "PRItemDetail/{Banfn}/{Bnfpo}",
-      "target": ["TargetPRItemDetail"]
+          "name": "PRItemDetail",
+          "pattern": "PRItemDetail/{Banfn}/{Bnfpo}",
+          "target": [
+            "TargetPRItemDetail"
+          ]
+        },
+        {
+          "name": "RFQList",
+          "pattern": "RFQList",
+          "target": [
+            "TargetRFQList"
+          ]
+        },
+        {
+          "name": "POList",
+          "pattern": "POList",
+          "target": [
+            "TargetPOList"
+          ]
         }
-        
-
       ],
       "targets": {
         "TargetDashboardPR": {
@@ -141,6 +155,20 @@
           "clearControlAggregation": false,
           "viewId": "PRItemDetail",
           "viewName": "PRItemDetail"
+        },
+        "TargetRFQList": {
+          "viewType": "XML",
+          "transition": "slide",
+          "clearControlAggregation": false,
+          "viewId": "RFQList",
+          "viewName": "RFQList"
+        },
+        "TargetPOList": {
+          "viewType": "XML",
+          "transition": "slide",
+          "clearControlAggregation": false,
+          "viewId": "POList",
+          "viewName": "POList"
         }
       }
     },

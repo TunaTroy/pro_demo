@@ -2008,6 +2008,13 @@ sap.ui.define(
       onGoToPRList: function () {
         sap.ui.core.UIComponent.getRouterFor(this).navTo("PRList");
       },
+
+      onGoToRFQList: function () {
+        sap.ui.core.UIComponent.getRouterFor(this).navTo("RFQList");
+      },
+       onGoToPOList: function () {
+        sap.ui.core.UIComponent.getRouterFor(this).navTo("POList");
+      },
     });
   }
 );
