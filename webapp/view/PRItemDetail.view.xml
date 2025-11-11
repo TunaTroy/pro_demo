@@ -5,110 +5,84 @@
   xmlns:form="sap.ui.layout.form"
   xmlns:l="sap.ui.layout"
   displayBlock="true">
-
-  <Page title="PR Item Detail">
+  <Page id="pagePRItemDetail" title="📦 PR Item Detail">
+    <!-- ===== HEADER BUTTON ===== -->
     <headerContent>
-      <Button icon="sap-icon://nav-back" press="onNavBack" type="Transparent" />
+      <Button id="btnNavBack" icon="sap-icon://nav-back" press="onNavBack" type="Transparent" />
     </headerContent>
-
     <content>
-
-    <HBox class="customHeaderBox" alignItems="Center" justifyContent="SpaceBetween">
-
-  <!-- 🟩 Cột trái: ẢNH -->
-  <VBox width="25%" alignItems="Center" class="headerImageContainer">
-    <Image
-      src="/images/tuanthanden.jpg"
-      width="140px"
-      height="140px"
-      decorative="false"
-      densityAware="false"
-      class="headerProfileImage" />
-  </VBox>
-
-  <!-- 🟦 Cột phải: THÔNG TIN -->
-  <VBox width="75%" class="headerInfoContainer">
-
-    <Text text="{Txz01}" class="headerIntroText" />
-    <Title text="{= 'PR ' + ${Banfn}}" level="H2" class="headerTitleText" />
-
-
-    <HBox alignItems="Center" class="headerItemBox">
-      <ObjectNumber
-       unit="Item"
-        number="{Bnfpo}"  
-        emphasized="true"
-        class="headerItemNumber" />
-    </HBox>
-
-  </VBox>
-</HBox>
-
-
-
-      <!-- GRID CHIA 2 CỘT -->
+      <!-- 🧾 HEADER SECTION -->
+      <HBox id="hboxHeader" class="customHeaderBox" alignItems="Center" justifyContent="SpaceBetween">
+        <!-- 🟩 LEFT COLUMN: IMAGE -->
+        <VBox id="vboxHeaderImage" width="25%" alignItems="Center" class="headerImageContainer">
+          <Image
+            id="imgMaterial"
+            src="/images/tuanthanden.jpg"
+            width="140px"
+            height="140px"
+            decorative="false"
+            densityAware="false"
+            class="headerProfileImage" />
+        </VBox>
+        <!-- 🟦 RIGHT COLUMN: BASIC INFO -->
+        <VBox id="vboxHeaderInfo" width="75%" class="headerInfoContainer">
+          <Text id="txtHeaderDesc" text="{Txz01}" class="headerIntroText" />
+          <Title id="txtHeaderTitle" text="{= 'PR ' + ${Banfn}}" level="H2" class="headerTitleText" />
+          <HBox id="hboxItemNumber" alignItems="Center" class="headerItemBox">
+            <ObjectNumber id="objItemNumber" unit="Item" number="{Bnfpo}" emphasized="true" class="headerItemNumber" />
+          </HBox>
+        </VBox>
+      </HBox>
+      <!-- GRID: TWO COLUMN LAYOUT -->
       <l:Grid
-        id="detailGrid"
+        id="gridDetail"
         defaultSpan="L6 M12 S12"
         hSpacing="2"
         vSpacing="1"
         class="sapUiMediumMarginBottom">
-
-        <!-- ==== CỘT TRÁI: BASIC DATA ==== -->
+        <!-- ==== LEFT COLUMN: BASIC DATA ==== -->
         <Panel
-  headerText="Basic Data"
-  expandable="false"
-  class="sapUiNoContentPadding sapUiSmallMarginBottom fioriSectionBox">
-
-  <HBox
-    class="sapUiSmallMarginTop sapUiSmallMarginBottom sapUiTinyMarginBegin sapUiTinyMarginEnd sapUiSmallScreenColumn"
-    justifyContent="SpaceBetween">
-
-    <!-- 🟩 CỘT TRÁI -->
-    <VBox width="48%" class="sapUiSmallMarginEnd">
-      <Label text="Item Category:" />
-      <Text text="{path: 'Pstyp', formatter: '.getItemCategoryText'}" />
-
-      <Label text="Requested By:" />
-      <Text text="{Ernam}" />
-
-      <Label text="Created By (Name):" />
-      <Text text="{Ernam}" />
-
-      <Label text="Material:" />
-      <Link text="{Txz01}" press=".onMaterialPress" />
-
-      <Label text="Short Text:" />
-      <Text text="{Txz01}" />
-
-      <Label text="Material Group:" />
-      <Text text="{Matkl}" />
-    </VBox>
-
-    <!-- 🟦 CỘT PHẢI -->
-    <VBox width="48%">
-      <Label text="Valuation Price:" />
-      <Text text="{Preis} {Waers}" />
-
-      <Label text="Price Unit:" />
-      <Text text="{Peinh} EA" />
-
-      <Label text="Quantity Requested:" />
-      <Text text="{Menge} {Meins}" />
-
-      <Label text="Net Value:" />
-      <Text text="{Netwr} {Waers}" />
-
-      <Label text="Release Status:" />
-      <Text text="{path: 'Frgkz', formatter: '.getReleaseStatus'}" />
-    </VBox>
-
-  </HBox>
-</Panel>
-
-
-        <!-- ==== CỘT PHẢI: DELIVERY ==== -->
+          id="panelBasicData"
+          headerText="Basic Data"
+          expandable="false"
+          class="sapUiNoContentPadding sapUiSmallMarginBottom fioriSectionBox">
+          <HBox
+            id="hboxBasicData"
+            class="sapUiSmallMarginTop sapUiSmallMarginBottom sapUiTinyMarginBegin sapUiTinyMarginEnd sapUiSmallScreenColumn"
+            justifyContent="SpaceBetween">
+            <!-- LEFT BOX -->
+            <VBox id="vboxBasicLeft" width="48%" class="sapUiSmallMarginEnd">
+              <Label id="lblItemCategory" text="Item Category:" />
+              <Text id="txtItemCategory" text="{path: 'Pstyp', formatter: '.getItemCategoryText'}" />
+              <Label id="lblRequestedBy" text="Requested By:" />
+              <Text id="txtRequestedBy" text="{Ernam}" />
+              <Label id="lblCreatedBy" text="Created By (Name):" />
+              <Text id="txtCreatedBy" text="{Ernam}" />
+              <Label id="lblMaterial" text="Material:" />
+              <Link id="lnkMaterial" text="{Txz01}" press=".onMaterialPress" />
+              <Label id="lblShortText" text="Short Text:" />
+              <Text id="txtShortText" text="{Txz01}" />
+              <Label id="lblMaterialGroup" text="Material Group:" />
+              <Text id="txtMaterialGroup" text="{Matkl}" />
+            </VBox>
+            <!-- RIGHT BOX -->
+            <VBox id="vboxBasicRight" width="48%">
+              <Label id="lblValuationPrice" text="Valuation Price:" />
+              <Text id="txtValuationPrice" text="{Preis} {Waers}" />
+              <Label id="lblPriceUnit" text="Price Unit:" />
+              <Text id="txtPriceUnit" text="{Peinh} EA" />
+              <Label id="lblQuantity" text="Quantity Requested:" />
+              <Text id="txtQuantity" text="{Menge} {Meins}" />
+              <Label id="lblNetValue" text="Net Value:" />
+              <Text id="txtNetValue" text="{Netwr} {Waers}" />
+              <Label id="lblReleaseStatus" text="Release Status:" />
+              <Text id="txtReleaseStatus" text="{path: 'Frgkz', formatter: '.getReleaseStatus'}" />
+            </VBox>
+          </HBox>
+        </Panel>
+        <!-- ==== RIGHT COLUMN: DELIVERY SECTION ==== -->
         <form:SimpleForm
+          id="formDelivery"
           layout="ResponsiveGridLayout"
           editable="false"
           title="Delivery"
@@ -116,17 +90,12 @@
           labelSpanM="6"
           columnsL="1"
           columnsM="1">
-
-          <Label text="Delivery Date" />
-          <Text text="{path: 'Lfdat', type: 'sap.ui.model.type.Date', formatOptions: {pattern: 'dd/MM/yyyy'}}" />
-
-          <Label text="Delivery Address" />
-          <Text text="Việt Nam" />
+          <Label id="lblDeliveryDate" text="Delivery Date" />
+          <Text id="txtDeliveryDate" text="{path: 'Lfdat', type: 'sap.ui.model.type.Date', formatOptions: {pattern: 'dd/MM/yyyy'}}" />
+          <Label id="lblDeliveryAddress" text="Delivery Address" />
+          <Text id="txtDeliveryAddress" text="Viet Nam" />
         </form:SimpleForm>
       </l:Grid>
-
-
-      
     </content>
   </Page>
 </mvc:View>
