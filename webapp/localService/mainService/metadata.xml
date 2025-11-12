@@ -1,3 +1,4 @@
+
 <edmx:Edmx xmlns:edmx="http://schemas.microsoft.com/ado/2007/06/edmx" xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata" xmlns:sap="http://www.sap.com/Protocols/SAPData" Version="1.0">
 <edmx:DataServices m:DataServiceVersion="2.0">
 <Schema xmlns="http://schemas.microsoft.com/ado/2008/09/edm" Namespace="ZGW_PRO_G18_SRV" xml:lang="en" sap:schema-version="1">
@@ -59,6 +60,8 @@
 <PropertyRef Name="Ebeln"/>
 </Key>
 <Property Name="Ebeln" Type="Edm.String" Nullable="false" MaxLength="10" sap:unicode="false" sap:label="Purchasing Doc." sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+<Property Name="Ktwrt" Type="Edm.Decimal" Nullable="false" Precision="16" Scale="3" sap:unicode="false" sap:unit="Waers" sap:label="Target Value" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+<Property Name="Statu" Type="Edm.String" Nullable="false" MaxLength="1" sap:unicode="false" sap:label="Status" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
 <Property Name="Bukrs" Type="Edm.String" Nullable="false" MaxLength="4" sap:unicode="false" sap:label="Company Code" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
 <Property Name="Bstyp" Type="Edm.String" Nullable="false" MaxLength="1" sap:unicode="false" sap:label="Doc. Category" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
 <Property Name="Bsart" Type="Edm.String" Nullable="false" MaxLength="4" sap:unicode="false" sap:label="Document Type" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
@@ -75,6 +78,7 @@
 <Property Name="Frgsx" Type="Edm.String" Nullable="false" MaxLength="2" sap:unicode="false" sap:label="Rel. Strategy" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
 <Property Name="Frgke" Type="Edm.String" Nullable="false" MaxLength="8" sap:unicode="false" sap:label="Release ind." sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
 <Property Name="Frgzu" Type="Edm.String" Nullable="false" MaxLength="8" sap:unicode="false" sap:label="Release State" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+<NavigationProperty Name="to_Items" Relationship="ZGW_PRO_G18_SRV.HeaderToItem" FromRole="FromRole_HeaderToItem" ToRole="ToRole_HeaderToItem"/>
 </EntityType>
 <EntityType Name="VendorsSet" sap:content-version="1">
 <Key>
@@ -100,6 +104,18 @@
 <Property Name="Note" Type="Edm.String" Nullable="false" MaxLength="225" sap:unicode="false" sap:label="Text" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
 <Property Name="Erdat" Type="Edm.DateTime" Precision="7" sap:unicode="false" sap:label="Changed On" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
 </EntityType>
+<Association Name="HeaderToItem" sap:content-version="1">
+<End Type="ZGW_PRO_G18_SRV.ProcurementHeaderSet" Multiplicity="1" Role="FromRole_HeaderToItem"/>
+<End Type="ZGW_PRO_G18_SRV.ProcurementItemSet" Multiplicity="*" Role="ToRole_HeaderToItem"/>
+<ReferentialConstraint>
+<Principal Role="FromRole_HeaderToItem">
+<PropertyRef Name="Ebeln"/>
+</Principal>
+<Dependent Role="ToRole_HeaderToItem">
+<PropertyRef Name="Ebeln"/>
+</Dependent>
+</ReferentialConstraint>
+</Association>
 <EntityContainer Name="ZGW_PRO_G18_SRV_Entities" m:IsDefaultEntityContainer="true" sap:supported-formats="atom json xlsx">
 <EntitySet Name="ProcurementItemSet" EntityType="ZGW_PRO_G18_SRV.ProcurementItemSet" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:pageable="false" sap:content-version="1"/>
 <EntitySet Name="PRsSet" EntityType="ZGW_PRO_G18_SRV.PRsSet" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:pageable="false" sap:content-version="1"/>
@@ -107,6 +123,10 @@
 <EntitySet Name="VendorsSet" EntityType="ZGW_PRO_G18_SRV.VendorsSet" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:pageable="false" sap:content-version="1"/>
 <EntitySet Name="LoginSet" EntityType="ZGW_PRO_G18_SRV.Login" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:pageable="false" sap:content-version="1"/>
 <EntitySet Name="PRNoteSet" EntityType="ZGW_PRO_G18_SRV.PRNote" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:pageable="false" sap:content-version="1"/>
+<AssociationSet Name="HeaderToItemSet" Association="ZGW_PRO_G18_SRV.HeaderToItem" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:content-version="1">
+<End EntitySet="ProcurementHeaderSet" Role="FromRole_HeaderToItem"/>
+<End EntitySet="ProcurementItemSet" Role="ToRole_HeaderToItem"/>
+</AssociationSet>
 </EntityContainer>
 <atom:link xmlns:atom="http://www.w3.org/2005/Atom" rel="self" href="http://s35lp1.ucc.cit.tum.de:8000/sap/opu/odata/sap/ZGW_PRO_G18_SRV/$metadata"/>
 <atom:link xmlns:atom="http://www.w3.org/2005/Atom" rel="latest-version" href="http://s35lp1.ucc.cit.tum.de:8000/sap/opu/odata/sap/ZGW_PRO_G18_SRV/$metadata"/>

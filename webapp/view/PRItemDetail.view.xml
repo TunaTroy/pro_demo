@@ -17,7 +17,7 @@
         <VBox id="vboxHeaderImage" width="25%" alignItems="Center" class="headerImageContainer">
           <Image
             id="imgMaterial"
-            src="/images/tuanthanden.jpg"
+            src="/images/tuandat2.jpg"
             width="140px"
             height="140px"
             decorative="false"

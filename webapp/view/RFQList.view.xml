@@ -7,7 +7,7 @@
   xmlns:f="sap.f"
   xmlns:fb="sap.ui.comp.filterbar"
   displayBlock="true">
-  
+
   <Page id="rfqListPage" title="Request for Quotation List" showNavButton="true" navButtonPress=".onNavBack">
     <subHeader>
       <Toolbar>
@@ -46,7 +46,7 @@
 
     <Table
       id="rfqTable"
-      items="{path: 'rfq>/', parameters: {expand: 'ToItems'}}"
+      items="{rfq>/results}"
       growing="true"
       growingThreshold="50"
       sticky="ColumnHeaders,HeaderToolbar"
@@ -54,7 +54,7 @@
       selectionChange=".onItemPress">
       <headerToolbar>
         <OverflowToolbar>
-          <Title text="RFQ List ({= ${rfq>/}.length } items)" level="H2"/>
+          <Title text="RFQ List ({= ${rfq>/results}.length } items)" level="H2"/>
           <ToolbarSpacer/>
           <Button icon="sap-icon://sort" press=".onSort"/>
           <Button icon="sap-icon://filter" press=".onFilter"/>
@@ -77,18 +77,9 @@
             <ObjectIdentifier title="{rfq>Ebeln}" text="{rfq>Bsart}"/>
             <Text text="{path: 'rfq>Aedat', formatter: '.formatter.formatDate'}"/>
             <ObjectStatus
-              text="{
-                path: 'rfq>Frgke',
-                formatter: '.formatter.formatReleaseStatusText'
-              }"
-              state="{
-                path: 'rfq>Frgke',
-                formatter: '.formatter.formatReleaseStatusState'
-              }"
-              icon="{
-                path: 'rfq>Frgke',
-                formatter: '.formatter.formatReleaseStatusIcon'
-              }"/>
+              text="{path: 'rfq>Frgke', formatter: '.formatter.formatReleaseStatusText'}"
+              state="{path: 'rfq>Frgke', formatter: '.formatter.formatReleaseStatusState'}"
+              icon="{path: 'rfq>Frgke', formatter: '.formatter.formatReleaseStatusIcon'}"/>
             <Text text="{rfq>Lifnr} - {rfq>VendorName}"/>
             <Text text="{rfq>Ekgrp}"/>
             <Text text="{rfq>Waers}"/>
@@ -97,13 +88,12 @@
               unit="{rfq>Waers}"
               state="{= ${rfq>TotalValue} > 1000000000 ? 'Error' : ${rfq>TotalValue} > 100000000 ? 'Warning' : 'Success'}"/>
             <Text text="{rfq>ItemCount}"/>
-            <Text text="{path: 'rfq>ToItems/0/Agdat', formatter: '.formatter.formatDate'}"/>
+            <!-- <Text text="{path: 'rfq>to_Items/results/0/Agdat', formatter: '.formatter.formatDate'}"/> -->
           </cells>
         </ColumnListItem>
       </items>
     </Table>
 
-    <!-- Footer Note Panel giống PR List -->
     <footer>
       <OverflowToolbar>
         <ToolbarSpacer/>
