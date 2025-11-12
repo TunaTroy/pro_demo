@@ -132,6 +132,13 @@
           "target": [
             "TargetPOList"
           ]
+        },
+        {
+          "name": "POItemDetail",
+          "pattern": "poitem/{Ebeln}/{Ebelp}",
+          "target": [
+            "TargetPOItemDetail"
+          ]
         }
       ],
       "targets": {
@@ -169,6 +176,13 @@
           "clearControlAggregation": false,
           "viewId": "POList",
           "viewName": "POList"
+        },
+         "TargetPOItemDetail": {
+          "viewType": "XML",
+          "transition": "slide",
+          "clearControlAggregation": false,
+          "viewId": "POItemDetail",
+          "viewName": "POItemDetail"
         }
       }
     },

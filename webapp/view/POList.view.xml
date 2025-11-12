@@ -155,55 +155,104 @@
 
           <!-- RIGHT DETAIL PANEL -->
           <l:SplitPane id="poDetailPane">
-            <l:layoutData>
-              <l:SplitterLayoutData size="40%" resizable="true"/>
-            </l:layoutData>
+  <l:layoutData>
+    <l:SplitterLayoutData size="40%" minSize="350px" resizable="true"/>
+  </l:layoutData>
 
-            <Panel id="poDetailPanel"
-                   visible="false"
-                   headerText="PO Details"
-                   class="sapUiMediumMargin sapUiResponsiveContentPadding sapUiSizeCompact">
+  <VBox
+    id="poDetailPanel"
+    visible="false"
+    class="sapUiMediumMargin sapUiSizeCompact sapUiNoContentPadding sapUiResponsiveContentPadding">
 
-              <VBox id="poDetailBox">
-                <HBox justifyContent="SpaceBetween">
-                  <Text text="{detailPO>Ebeln}" class="sapUiSmallMarginEnd"/>
-                  <Button icon="sap-icon://decline" type="Transparent" press=".onCloseDetail"/>
-                </HBox>
+    <!-- ===== HEADER CARD ===== -->
+    <Panel
+  id="panelPODetailHeader"
+  class="sapUiNoContentPadding sapUiResponsiveContentPadding sapUiSizeCompact sapUiMediumMarginBottom"
+  width="100%"
+  headerText="PO Details">
 
-                <Text text="{= 'Order Type: ' + ${detailPO>Bsart} }"/>
-                <Text text="{= 'Purchasing Group: ' + ${detailPO>Ekgrp} }"/>
-                <Text text="{= 'Created By: ' + ${detailPO>Ernam} }"/>
-                <Text text="{path:'detailPO>Aedat', formatter:'.formatter.dateFormat'}"/>
+  <VBox class="sapUiSmallMargin sapUiSizeCompact">
 
-                <ObjectStatus
-                  text="{path:'detailPO>Frgzu', formatter:'.formatter.formatReleaseStatusText'}"
-                  state="{path:'detailPO>Frgzu', formatter:'.formatter.formatReleaseStatusState'}"/>
+    <!-- Dòng tiêu đề + nút đóng -->
+    <HBox justifyContent="SpaceBetween" alignItems="Center" class="sapUiTinyMarginBottom">
+      <Text text="{detailPO>Ebeln}" class="sapUiTinyMarginEnd sapUiTinyMarginBottom sapMTitle sapMTitleStyleH4"/>
+      <Button icon="sap-icon://decline" press=".onCloseDetail" type="Transparent"/>
+    </HBox>
 
-                <Panel headerText="Items" class="sapUiSmallMarginTop">
-                  <Table id="poItemsTable" items="{detailPO>/to_Items}">
-                    <columns>
-                      <Column><Text text="Item"/></Column>
-                      <Column><Text text="Material"/></Column>
-                      <Column><Text text="Quantity"/></Column>
-                      <Column><Text text="Net Price"/></Column>
-                    </columns>
+    <!-- Loại PO -->
+    <Text text="{detailPO>Bsart}" class="prHeaderSubTitle"/>
 
-                    <items>
-                      <ColumnListItem>
-                        <cells>
-                          <Text text="{Ebelp}"/>
-                          <Text text="{Matnr}"/>
-                          <Text text="{Menge}"/>
-                          <Text text="{Netwr}"/>
-                        </cells>
-                      </ColumnListItem>
-                    </items>
-                  </Table>
-                </Panel>
+    <!-- Group / Created By / Created On -->
+    <HBox class="sapUiTinyMarginTop" wrap="Wrap">
+      <Text
+        text="{= 'Group: ' + ${detailPO>Ekgrp}
+                + ' • Created By: ' + ${detailPO>Ernam}
+                + ' • Created On: ' + ${path:'detailPO>Aedat', formatter:'.formatter.dateFormat'} }"/>
+    </HBox>
 
-              </VBox>
-            </Panel>
-          </l:SplitPane>
+    <!-- 🆕 Quotation Deadline -->
+    <HBox class="sapUiTinyMarginTop" alignItems="Center">
+      <Text text="Quotation Deadline:" class="sapUiSmallMarginEnd"/>
+      <ObjectStatus
+        text="{ path:'detailPO>Agdat', formatter:'.formatter.dateFormat' }"
+        state="Information"
+        icon="sap-icon://calendar"/>
+    </HBox>
+
+    <!-- Status -->
+    <HBox class="sapUiTinyMarginTop" alignItems="Center">
+      <Text text="Status:"/>
+      <ObjectStatus
+        text="{path:'detailPO>Frgzu', formatter:'.formatter.formatReleaseStatusText'}"
+        state="{path:'detailPO>Frgzu', formatter:'.formatter.formatReleaseStatusState'}"
+        icon="{path:'detailPO>Frgzu', formatter:'.formatter.formatReleaseStatusIcon'}"
+        class="sapUiTinyMarginBegin"/>
+    </HBox>
+
+  </VBox>
+</Panel>
+
+
+    <!-- ===== ITEMS TABLE ===== -->
+    <Panel
+      id="panelPOItems"
+      headerText="📦 Items"
+      
+      class="sapUiNoContentPadding sapUiResponsiveContentPadding sapUiSizeCompact"
+      width="100%">
+
+      <Table
+        id="tblPOItems"
+        mode="SingleSelectMaster"
+        selectionChange="onItemPress"
+        items="{detailPO>/Items}"
+        class="sapUiSizeCompact"
+        width="100%">
+
+        <columns>
+          <Column><Text text="Item"/></Column>
+          <Column><Text text="Material"/></Column>
+          <Column><Text text="Quantity"/></Column>
+          <Column><Text text="Net Price"/></Column>         
+          <Column><Text text="Deadline"/></Column>
+        </columns>
+
+        <items>
+          <ColumnListItem>
+            <cells>
+              <Text text="{detailPO>Ebelp}"/>
+              <Text text="{detailPO>Matnr}"/>
+              <Text text="{detailPO>Menge}"/>
+              <Text text="{detailPO>Netpr}"/>            
+              <Text text="{path:'detailPO>Agdat', formatter:'.formatter.dateFormat'}"/>
+            </cells>
+          </ColumnListItem>
+        </items>
+      </Table>
+    </Panel>
+
+  </VBox>
+</l:SplitPane>
 
         </l:PaneContainer>
       </l:ResponsiveSplitter>

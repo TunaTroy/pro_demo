@@ -291,68 +291,7 @@ onFilterSearch: function () {
 },
 
 
-    // ============================
-    // LOAD PO HEADER + ITEMS
-    // ============================
-    _loadPOList: function () {
-      sap.ui.core.BusyIndicator.show(0);
 
-      let aHeader = [];
-      let aItems = [];
-
-      const pHeader = new Promise((resolve, reject) => {
-        this.oODataModel.read("/ProcurementHeaderSet", {
-          filters: [new Filter("Bstyp", FilterOperator.EQ, "F")], // Only PO
-          success: d => resolve(d.results),
-          error: reject
-        });
-      });
-
-      const pItems = new Promise((resolve, reject) => {
-        this.oODataModel.read("/ProcurementItemSet", {
-          success: d => resolve(d.results),
-          error: reject
-        });
-      });
-
-      Promise.all([pHeader, pItems]).then(results => {
-        aHeader = results[0];
-        aItems = results[1];
-
-        // 🔹 Map items to header by Ebeln
-        const mapItems = {};
-        aItems.forEach(it => {
-          if (!mapItems[it.Ebeln]) mapItems[it.Ebeln] = [];
-          mapItems[it.Ebeln].push(it);
-        });
-
-        // 🔹 Merge Header + Items
-        aHeader.forEach(h => {
-          h.Items = mapItems[h.Ebeln] || [];
-          h.ItemCount = h.Items.length;
-
-          h.TotalNetValue = h.Items
-            .reduce((s, it) => s + (parseFloat(it.Netwr) || 0), 0)
-            .toFixed(2);
-
-          // ➕ Ekgrp giữ nguyên (không thay đổi)
-          h.PurchGroup = h.Ekgrp || "";  // optional alias
-        });
-
-        console.log("=== DEBUG PO HEADER ===");
-aHeader.forEach(h => {
-    console.log("PO:", h.Ebeln, "Aedat:", h.Aedat, typeof h.Aedat);
-});
-
-
-        this.getView().setModel(new JSONModel(aHeader), "po");
-        sap.ui.core.BusyIndicator.hide();
-      })
-      .catch(err => {
-        sap.ui.core.BusyIndicator.hide();
-        MessageBox.error("Cannot load PO data.");
-      });
-    },
 
     // ============================
     // SEARCH
@@ -376,13 +315,51 @@ aHeader.forEach(h => {
       this.byId("poTable").getBinding("items").filter(aFilters);
     },
 
+    onSelectPO: function (oEvent) {
+  const oTable = oEvent.getSource();
+  const oSelectedItem = oTable.getSelectedItem();
+
+  if (!oSelectedItem) {
+    this.byId("poDetailPanel").setVisible(false);
+    this.byId("poTablePane").getLayoutData().setSize("100%");
+    return;
+  }
+
+  const oContext = oSelectedItem.getBindingContext("po");
+  const oPOData = oContext.getObject();
+
+  this.getView().getModel("detailPO").setData(oPOData);
+
+  const oPanel = this.byId("poDetailPanel");
+  oPanel.setVisible(true);
+
+  const oLayout = this.byId("poTablePane").getLayoutData();
+  oLayout.setSize("60%");
+
+
+},
+
+
     // ============================
     // ROW SELECTED
     // ============================
     onItemPress: function (oEvent) {
-      const oData = oEvent.getSource().getBindingContext("po").getObject();
-      MessageToast.show(`Selected PO ${oData.Ebeln}`);
-    },
+  const oItem = oEvent.getParameter("listItem"); // ✅ đúng đối tượng row
+  const oCtx = oItem.getBindingContext("detailPO");
+  if (!oCtx) return;
+
+  const oData = oCtx.getObject();
+  const sEbeln = oData.Ebeln;
+  const sEbelp = oData.Ebelp;
+
+  const oRouter = sap.ui.core.UIComponent.getRouterFor(this);
+  oRouter.navTo("POItemDetail", {
+    Ebeln: sEbeln,
+    Ebelp: sEbelp
+  });
+},
+
+
 
     // ============================
     // EXPORT EXCEL
@@ -456,6 +433,72 @@ aHeader.forEach(h => {
     oDialog.setTable(oTable);
     oDialog.open();
 },
+
+
+
+
+    // ============================
+    // LOAD PO HEADER + ITEMS
+    // ============================
+    _loadPOList: function () {
+      sap.ui.core.BusyIndicator.show(0);
+
+      let aHeader = [];
+      let aItems = [];
+
+      const pHeader = new Promise((resolve, reject) => {
+        this.oODataModel.read("/ProcurementHeaderSet", {
+          filters: [new Filter("Bstyp", FilterOperator.EQ, "F")], // Only PO
+          success: d => resolve(d.results),
+          error: reject
+        });
+      });
+
+      const pItems = new Promise((resolve, reject) => {
+        this.oODataModel.read("/ProcurementItemSet", {
+          success: d => resolve(d.results),
+          error: reject
+        });
+      });
+
+      Promise.all([pHeader, pItems]).then(results => {
+        aHeader = results[0];
+        aItems = results[1];
+
+        // 🔹 Map items to header by Ebeln
+        const mapItems = {};
+        aItems.forEach(it => {
+          if (!mapItems[it.Ebeln]) mapItems[it.Ebeln] = [];
+          mapItems[it.Ebeln].push(it);
+        });
+
+        // 🔹 Merge Header + Items
+        aHeader.forEach(h => {
+          h.Items = mapItems[h.Ebeln] || [];
+          h.ItemCount = h.Items.length;
+
+          h.TotalNetValue = h.Items
+            .reduce((s, it) => s + (parseFloat(it.Netwr) || 0), 0)
+            .toFixed(2);
+
+          // ➕ Ekgrp giữ nguyên (không thay đổi)
+          h.PurchGroup = h.Ekgrp || "";  // optional alias
+        });
+
+        console.log("=== DEBUG PO HEADER ===");
+aHeader.forEach(h => {
+    console.log("PO:", h.Ebeln, "Aedat:", h.Aedat, typeof h.Aedat);
+});
+
+
+        this.getView().setModel(new JSONModel(aHeader), "po");
+        sap.ui.core.BusyIndicator.hide();
+      })
+      .catch(err => {
+        sap.ui.core.BusyIndicator.hide();
+        MessageBox.error("Cannot load PO data.");
+      });
+    },
 
 
   });

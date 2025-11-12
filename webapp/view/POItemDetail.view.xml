@@ -1,0 +1,113 @@
+<mvc:View
+  controllerName="demodashboard.controller.POItemDetail"
+  xmlns:mvc="sap.ui.core.mvc"
+  xmlns="sap.m"
+  xmlns:form="sap.ui.layout.form"
+  xmlns:l="sap.ui.layout"
+  displayBlock="true">
+
+  <Page id="pagePOItemDetail" title="📦 PO Item Detail">
+    <!-- ===== HEADER BUTTON ===== -->
+    <headerContent>
+      <Button id="btnNavBack" icon="sap-icon://nav-back" press=".onNavBack" type="Transparent" />
+    </headerContent>
+
+    <content>
+      <!-- 🧾 HEADER SECTION -->
+      <HBox id="hboxHeader" class="customHeaderBox" alignItems="Center" justifyContent="SpaceBetween">
+        <!-- 🟩 LEFT COLUMN: IMAGE -->
+        <VBox id="vboxHeaderImage" width="25%" alignItems="Center" class="headerImageContainer">
+          <Image
+            id="imgMaterial"
+            src="/images/poitem.png"
+            width="140px"
+            height="140px"
+            decorative="false"
+            densityAware="false"
+            class="headerProfileImage" />
+        </VBox>
+
+        <!-- 🟦 RIGHT COLUMN: BASIC INFO -->
+        <VBox id="vboxHeaderInfo" width="75%" class="headerInfoContainer">
+          <Text id="txtHeaderDesc" text="{item>Txz01}" class="headerIntroText" />
+          <Title id="txtHeaderTitle" text="{= 'PO ' + ${item>Ebeln}}" level="H2" class="headerTitleText" />
+          <HBox id="hboxItemNumber" alignItems="Center" class="headerItemBox">
+            <ObjectNumber id="objItemNumber" unit="Item" number="{item>Ebelp}" emphasized="true" class="headerItemNumber" />
+          </HBox>
+        </VBox>
+      </HBox>
+
+      <!-- GRID: TWO COLUMN LAYOUT -->
+      <l:Grid
+        id="gridDetail"
+        defaultSpan="L6 M12 S12"
+        hSpacing="2"
+        vSpacing="1"
+        class="sapUiMediumMarginBottom">
+
+        <!-- ==== LEFT COLUMN: BASIC DATA ==== -->
+        <Panel
+          id="panelBasicData"
+          headerText="Basic Data"
+          expandable="false"
+          class="sapUiNoContentPadding sapUiSmallMarginBottom fioriSectionBox">
+
+          <HBox
+            id="hboxBasicData"
+            class="sapUiSmallMarginTop sapUiSmallMarginBottom sapUiTinyMarginBegin sapUiTinyMarginEnd sapUiSmallScreenColumn"
+            justifyContent="SpaceBetween">
+
+            <!-- LEFT BOX -->
+            <VBox id="vboxBasicLeft" width="48%" class="sapUiSmallMarginEnd">
+              <Label text="Material:" />
+              <Text text="{item>Matnr}" />
+              <Label text="Description:" />
+              <Text text="{item>Txz01}" />
+              <Label text="Quantity:" />
+              <Text text="{item>Menge} {item>Meins}" />
+              <Label text="Net Price:" />
+              <Text text="{item>Netpr} {item>Waers}" />
+              <Label text="Price Unit:" />
+              <Text text="{item>Peinh}" />
+            </VBox>
+
+            <!-- RIGHT BOX -->
+            <VBox id="vboxBasicRight" width="48%">
+              <Label text="Plant:" />
+              <Text text="{item>Werks}" />
+              <Label text="Storage Location:" />
+              <Text text="{item>Lgort}" />
+              <Label text="Delivery Date:" />
+              <Text text="{path:'item>Agdat', formatter:'.formatter.dateFormat'}" />
+              <Label text="Created By:" />
+              <Text text="{item>Ernam}" />
+              <Label text="Vendor:" />
+              <Text text="{item>Lifnr}" />
+            </VBox>
+
+          </HBox>
+        </Panel>
+
+        <!-- ==== RIGHT COLUMN: DELIVERY SECTION ==== -->
+        <form:SimpleForm
+          id="formDelivery"
+          layout="ResponsiveGridLayout"
+          editable="false"
+          title="Delivery"
+          labelSpanL="5"
+          labelSpanM="6"
+          columnsL="1"
+          columnsM="1">
+
+          <Label text="Delivery Date" />
+          <Text text="{path:'item>Agdat', formatter:'.formatter.dateFormat'}" />
+          <Label text="Delivery Address" />
+          <Text text="{item>Adrnr}" />
+          <Label text="Incoterms" />
+          <Text text="{item>Inco1}" />
+        </form:SimpleForm>
+
+      </l:Grid>
+    </content>
+  </Page>
+</mvc:View>
