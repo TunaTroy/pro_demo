@@ -3,104 +3,214 @@
   xmlns:mvc="sap.ui.core.mvc"
   xmlns="sap.m"
   xmlns:core="sap.ui.core"
-  xmlns:table="sap.ui.table"
-  xmlns:f="sap.f"
   xmlns:fb="sap.ui.comp.filterbar"
+  xmlns:l="sap.ui.layout"
   displayBlock="true">
 
-  <Page id="poListPage" title="Purchase Order List" showNavButton="true" navButtonPress=".onNavBack">
+
+  <Page id="poListPage"
+        title="Purchase Order List">
+
+    <!-- ==================== SUB HEADER ==================== -->
     <subHeader>
       <Toolbar>
-        <SearchField id="searchField" liveChange=".onSearch" width="300px" placeholder="Search PO Number, Vendor, Material..."/>
+        <SearchField id="searchField"
+                     liveChange=".onSearch"
+                     width="300px"
+                     placeholder="Search PO Number, Vendor, Material..."/>
         <ToolbarSpacer/>
-        <Button text="Create PO" icon="sap-icon://add-document" type="Emphasized" press=".onCreatePO" visible="false"/>
-        <Button icon="sap-icon://excel-attachment" tooltip="Export to Excel" press=".onExportExcel"/>
-        <Button icon="sap-icon://print" tooltip="Print PO" press=".onPrint"/>
+        <Button icon="sap-icon://excel-attachment"
+                tooltip="Export to Excel"
+                press=".onExportExcel"/>
+        <Button icon="sap-icon://print"
+                tooltip="Print PO"
+                press=".onPrint"/>
       </Toolbar>
     </subHeader>
 
-    <fb:FilterBar id="filterBar" persistencyKey="poFilterBar" useToolbar="false" search=".onFilterSearch">
-      <fb:filterGroupItems>
-        <fb:FilterGroupItem name="Ebeln" label="PO Number" groupName="default" visibleInFilterBar="true">
-          <fb:control><MultiInput id="poFilter" showValueHelp="true" valueHelpRequest=".onValueHelpPO"/></fb:control>
-        </fb:FilterGroupItem>
-        <fb:FilterGroupItem name="Lifnr" label="Vendor" groupName="default" visibleInFilterBar="true">
-          <fb:control><MultiInput id="vendorFilter" showValueHelp="true" valueHelpRequest=".onValueHelpVendor"/></fb:control>
-        </fb:FilterGroupItem>
-        <fb:FilterGroupItem name="Aedat" label="Created Date" groupName="default" visibleInFilterBar="true">
-          <fb:control><DateRangeSelection id="dateFilter" displayFormat="dd.MM.yyyy"/></fb:control>
-        </fb:FilterGroupItem>
-        <fb:FilterGroupItem name="Frgke" label="Release Status" groupName="default" visibleInFilterBar="true">
-          <fb:control>
-            <Select id="statusFilter">
+    <!-- ========= PAGE CONTENT MUST WRAP EVERYTHING ========= -->
+    <content>
+
+      <!-- ==================== FILTER BAR ==================== -->
+      <fb:FilterBar id=".onFilterSearch"
+                    persistencyKey="poFilterBar"
+                    useToolbar="false"
+                    search=".onFilterSearch">
+
+        <fb:filterGroupItems>
+
+          <fb:FilterGroupItem name="Ebeln" label="PO Number" groupName="default" visibleInFilterBar="true">
+            <fb:control>
+              <MultiInput id="poFilter"
+                          showValueHelp="true"
+                          valueHelpRequest=".onValueHelpPO"/>
+            </fb:control>
+          </fb:FilterGroupItem>
+
+          <fb:FilterGroupItem name="Bsart" label="Order Type" groupName="default" visibleInFilterBar="true">
+            <fb:control>
+              <MultiInput id="orderTypeFilter"
+                          showValueHelp="true"
+                          valueHelpRequest=".onValueHelpOrderType"/>
+            </fb:control>
+          </fb:FilterGroupItem>
+
+          <fb:FilterGroupItem name="Aedat" label="Created Date" groupName="default" visibleInFilterBar="true">
+            <fb:control>
+              <DateRangeSelection id="dateFilter" displayFormat="dd.MM.yyyy"/>
+            </fb:control>
+          </fb:FilterGroupItem>
+
+          <fb:FilterGroupItem name="Frgke" label="Release Status" groupName="default" visibleInFilterBar="true">
+            <fb:control>
+              <Select id="statusFilter">
+                <items>
+                  <core:Item key="" text="All"/>
+                  <core:Item key="R" text="Released"/>
+                  <core:Item key="C" text="Pending"/>
+                  <core:Item key="A" text="Blocked"/>
+                </items>
+              </Select>
+            </fb:control>
+          </fb:FilterGroupItem>
+
+          <fb:FilterGroupItem name="Ekgrp" label="Purch. Group" groupName="default" visibleInFilterBar="true">
+  <fb:control>
+    <MultiInput id="ekgrpFilter"
+                showValueHelp="true"
+                valueHelpRequest=".onValueHelpEkgrp"/>
+  </fb:control>
+</fb:FilterGroupItem>
+
+
+          <fb:FilterGroupItem name="Ernam" label="Created By"  groupName="default" visibleInFilterBar="true">
+  <fb:control>
+    <MultiInput id="humanFilter"
+                showValueHelp="true"
+                valueHelpRequest=".onValueHelpErnam"/>
+  </fb:control>
+</fb:FilterGroupItem>
+
+
+        </fb:filterGroupItems>
+      </fb:FilterBar>
+
+      <!-- ========== RESPONSIVE SPLITTER ========== -->
+      <l:ResponsiveSplitter id="mainSplitter" defaultPane="poTablePane">
+
+        <l:PaneContainer orientation="Horizontal">
+
+          <!-- LEFT TABLE PANE -->
+          <l:SplitPane id="poTablePane">
+            <l:layoutData>
+              <l:SplitterLayoutData id="poTableLayout" size="100%" resizable="true"/>
+            </l:layoutData>
+
+            <Table id="poTable"
+                   items="{path: 'po>/'}"
+                   mode="SingleSelectLeft"
+                   selectionChange=".onSelectPO"
+                   growing="true"
+                   growingThreshold="50"
+                   width="100%">
+
+              <headerToolbar>
+                <OverflowToolbar>
+                  <Title text="PO List ({= ${po>/}.length } items)" level="H2"/>
+                  <ToolbarSpacer/>
+                  <Button icon="sap-icon://sort" press=".onSort"/>
+                  <Button icon="sap-icon://filter" press=".onFilter"/>
+                </OverflowToolbar>
+              </headerToolbar>
+
+              <columns>
+                <Column width="120px"><Text text="Purchase Order."/></Column>
+                <Column width="100px"><Text text="Order Type"/></Column>
+                <Column width="130px"><Text text="Purch. Group"/></Column>
+                <Column width="130px"><Text text="Created By"/></Column>
+                <Column width="110px"><Text text="Created Date"/></Column>
+                <Column width="100px"><Text text="Items Count"/></Column>
+                <Column width="100px"><Text text="Status"/></Column>
+              </columns>
+
               <items>
-                <core:Item key="" text="All"/>
-                <core:Item key="R" text="Released"/>
-                <core:Item key="C" text="Pending"/>
-                <core:Item key="A" text="Blocked"/>
+                <ColumnListItem>
+                  <cells>
+                    <Text text="{po>Ebeln}"/>
+                    <Text text="{po>Bsart}"/>
+                    <Text text="{po>Ekgrp}"/>
+                    <Text text="{po>Ernam}"/>
+                    <Text text="{ path:'po>Aedat', formatter:'.formatter.dateFormat' }"/>
+                    <Text text="{po>ItemCount}"/>
+                    <ObjectStatus
+                      text="{path:'po>Frgzu', formatter:'.formatter.formatReleaseStatusText'}"
+                      state="{path:'po>Frgzu', formatter:'.formatter.formatReleaseStatusState'}"
+                      icon="{path:'po>Frgzu', formatter:'.formatter.formatReleaseStatusIcon'}"/>
+                  </cells>
+                </ColumnListItem>
               </items>
-            </Select>
-          </fb:control>
-        </fb:FilterGroupItem>
-        <fb:FilterGroupItem name="Ekgrp" label="Purch. Group" groupName="default" visibleInFilterBar="true">
-          <fb:control><Input id="ekgrpFilter"/></fb:control>
-        </fb:FilterGroupItem>
-      </fb:filterGroupItems>
-    </fb:FilterBar>
 
-    <Table
-      id="poTable"
-      items="{path: 'po>/', parameters: {expand: 'ToItems'}}"
-      growing="true"
-      growingThreshold="100"
-      sticky="ColumnHeaders,HeaderToolbar"
-      mode="SingleSelectMaster"
-      selectionChange=".onItemPress">
-      <headerToolbar>
-        <OverflowToolbar>
-          <Title text="PO List ({= ${po>/}.length } items)" level="H2"/>
-          <ToolbarSpacer/>
-          <Button icon="sap-icon://sort" press=".onSort" tooltip="Sort"/>
-          <Button icon="sap-icon://filter" press=".onFilter" tooltip="Filter"/>
-          <Button icon="sap-icon://group-2" press=".onGroup" tooltip="Group"/>
-        </OverflowToolbar>
-      </headerToolbar>
-      <columns>
-        <Column width="110px" demandPopin="true" minScreenWidth="Tablet"><Text text="PO No."/></Column>
-        <Column width="100px" demandPopin="true" minScreenWidth="Tablet"><Text text="Created On"/></Column>
-        <Column width="90px"><Text text="Status"/></Column>
-        <Column width="130px" demandPopin="true" minScreenWidth="Desktop"><Text text="Vendor"/></Column>
-        <Column width="90px"><Text text="PGr"/></Column>
-        <Column width="90px"><Text text="Currency"/></Column>
-        <Column width="130px" hAlign="End"><Text text="Total Net Value"/></Column>
-        <Column width="80px" hAlign="Center"><Text text="Items"/></Column>
-        <Column width="100px" hAlign="Center"><Text text="GR"/></Column>
-        <Column width="100px" hAlign="Center"><Text text="IR"/></Column>
-      </columns>
-      <items>
-        <ColumnListItem>
-          <cells>
-            <ObjectIdentifier title="{po>Ebeln}" text="{po>Bsart}"/>
-            <Text text="{path: 'po>Aedat', formatter: '.formatter.formatDate'}"/>
-            <ObjectStatus
-              text="{path: 'po>Frgke', formatter: '.formatter.formatReleaseStatusText'}"
-              state="{path: 'po>Frgke', formatter: '.formatter.formatReleaseStatusState'}"
-              icon="{path: 'po>Frgke', formatter: '.formatter.formatReleaseStatusIcon'}"/>
-            <Text text="{po>Lifnr} - {po>VendorName}"/>
-            <Text text="{po>Ekgrp}"/>
-            <Text text="{po>Waers}"/>
-            <ObjectNumber
-              number="{po>TotalNetValue}"
-              unit="{po>Waers}"
-              state="{= ${po>TotalNetValue} > 500000000 ? 'Error' : ${po>TotalNetValue} > 100000000 ? 'Warning' : 'Success'}"/>
-            <Text text="{po>ItemCount}"/>
-            <ObjectStatus text="{po>GRCount}" state="{po>GRCount} > 0 ? 'Success' : 'None'" icon="sap-icon://accept"/>
-            <ObjectStatus text="{po>IRCount}" state="{po>IRCount} > 0 ? 'Success' : 'None'" icon="sap-icon://payment-approval"/>
-          </cells>
-        </ColumnListItem>
-      </items>
-    </Table>
+            </Table>
+          </l:SplitPane>
 
+          <!-- RIGHT DETAIL PANEL -->
+          <l:SplitPane id="poDetailPane">
+            <l:layoutData>
+              <l:SplitterLayoutData size="40%" resizable="true"/>
+            </l:layoutData>
+
+            <Panel id="poDetailPanel"
+                   visible="false"
+                   headerText="PO Details"
+                   class="sapUiMediumMargin sapUiResponsiveContentPadding sapUiSizeCompact">
+
+              <VBox id="poDetailBox">
+                <HBox justifyContent="SpaceBetween">
+                  <Text text="{detailPO>Ebeln}" class="sapUiSmallMarginEnd"/>
+                  <Button icon="sap-icon://decline" type="Transparent" press=".onCloseDetail"/>
+                </HBox>
+
+                <Text text="{= 'Order Type: ' + ${detailPO>Bsart} }"/>
+                <Text text="{= 'Purchasing Group: ' + ${detailPO>Ekgrp} }"/>
+                <Text text="{= 'Created By: ' + ${detailPO>Ernam} }"/>
+                <Text text="{path:'detailPO>Aedat', formatter:'.formatter.dateFormat'}"/>
+
+                <ObjectStatus
+                  text="{path:'detailPO>Frgzu', formatter:'.formatter.formatReleaseStatusText'}"
+                  state="{path:'detailPO>Frgzu', formatter:'.formatter.formatReleaseStatusState'}"/>
+
+                <Panel headerText="Items" class="sapUiSmallMarginTop">
+                  <Table id="poItemsTable" items="{detailPO>/to_Items}">
+                    <columns>
+                      <Column><Text text="Item"/></Column>
+                      <Column><Text text="Material"/></Column>
+                      <Column><Text text="Quantity"/></Column>
+                      <Column><Text text="Net Price"/></Column>
+                    </columns>
+
+                    <items>
+                      <ColumnListItem>
+                        <cells>
+                          <Text text="{Ebelp}"/>
+                          <Text text="{Matnr}"/>
+                          <Text text="{Menge}"/>
+                          <Text text="{Netwr}"/>
+                        </cells>
+                      </ColumnListItem>
+                    </items>
+                  </Table>
+                </Panel>
+
+              </VBox>
+            </Panel>
+          </l:SplitPane>
+
+        </l:PaneContainer>
+      </l:ResponsiveSplitter>
+
+    </content>
+
+    <!-- ==================== FOOTER ==================== -->
     <footer>
       <OverflowToolbar>
         <ToolbarSpacer/>
@@ -108,5 +218,7 @@
         <Button text="Follow-up" icon="sap-icon://activity-items" press=".onFollowUp"/>
       </OverflowToolbar>
     </footer>
+
   </Page>
+
 </mvc:View>

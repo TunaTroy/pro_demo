@@ -5,22 +5,26 @@ sap.ui.define([
   "sap/ui/model/FilterOperator",
   "sap/m/MessageBox",
   "sap/m/MessageToast",
-  "sap/ui/core/format/DateFormat",
-  "sap/ui/export/Spreadsheet"
-], function (Controller, JSONModel, Filter, FilterOperator, MessageBox, MessageToast, DateFormat, Spreadsheet) {
+  "sap/ui/export/Spreadsheet",
+  "sap/ui/table/Table",        
+  "sap/ui/table/Column"
+], function (Controller, JSONModel, Filter, FilterOperator, MessageBox, MessageToast, Spreadsheet,Table, Column ) {
   "use strict";
 
   return Controller.extend("demodashboard.controller.POList", {
+
+    // ============================
+    // FORMATTERhhS
+    // ============================
     formatter: {
-      formatDate: function (sDate) {
-        if (!sDate) return "";
-        try {
-          const iTime = parseInt(sDate.replace(/\/Date\((\d+)\)\//, "$1"));
-          return DateFormat.getDateInstance({ pattern: "dd.MM.yyyy" }).format(new Date(iTime));
-        } catch (e) {
-          return "";
-        }
-      },
+     dateFormat: function (sDate) {
+          if (!sDate) return "";
+          const oDate = new Date(sDate);
+          return oDate.toLocaleDateString("en-GB");
+        },
+
+
+
       formatReleaseStatusText: function (s) {
         switch (s) {
           case "R": return "Released";
@@ -29,6 +33,7 @@ sap.ui.define([
           default: return "Not Rel.";
         }
       },
+
       formatReleaseStatusState: function (s) {
         switch (s) {
           case "R": return "Success";
@@ -37,6 +42,7 @@ sap.ui.define([
           default: return "None";
         }
       },
+
       formatReleaseStatusIcon: function (s) {
         switch (s) {
           case "R": return "sap-icon://accept";
@@ -47,152 +53,410 @@ sap.ui.define([
       }
     },
 
+    
+
+    // ============================
+    // INIT
+    // ============================
     onInit: function () {
       this.oODataModel = this.getOwnerComponent().getModel();
       this.oViewModel = new JSONModel({ busy: false });
       this.getView().setModel(this.oViewModel, "view");
+      this.getView().setModel(new JSONModel(), "detailPO");
 
-      const oRouter = this.getOwnerComponent().getRouter();
-      oRouter.getRoute("POList").attachPatternMatched(this._onRouteMatched, this);
-    },
 
-    _onRouteMatched: function () {
       this._loadPOList();
     },
 
-    _loadPOList: function () {
-      this.oViewModel.setProperty("/busy", true);
-      this.oODataModel.read("/ProcurementHeaderSet", {
-        filters: [new Filter("Bstyp", FilterOperator.EQ, "F")], // F = PO
-        urlParameters: {
-          "$expand": "ToItems",
-          "$top": 500,
-          "$orderby": "Aedat desc"
-        },
-        success: (oData) => {
-          const aPOs = oData.results || [];
-          aPOs.forEach(po => {
-            po.TotalNetValue = 0;
-            po.ItemCount = 0;
-            po.GRCount = 0;
-            po.IRCount = 0;
 
-            if (po.ToItems && po.ToItems.results) {
-              po.ItemCount = po.ToItems.results.length;
-              po.ToItems.results.forEach(item => {
-                const netwr = parseFloat(item.Netwr) || 0;
-                po.TotalNetValue += netwr;
+    _createSimpleValueHelp: function (oEvent, sTitle, sKey, aValues) {
 
-                // Giả lập GR/IR (thực tế cần navigation property riêng)
-                if (item.Wepos === true) po.GRCount++;
-                if (item.Repos === true) po.IRCount++;
-              });
-            }
-            po.TotalNetValue = po.TotalNetValue.toFixed(2);
-            po.VendorName = this._getVendorName(po.Lifnr);
-          });
+    // Convert values -> [{ key: "..."}]
+    const aRows = aValues.map(v => {
+        let obj = {};
+        obj[sKey] = v;
+        return obj;
+    });
 
-          this.getView().setModel(new JSONModel(aPOs), "po");
-          this.oViewModel.setProperty("/busy", false);
-        },
-        error: (err) => {
-          MessageBox.error("Cannot load PO List: " + err.message);
-          this.oViewModel.setProperty("/busy", false);
+    const oRowsModel = new sap.ui.model.json.JSONModel({ rows: aRows });
+
+    // ===== TABLE =====
+    const oTable = new sap.ui.table.Table({
+        visibleRowCount: 12,
+        selectionMode: "MultiToggle",
+        columns: [
+            new sap.ui.table.Column({
+                width: "180px",
+                label: new sap.m.Label({ text: sTitle }),
+                template: new sap.m.Text({ text: `{${sKey}}` })
+            })
+        ]
+    });
+    oTable.setModel(oRowsModel);
+    oTable.bindRows("/rows");
+
+    // ===== SEARCH FIELD =====
+    const oSearch = new sap.m.SearchField({
+        width: "100%",
+        placeholder: "Search...",
+        liveChange: (e) => {
+            const q = (e.getParameter("newValue") || "").toUpperCase();
+
+            const filtered = aRows.filter(r =>
+                String(r[sKey]).toUpperCase().includes(q)
+            );
+
+            oRowsModel.setData({ rows: filtered });
         }
-      });
-    },
+    });
 
-    _getVendorName: function (sLifnr) {
-      if (!this._vendorCache) this._vendorCache = {};
-      if (this._vendorCache[sLifnr]) return this._vendorCache[sLifnr];
+    const oFilterBar = new sap.ui.comp.filterbar.FilterBar({
+        advancedMode: false,
+        filterGroupItems: [],
+        basicSearch: oSearch
+    });
 
-      this.oODataModel.read(`/VendorsSet('${sLifnr}')`, {
-        success: (oData) => {
-          this._vendorCache[sLifnr] = oData.Name1 || sLifnr;
+    // ===== DIALOG =====
+    const oMI = oEvent.getSource();
+
+    const oVH = new sap.ui.comp.valuehelpdialog.ValueHelpDialog({
+        title: sTitle,
+        key: sKey,
+        supportMultiselect: true,
+        supportRanges: false,
+        supportRangesOnly: false,
+
+        ok: () => {
+            const aIdx = oTable.getSelectedIndices();
+            const aSelected = aIdx.map(i => oTable.getContextByIndex(i).getObject()[sKey]);
+
+            oMI.removeAllTokens();
+            aSelected.forEach(v =>
+                oMI.addToken(new sap.m.Token({ key: v, text: v }))
+            );
+
+            oVH.close();
         },
-        async: false
+
+        cancel: () => oVH.close()
+    });
+
+    oVH.setFilterBar(oFilterBar);
+    oVH.setTable(oTable);
+
+    oVH.open();
+},
+
+
+
+
+onValueHelpPO: function (oEvent) {
+    const aData = this.getView().getModel("po").getData() || [];
+    this._createSimpleValueHelp(
+        oEvent,
+        "PO Number",
+        "Ebeln",
+        aData.map(i => i.Ebeln)
+    );
+},
+
+
+
+
+
+onValueHelpOrderType: function (oEvent) {
+    const aData = this.getView().getModel("po").getData() || [];
+    const aTypes = [...new Set(aData.map(i => i.Bsart))];
+    this._createSimpleValueHelp(oEvent, "Order Type", "Bsart", aTypes);
+},
+
+
+
+
+onValueHelpEkgrp: function (oEvent) {
+    const aData = this.getView().getModel("po").getData() || [];
+    const aGroups = [...new Set(aData.map(i => i.Ekgrp))];
+    this._createSimpleValueHelp(oEvent, "Purch. Group", "Ekgrp", aGroups);
+},
+
+
+
+onValueHelpErnam: function (oEvent) {
+    const aData = this.getView().getModel("po").getData() || [];
+    const aUsers = [...new Set(aData.map(i => i.Ernam))];
+    this._createSimpleValueHelp(oEvent, "Created By", "Ernam", aUsers);
+},
+
+
+
+
+
+
+
+
+
+
+onCloseDetail: function () {
+  this.byId("poDetailPanel").setVisible(false);
+  this.byId("poTablePane").getLayoutData().setSize("100%");
+},
+
+
+
+
+onFilterSearch: function () {
+
+    const oTable = this.byId("poTable");
+    const aFilters = [];
+
+    // ====== ⛔ 1. AUTO TOKEN FOR PO NUMBER ======
+    const oPO = this.byId("poFilter");
+    const sPOtyped = oPO.getValue().trim();
+    if (sPOtyped) {
+        oPO.addToken(new sap.m.Token({ key: sPOtyped, text: sPOtyped }));
+        oPO.setValue("");
+    }
+
+    const aPOTokens = oPO.getTokens();
+    if (aPOTokens.length > 0) {
+        const aPOFilters = aPOTokens.map(t =>
+            new sap.ui.model.Filter("Ebeln", sap.ui.model.FilterOperator.EQ, t.getKey())
+        );
+        aFilters.push(new sap.ui.model.Filter(aPOFilters, false)); // OR
+    }
+
+    // ====== ⛔ 2. AUTO TOKEN FOR ORDER TYPE (Bsart) ======
+    const oBsart = this.byId("orderTypeFilter");
+    const sBsartTyped = oBsart.getValue().trim();
+    if (sBsartTyped) {
+        oBsart.addToken(new sap.m.Token({ key: sBsartTyped, text: sBsartTyped }));
+        oBsart.setValue("");
+    }
+
+    const aBsartTokens = oBsart.getTokens();
+    if (aBsartTokens.length > 0) {
+        const aBsartFilters = aBsartTokens.map(t =>
+            new sap.ui.model.Filter("Bsart", sap.ui.model.FilterOperator.EQ, t.getKey())
+        );
+        aFilters.push(new sap.ui.model.Filter(aBsartFilters, false));
+    }
+
+    // ====== ⛔ 3. AUTO TOKEN FOR PURCH. GROUP (Ekgrp) ======
+    const oEkgrp = this.byId("ekgrpFilter");
+    const sEkgrpTyped = oEkgrp.getValue().trim();
+    if (sEkgrpTyped) {
+        oEkgrp.addToken(new sap.m.Token({ key: sEkgrpTyped, text: sEkgrpTyped }));
+        oEkgrp.setValue("");
+    }
+
+    const aEkgrpTokens = oEkgrp.getTokens();
+    if (aEkgrpTokens.length > 0) {
+        const aEkgrpFilters = aEkgrpTokens.map(t =>
+            new sap.ui.model.Filter("Ekgrp", sap.ui.model.FilterOperator.EQ, t.getKey())
+        );
+        aFilters.push(new sap.ui.model.Filter(aEkgrpFilters, false));
+    }
+
+    // ====== ⛔ 4. AUTO TOKEN FOR CREATED BY (Ernam) ======
+    const oErnam = this.byId("humanFilter");
+    const sErnamTyped = oErnam.getValue().trim();
+    if (sErnamTyped) {
+        oErnam.addToken(new sap.m.Token({ key: sErnamTyped, text: sErnamTyped }));
+        oErnam.setValue("");
+    }
+
+    const aErnamTokens = oErnam.getTokens();
+    if (aErnamTokens.length > 0) {
+        const aErnamFilters = aErnamTokens.map(t =>
+            new sap.ui.model.Filter("Ernam", sap.ui.model.FilterOperator.EQ, t.getKey())
+        );
+        aFilters.push(new sap.ui.model.Filter(aErnamFilters, false));
+    }
+
+    // ====== CREATED DATE ======
+    const oDateFrom = this.byId("dateFilter").getDateValue();
+    const oDateTo = this.byId("dateFilter").getSecondDateValue();
+    if (oDateFrom && oDateTo) {
+        aFilters.push(new sap.ui.model.Filter("Aedat", sap.ui.model.FilterOperator.BT, oDateFrom, oDateTo));
+    }
+
+    // ====== STATUS ======
+    const sStatus = this.byId("statusFilter").getSelectedKey();
+    if (sStatus) {
+        aFilters.push(new sap.ui.model.Filter("Frgzu", sap.ui.model.FilterOperator.EQ, sStatus));
+    }
+
+    // ===== APPLY TO TABLE ======
+    oTable.getBinding("items").filter(aFilters);
+},
+
+
+    // ============================
+    // LOAD PO HEADER + ITEMS
+    // ============================
+    _loadPOList: function () {
+      sap.ui.core.BusyIndicator.show(0);
+
+      let aHeader = [];
+      let aItems = [];
+
+      const pHeader = new Promise((resolve, reject) => {
+        this.oODataModel.read("/ProcurementHeaderSet", {
+          filters: [new Filter("Bstyp", FilterOperator.EQ, "F")], // Only PO
+          success: d => resolve(d.results),
+          error: reject
+        });
       });
-      return this._vendorCache[sLifnr] || sLifnr;
+
+      const pItems = new Promise((resolve, reject) => {
+        this.oODataModel.read("/ProcurementItemSet", {
+          success: d => resolve(d.results),
+          error: reject
+        });
+      });
+
+      Promise.all([pHeader, pItems]).then(results => {
+        aHeader = results[0];
+        aItems = results[1];
+
+        // 🔹 Map items to header by Ebeln
+        const mapItems = {};
+        aItems.forEach(it => {
+          if (!mapItems[it.Ebeln]) mapItems[it.Ebeln] = [];
+          mapItems[it.Ebeln].push(it);
+        });
+
+        // 🔹 Merge Header + Items
+        aHeader.forEach(h => {
+          h.Items = mapItems[h.Ebeln] || [];
+          h.ItemCount = h.Items.length;
+
+          h.TotalNetValue = h.Items
+            .reduce((s, it) => s + (parseFloat(it.Netwr) || 0), 0)
+            .toFixed(2);
+
+          // ➕ Ekgrp giữ nguyên (không thay đổi)
+          h.PurchGroup = h.Ekgrp || "";  // optional alias
+        });
+
+        console.log("=== DEBUG PO HEADER ===");
+aHeader.forEach(h => {
+    console.log("PO:", h.Ebeln, "Aedat:", h.Aedat, typeof h.Aedat);
+});
+
+
+        this.getView().setModel(new JSONModel(aHeader), "po");
+        sap.ui.core.BusyIndicator.hide();
+      })
+      .catch(err => {
+        sap.ui.core.BusyIndicator.hide();
+        MessageBox.error("Cannot load PO data.");
+      });
     },
 
-    onNavBack: function () {
-      this.getOwnerComponent().getRouter().navTo("DashboardPR");
-    },
-
-    onItemPress: function (oEvent) {
-      const oPO = oEvent.getSource().getBindingContext("po").getObject();
-      MessageToast.show(`PO ${oPO.Ebeln} selected – Detail coming soon!`);
-      // this.getOwnerComponent().getRouter().navTo("PODetail", { ebeln: oPO.Ebeln });
-    },
-
+    // ============================
+    // SEARCH
+    // ============================
     onSearch: function (oEvent) {
-      const sQuery = oEvent.getParameter("query").toUpperCase();
-      const aFilters = sQuery ? [new Filter({
-        filters: [
-          new Filter("Ebeln", FilterOperator.Contains, sQuery),
-          new Filter("Lifnr", FilterOperator.Contains, sQuery),
-          new Filter("ToItems/Matnr", FilterOperator.Contains, sQuery)
-        ],
-        and: false
-      })] : [];
+      const sValue = oEvent.getParameter("query")?.toUpperCase() || "";
+      const aFilters = [];
+
+      if (sValue) {
+        aFilters.push(new Filter({
+          filters: [
+            new Filter("Ebeln", FilterOperator.Contains, sValue),
+            new Filter("Ernam", FilterOperator.Contains, sValue),
+            new Filter("Bsart", FilterOperator.Contains, sValue),
+            new Filter("Ekgrp", FilterOperator.Contains, sValue) // ⭐ Search by Purch. Group
+          ],
+          and: false
+        }));
+      }
+
       this.byId("poTable").getBinding("items").filter(aFilters);
     },
 
-    onFilterSearch: function () {
-      const aFilters = [];
-      const aEbeln = this.byId("poFilter").getTokens().map(t => t.getKey());
-      if (aEbeln.length) aFilters.push(new Filter("Ebeln", FilterOperator.In, aEbeln));
-
-      const aVendor = this.byId("vendorFilter").getTokens().map(t => t.getKey());
-      if (aVendor.length) aFilters.push(new Filter("Lifnr", FilterOperator.In, aVendor));
-
-      const oDate = this.byId("dateFilter").getDateValue();
-      const oDate2 = this.byId("dateFilter").getSecondDateValue();
-      if (oDate && oDate2) aFilters.push(new Filter("Aedat", FilterOperator.BT, oDate, oDate2));
-
-      const sStatus = this.byId("statusFilter").getSelectedKey();
-      if (sStatus) aFilters.push(new Filter("Frgke", FilterOperator.EQ, sStatus));
-
-      const sEkgrp = this.byId("ekgrpFilter").getValue();
-      if (sEkgrp) aFilters.push(new Filter("Ekgrp", FilterOperator.EQ, sEkgrp));
-
-      this.byId("poTable").getBinding("items").filter(aFilters.length ? new Filter(aFilters, true) : []);
+    // ============================
+    // ROW SELECTED
+    // ============================
+    onItemPress: function (oEvent) {
+      const oData = oEvent.getSource().getBindingContext("po").getObject();
+      MessageToast.show(`Selected PO ${oData.Ebeln}`);
     },
 
-    onValueHelpPO: function () { MessageToast.show("Value Help PO – coming soon!"); },
-    onValueHelpVendor: function () { MessageToast.show("Value Help Vendor – coming soon!"); },
-
+    // ============================
+    // EXPORT EXCEL
+    // ============================
     onExportExcel: function () {
       const aCols = [
-        { label: "PO No.", property: "Ebeln" },
-        { label: "Created On", property: "Aedat", type: "Date" },
-        { label: "Status", property: "Frgke" },
-        { label: "Vendor", property: "Lifnr" },
-        { label: "Vendor Name", property: "VendorName" },
-        { label: "Total Net", property: "TotalNetValue", type: "Number" },
-        { label: "Items", property: "ItemCount", type: "Number" }
+        { label: "PO Number", property: "Ebeln" },
+        { label: "Order Type", property: "Bsart" },
+        { label: "Purch. Group", property: "Ekgrp" },   // ⭐ ADD EKGRP
+        { label: "Created By", property: "Ernam" },
+        { label: "Items Count", property: "ItemCount", type: "Number" },
+        { label: "Total Net", property: "TotalNetValue", type: "Number" }
       ];
+
       new Spreadsheet({
         workbook: { columns: aCols },
         dataSource: this.getView().getModel("po").getData(),
-        fileName: "PO_List_" + DateFormat.getDateInstance({pattern: "yyyyMMdd"}).format(new Date()) + ".xlsx"
+        fileName: "PO_List.xlsx"
       }).build();
     },
 
-    onPrint: function () {
-      MessageToast.show("Print PO – mở SAP GUI hoặc Adobe Form!");
-    },
+    _createVHD: function (sKey, sTitle, aCols, aItems, fnOnSelect) {
+    const oColModel = new sap.ui.model.json.JSONModel({ cols: aCols });
+    const oRowsModel = new sap.ui.model.json.JSONModel(aItems);
 
-    onOpenNotes: function () {
-      MessageToast.show("PO Notes panel – giống PR List, coming soon!");
-    },
+    const oTable = new sap.ui.table.Table({
+        selectionMode: "Single",
+        visibleRowCount: 10
+    });
 
-    onFollowUp: function () {
-      MessageToast.show("Follow-up actions: GR, IR, Payment Status...");
-    },
+    // Add columns
+    aCols.forEach(c => {
+        oTable.addColumn(new sap.ui.table.Column({
+            label: new sap.m.Label({ text: c.label }),
+            template: new sap.m.Text({ text: `{${c.template}}` })
+        }));
+    });
+    oTable.setModel(oRowsModel);
+    oTable.bindRows("/");
 
-    onCreatePO: function () {
-      MessageToast.show("Create PO from PR/RFQ – ME21N style coming soon!");
-    }
+    // 👉 Tạo Search Bar
+    const oSearch = new sap.m.SearchField({
+        liveChange: function (oEvent) {
+            const sQuery = oEvent.getParameter("newValue").toUpperCase();
+
+            const aFiltered = aItems.filter(it =>
+                Object.values(it).some(v => String(v).toUpperCase().includes(sQuery))
+            );
+
+            oRowsModel.setData(aFiltered);
+        }
+    });
+
+    const oDialog = new sap.ui.comp.valuehelpdialog.ValueHelpDialog({
+        title: sTitle,
+        supportRanges: false,
+        supportRangesOnly: false,
+        key: sKey,
+        ok: function (oEvt) {
+            const aTokens = oEvt.getParameter("tokens");
+            fnOnSelect(aTokens);
+            oDialog.close();
+        },
+        cancel: function () {
+            oDialog.close();
+        }
+    });
+
+    // Nhét search bar vào header
+    oDialog.addContent(oSearch);
+    oDialog.setTable(oTable);
+    oDialog.open();
+},
+
+
   });
 });
