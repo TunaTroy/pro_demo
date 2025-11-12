@@ -844,12 +844,16 @@ sap.ui.define(
       },
 
       // ========= VALUE HELP HANDLERS =========
-      onValueHelpRFQ: function () {
-        MessageToast.show("RFQ Value Help - Coming soon");
+      onValueHelpRFQ: function (oEvent) {
+        const aData = this.getView().getModel("rfq").getData() || [];
+        const aRFQs = [...new Set(aData.map((i) => i.Ebeln))];
+        this._createSimpleValueHelp(oEvent, "RFQ Number", "Ebeln", aRFQs);
       },
 
-      onValueHelpErnam: function () {
-        MessageToast.show("User Value Help - Coming soon");
+      onValueHelpErnam: function (oEvent) {
+        const aData = this.getView().getModel("rfq").getData() || [];
+        const aUsers = [...new Set(aData.map((i) => i.Ernam))];
+        this._createSimpleValueHelp(oEvent, "Created By", "Ernam", aUsers);
       },
 
       onValueHelpBukrs: function (oEvent) {

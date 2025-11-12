@@ -21,17 +21,18 @@
         showGoOnFB="true"
         filterBarExpanded="true">
         <fb:filterGroupItems>
+          <!-- RFQ No. -->
           <fb:FilterGroupItem name="Ebeln"
-            label="RFQ No."
-            groupName="__$INTERNAL$"
-            visibleInFilterBar="true"
-            partOfCurrentVariant="true">
+    label="RFQ No."
+    groupName="__$INTERNAL$"
+    visibleInFilterBar="true"
+    partOfCurrentVariant="true">
             <fb:control>
               <MultiInput id="rfqFilter"
-                showValueHelp="true"
-                valueHelpRequest=".onValueHelpRFQ"
-                width="100%"
-                placeholder="Enter RFQ Number" />
+        showValueHelp="true"
+        valueHelpRequest=".onValueHelpRFQ"
+        width="100%"
+        placeholder="Enter RFQ Number" />
             </fb:control>
           </fb:FilterGroupItem>
           <fb:FilterGroupItem name="Angdt"
@@ -56,16 +57,18 @@
                 placeholder="Select date range" />
             </fb:control>
           </fb:FilterGroupItem>
+          <!-- Created By -->
           <fb:FilterGroupItem name="Ernam"
-            label="Created By"
-            groupName="__$INTERNAL$"
-            visibleInFilterBar="true">
+    label="Created By"
+    groupName="__$INTERNAL$"
+    visibleInFilterBar="true"
+    partOfCurrentVariant="true">
             <fb:control>
               <MultiInput id="ernamFilter"
-                showValueHelp="true"
-                valueHelpRequest=".onValueHelpErnam"
-                width="100%"
-                placeholder="Enter user name" />
+        showValueHelp="true"
+        valueHelpRequest=".onValueHelpErnam"
+        width="100%"
+        placeholder="Enter Creator" />
             </fb:control>
           </fb:FilterGroupItem>
           <fb:FilterGroupItem name="Bukrs"
