@@ -3,102 +3,316 @@
   xmlns:mvc="sap.ui.core.mvc"
   xmlns="sap.m"
   xmlns:core="sap.ui.core"
-  xmlns:table="sap.ui.table"
-  xmlns:f="sap.f"
   xmlns:fb="sap.ui.comp.filterbar"
-  displayBlock="true">
-
-  <Page id="rfqListPage" title="Request for Quotation List" showNavButton="true" navButtonPress=".onNavBack">
-    <subHeader>
-      <Toolbar>
-        <SearchField id="searchField" liveChange=".onSearch" width="300px" placeholder="Search RFQ Number, Vendor..."/>
-        <ToolbarSpacer/>
-        <Button text="Create RFQ" icon="sap-icon://add-document" type="Emphasized" press=".onCreateRFQ" visible="false"/>
-        <Button icon="sap-icon://excel-attachment" tooltip="Export to Excel" press=".onExportExcel"/>
-      </Toolbar>
-    </subHeader>
-
-    <fb:FilterBar id="filterBar" persistencyKey="rfqFilterBar" useToolbar="false" search=".onFilterSearch">
-      <fb:filterGroupItems>
-        <fb:FilterGroupItem name="Ebeln" label="RFQ Number" groupName="default" visibleInFilterBar="true">
-          <fb:control><MultiInput id="ebelnFilter" showValueHelp="true" valueHelpRequest=".onValueHelpEbeln"/></fb:control>
-        </fb:FilterGroupItem>
-        <fb:FilterGroupItem name="Lifnr" label="Vendor" groupName="default" visibleInFilterBar="true">
-          <fb:control><MultiInput id="vendorFilter" showValueHelp="true" valueHelpRequest=".onValueHelpVendor"/></fb:control>
-        </fb:FilterGroupItem>
-        <fb:FilterGroupItem name="Aedat" label="Created Date" groupName="default" visibleInFilterBar="true">
-          <fb:control><DateRangeSelection id="dateFilter" displayFormat="dd.MM.yyyy"/></fb:control>
-        </fb:FilterGroupItem>
-        <fb:FilterGroupItem name="Frgke" label="Release Status" groupName="default" visibleInFilterBar="true">
-          <fb:control>
-            <Select id="statusFilter">
-              <items>
-                <core:Item key="" text="All"/>
-                <core:Item key="R" text="Released"/>
-                <core:Item key="C" text="Pending"/>
-                <core:Item key="A" text="Blocked"/>
-              </items>
-            </Select>
-          </fb:control>
-        </fb:FilterGroupItem>
-      </fb:filterGroupItems>
-    </fb:FilterBar>
-
-    <Table
-      id="rfqTable"
-      items="{rfq>/results}"
-      growing="true"
-      growingThreshold="50"
-      sticky="ColumnHeaders,HeaderToolbar"
-      mode="SingleSelectMaster"
-      selectionChange=".onItemPress">
-      <headerToolbar>
-        <OverflowToolbar>
-          <Title text="RFQ List ({= ${rfq>/results}.length } items)" level="H2"/>
-          <ToolbarSpacer/>
-          <Button icon="sap-icon://sort" press=".onSort"/>
-          <Button icon="sap-icon://filter" press=".onFilter"/>
-        </OverflowToolbar>
-      </headerToolbar>
-      <columns>
-        <Column width="110px"><Text text="RFQ No."/></Column>
-        <Column width="100px"><Text text="Created On"/></Column>
-        <Column width="90px"><Text text="Status"/></Column>
-        <Column width="120px"><Text text="Vendor"/></Column>
-        <Column width="100px"><Text text="Purch. Group"/></Column>
-        <Column width="90px"><Text text="Currency"/></Column>
-        <Column width="120px" hAlign="End"><Text text="Total Value"/></Column>
-        <Column width="100px"><Text text="Items"/></Column>
-        <Column width="80px"><Text text="Deadline"/></Column>
-      </columns>
-      <items>
-        <ColumnListItem>
-          <cells>
-            <ObjectIdentifier title="{rfq>Ebeln}" text="{rfq>Bsart}"/>
-            <Text text="{path: 'rfq>Aedat', formatter: '.formatter.formatDate'}"/>
-            <ObjectStatus
-              text="{path: 'rfq>Frgke', formatter: '.formatter.formatReleaseStatusText'}"
-              state="{path: 'rfq>Frgke', formatter: '.formatter.formatReleaseStatusState'}"
-              icon="{path: 'rfq>Frgke', formatter: '.formatter.formatReleaseStatusIcon'}"/>
-            <Text text="{rfq>Lifnr} - {rfq>VendorName}"/>
-            <Text text="{rfq>Ekgrp}"/>
-            <Text text="{rfq>Waers}"/>
-            <ObjectNumber
-              number="{rfq>TotalValue}"
-              unit="{rfq>Waers}"
-              state="{= ${rfq>TotalValue} > 1000000000 ? 'Error' : ${rfq>TotalValue} > 100000000 ? 'Warning' : 'Success'}"/>
-            <Text text="{rfq>ItemCount}"/>
-            <!-- <Text text="{path: 'rfq>to_Items/results/0/Agdat', formatter: '.formatter.formatDate'}"/> -->
-          </cells>
-        </ColumnListItem>
-      </items>
-    </Table>
-
-    <footer>
-      <OverflowToolbar>
-        <ToolbarSpacer/>
-        <Button text="View Notes" icon="sap-icon://notes" press=".onOpenNotes"/>
-      </OverflowToolbar>
-    </footer>
+  displayBlock="true"
+  height="100%">
+  <Page id="rfqListPage"
+    title="Request for Quotation List"
+    showNavButton="false"
+    class="sapUiResponsiveContentPadding">
+    <content>
+      <!-- ======== FILTER BAR - Fiori Standard ======== -->
+      <fb:FilterBar id="filterBar"
+        persistencyKey="rfqFilterBar"
+        useToolbar="false"
+        search=".onFilterSearch"
+        showRestoreButton="true"
+        showClearButton="true"
+        showGoOnFB="true"
+        filterBarExpanded="true">
+        <fb:filterGroupItems>
+          <fb:FilterGroupItem name="Ebeln"
+            label="RFQ No."
+            groupName="__$INTERNAL$"
+            visibleInFilterBar="true"
+            partOfCurrentVariant="true">
+            <fb:control>
+              <MultiInput id="rfqFilter"
+                showValueHelp="true"
+                valueHelpRequest=".onValueHelpRFQ"
+                width="100%"
+                placeholder="Enter RFQ Number" />
+            </fb:control>
+          </fb:FilterGroupItem>
+          <fb:FilterGroupItem name="Angdt"
+            label="Quotation Deadline"
+            groupName="__$INTERNAL$"
+            visibleInFilterBar="true">
+            <fb:control>
+              <DateRangeSelection id="deadlineFilter"
+                displayFormat="dd.MM.yyyy"
+                width="100%"
+                placeholder="Select date range" />
+            </fb:control>
+          </fb:FilterGroupItem>
+          <fb:FilterGroupItem name="Aedat"
+            label="Created On"
+            groupName="__$INTERNAL$"
+            visibleInFilterBar="true">
+            <fb:control>
+              <DateRangeSelection id="createdFilter"
+                displayFormat="dd.MM.yyyy"
+                width="100%"
+                placeholder="Select date range" />
+            </fb:control>
+          </fb:FilterGroupItem>
+          <fb:FilterGroupItem name="Ernam"
+            label="Created By"
+            groupName="__$INTERNAL$"
+            visibleInFilterBar="true">
+            <fb:control>
+              <MultiInput id="ernamFilter"
+                showValueHelp="true"
+                valueHelpRequest=".onValueHelpErnam"
+                width="100%"
+                placeholder="Enter user name" />
+            </fb:control>
+          </fb:FilterGroupItem>
+          <fb:FilterGroupItem name="Bukrs"
+            label="Company Code"
+            groupName="__$INTERNAL$"
+            visibleInFilterBar="true">
+            <fb:control>
+              <MultiInput id="bukrsFilter"
+                showValueHelp="true"
+                valueHelpRequest=".onValueHelpBukrs"
+                width="100%"
+                placeholder="Enter company code" />
+            </fb:control>
+          </fb:FilterGroupItem>
+          <fb:FilterGroupItem name="Ekorg"
+            label="Purchasing Organization"
+            groupName="__$INTERNAL$"
+            visibleInFilterBar="true">
+            <fb:control>
+              <MultiInput id="ekorgFilter"
+                showValueHelp="true"
+                valueHelpRequest=".onValueHelpEkorg"
+                width="100%"
+                placeholder="Enter purchasing org" />
+            </fb:control>
+          </fb:FilterGroupItem>
+          <fb:FilterGroupItem name="Ekgrp"
+            label="Purchasing Group"
+            groupName="__$INTERNAL$"
+            visibleInFilterBar="true">
+            <fb:control>
+              <MultiInput id="ekgrpFilter"
+                showValueHelp="true"
+                valueHelpRequest=".onValueHelpEkgrp"
+                width="100%"
+                placeholder="Enter purchasing group" />
+            </fb:control>
+          </fb:FilterGroupItem>
+        </fb:filterGroupItems>
+      </fb:FilterBar>
+      <!-- ======== RESPONSIVE TABLE - Fiori Standard ======== -->
+      <Table id="rfqTable"
+        items="{
+               path: 'rfq>/',
+               sorter: {
+                 path: 'Aedat',
+                 descending: true
+               }
+             }"
+        mode="SingleSelectLeft"
+        growing="true"
+        growingThreshold="20"
+        growingScrollToLoad="true"
+        sticky="ColumnHeaders,HeaderToolbar"
+        selectionChange=".onSelectionChange"
+        class="sapUiSmallMarginTop">
+        <headerToolbar>
+          <OverflowToolbar design="Transparent">
+            <Title text="Requests for Quotations ({rfq>/length})"
+              level="H2"
+              titleStyle="H4" />
+            <ToolbarSpacer />
+            <Button icon="sap-icon://excel-attachment"
+              text="Export"
+              press=".onExport"
+              type="Transparent"
+              tooltip="Export to Excel" />
+            <Button icon="sap-icon://action-settings"
+              press=".onTableSettings"
+              type="Transparent"
+              tooltip="Settings" />
+          </OverflowToolbar>
+        </headerToolbar>
+        <columns>
+          <!-- Column 1: RFQ Details -->
+          <Column
+            width="25%"
+            minScreenWidth="Tablet"
+            demandPopin="false"
+            hAlign="Begin">
+            <Text text="RFQ" />
+          </Column>
+          <!-- Column 2: RFQ Description -->
+          <Column
+            id="col_description"
+            width="25%"
+            minScreenWidth="Desktop"
+            demandPopin="true"
+            hAlign="Begin"
+            visible="{view>/columnSettings/description}">
+            <Text text="RFQ Description" />
+          </Column>
+          <!-- Column 3: Company Code -->
+          <Column
+            id="col_companyCode"
+            width="17%"
+            minScreenWidth="Desktop"
+            demandPopin="true"
+            hAlign="Begin"
+            visible="{view>/columnSettings/companyCode}">
+            <Text text="Company Code" />
+          </Column>
+          <!-- Column 4: Purchasing Organization -->
+          <Column
+            id="col_purchOrg"
+            width="17%"
+            minScreenWidth="Desktop"
+            demandPopin="true"
+            hAlign="Begin"
+            visible="{view>/columnSettings/purchOrg}">
+            <Text text="Purchasing Organization" />
+          </Column>
+          <!-- Column 5: Purchasing Group -->
+          <Column
+            id="col_purchGroup"
+            width="16%"
+            minScreenWidth="Desktop"
+            demandPopin="true"
+            hAlign="Begin"
+            visible="{view>/columnSettings/purchGroup}">
+            <Text text="Purchasing Group" />
+          </Column>
+        </columns>
+        <items>
+          <ColumnListItem type="Navigation" press=".onItemPress">
+            <cells>
+              <!-- Cell 1: RFQ Details - Dynamic based on field settings -->
+              <VBox class="sapUiSmallMarginTopBottom">
+                <!-- RFQ Number - Always visible (mandatory) -->
+                <HBox class="sapUiTinyMarginTop">
+                  <Label text="Request For Quote: " class="sapUiTinyMarginEnd" />
+                  <Link text="{rfq>Ebeln}"
+                    press=".onRFQPress"
+                    emphasized="true">
+                    <customData>
+                      <core:CustomData key="rfqNo" value="{rfq>Ebeln}" />
+                    </customData>
+                  </Link>
+                </HBox>
+                <!-- Target Value -->
+                <HBox class="sapUiTinyMarginTop" visible="{view>/fieldSettings/targetValue}">
+                  <Label text="Target Value: " class="sapUiTinyMarginEnd" />
+                  <ObjectNumber
+                    number="{
+                      parts: ['rfq>Ktwrt'],
+                      formatter: '.formatter.numberFormat'
+                    }"
+                    unit="{rfq>Waers}"
+                    emphasized="false" />
+                </HBox>
+                <!-- Quotation Deadline -->
+                <HBox class="sapUiTinyMarginTop" visible="{view>/fieldSettings/deadline}">
+                  <Label text="Quotation Deadline: " class="sapUiTinyMarginEnd" />
+                  <Text text="{
+                    path: 'rfq>Angdt',
+                    formatter: '.formatter.dateFormat'
+                  }" />
+                </HBox>
+                <!-- Status -->
+                <HBox class="sapUiTinyMarginTop" visible="{view>/fieldSettings/status}">
+                  <Label text="Status: " class="sapUiTinyMarginEnd" />
+                  <ObjectStatus
+                    text="{
+                      path: 'rfq>Statu',
+                      formatter: '.formatter.statusText'
+                    }"
+                    state="{
+                      path: 'rfq>Statu',
+                      formatter: '.formatter.statusState'
+                    }" />
+                </HBox>
+                <!-- Created On -->
+                <HBox class="sapUiTinyMarginTop" visible="{view>/fieldSettings/createdOn}">
+                  <Label text="Created On: " class="sapUiTinyMarginEnd" />
+                  <Text text="{
+                    path: 'rfq>Aedat',
+                    formatter: '.formatter.dateFormat'
+                  }" />
+                </HBox>
+                <!-- Created By -->
+                <HBox class="sapUiTinyMarginTop" visible="{view>/fieldSettings/createdBy}">
+                  <Label text="Created By: " class="sapUiTinyMarginEnd" />
+                  <Text text="{rfq>Ernam}" />
+                </HBox>
+                <!-- Company Code in RFQ column -->
+                <HBox class="sapUiTinyMarginTop" visible="{view>/fieldSettings/companyCodeInRFQ}">
+                  <Label text="Company Code: " class="sapUiTinyMarginEnd" />
+                  <Text text="{
+                    path: 'rfq>Bukrs',
+                    formatter: '.formatter.companyCodeText'
+                  }" />
+                </HBox>
+                <!-- Purchasing Org in RFQ column -->
+                <HBox class="sapUiTinyMarginTop" visible="{view>/fieldSettings/purchOrgInRFQ}">
+                  <Label text="Purchasing Org: " class="sapUiTinyMarginEnd" />
+                  <Text text="{
+                    path: 'rfq>Ekorg',
+                    formatter: '.formatter.purchOrgText'
+                  }" />
+                </HBox>
+                <!-- Purchasing Group in RFQ column -->
+                <HBox class="sapUiTinyMarginTop" visible="{view>/fieldSettings/purchGroupInRFQ}">
+                  <Label text="Purchasing Group: " class="sapUiTinyMarginEnd" />
+                  <Text text="{
+                    path: 'rfq>Ekgrp',
+                    formatter: '.formatter.purchGroupText'
+                  }" />
+                </HBox>
+              </VBox>
+              <!-- Cell 2: RFQ Description -->
+              <VBox class="sapUiSmallMarginTopBottom">
+                <Text
+                  text="{rfq>Txz01}"
+                  wrapping="true"
+                  tooltip="{rfq>Txz01}" />
+              </VBox>
+              <!-- Cell 3: Company Code -->
+              <VBox class="sapUiSmallMarginTopBottom">
+                <Text
+                  text="{
+                  path: 'rfq>Bukrs',
+                  formatter: '.formatter.companyCodeText'
+                }"
+                  wrapping="true" />
+              </VBox>
+              <!-- Cell 4: Purchasing Organization -->
+              <VBox class="sapUiSmallMarginTopBottom">
+                <Text
+                  text="{
+                  path: 'rfq>Ekorg',
+                  formatter: '.formatter.purchOrgText'
+                }"
+                  wrapping="true" />
+              </VBox>
+              <!-- Cell 5: Purchasing Group -->
+              <VBox class="sapUiSmallMarginTopBottom">
+                <Text
+                  text="{
+                  path: 'rfq>Ekgrp',
+                  formatter: '.formatter.purchGroupText'
+                }"
+                  wrapping="true" />
+              </VBox>
+            </cells>
+          </ColumnListItem>
+        </items>
+      </Table>
+    </content>
   </Page>
 </mvc:View>

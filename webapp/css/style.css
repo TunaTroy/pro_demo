@@ -165,7 +165,7 @@
   background: white;
   padding: 1rem 1.5rem;
   border-radius: 0.75rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   margin-top: 1rem;
 }
 
@@ -261,7 +261,8 @@
    🟢 RESPONSIVE DESIGN
    ============================================================ */
 @media (max-width: 1024px) {
-  #chartRow, #kpiRow {
+  #chartRow,
+  #kpiRow {
     justify-content: center;
   }
   .dashboardCard,
@@ -279,7 +280,6 @@
     height: 220px !important;
   }
 }
-
 
 /* ============================================================
    🌈 KPI CARD COLOR VARIANTS (PR - RFQ - PO)
@@ -311,7 +311,7 @@
   margin-bottom: 0.25rem;
 }
 
-/* Subtitle (ví dụ “Năm 2025”) */
+/* Subtitle (ví dụ "Năm 2025") */
 .kpiCard .kpiSubtitle {
   font-size: 0.9rem;
   color: #6a737d;
@@ -391,7 +391,8 @@
 /* ============================================================
    ⚙️ Căn chỉnh hàng KPI
    ============================================================ */
-#kpiRow, #kpiContainer {
+#kpiRow,
+#kpiContainer {
   display: flex;
   justify-content: space-around;
   flex-wrap: wrap;
@@ -427,9 +428,9 @@
   min-width: 280px;
   max-width: 24%;
   background-color: #ffffff;
-  border: 0.5px solid #d0d7de;       /* ✅ Viền nhẹ tạo khung rõ ràng */
+  border: 0.5px solid #d0d7de;
   border-radius: 0.75rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); /* bóng nhẹ */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   padding: 1rem;
   display: flex;
   flex-direction: column;
@@ -441,7 +442,7 @@
 .chartCardBox:hover {
   transform: translateY(-3px);
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
-  border-color: #b0bec5; /* nhẹ highlight khi hover */
+  border-color: #b0bec5;
 }
 
 /* ====== TITLES ====== */
@@ -471,6 +472,7 @@
     max-width: 100%;
   }
 }
+
 .filterPanel .sapMPanelHdr {
   font-weight: 600;
   color: #0a6ed1;
@@ -496,11 +498,11 @@
 
 .buttonGo {
   display: flex;
-  justify-content: flex-end; /* ✅ đẩy toàn bộ sang phải */
+  justify-content: flex-end;
   gap: 0.5rem;
 }
 
-.sapUiTinyMarginBottom{
+.sapUiTinyMarginBottom {
   margin-top: 20px;
 }
 
@@ -509,18 +511,17 @@
   position: sticky;
   top: 0;
   z-index: 10;
-  background-color: var(--sapList_HeaderBackground); /* Giữ đúng theme Fiori */
-  box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+  background-color: var(--sapList_HeaderBackground);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
 }
 
-/* Đảm bảo cột header không bị ẩn */
 .stickyTable .sapMListTbl {
   border-collapse: separate;
 }
 
 .prHeaderCard {
   border-radius: 12px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
   background-color: #f9fafb;
 }
 
@@ -549,15 +550,15 @@
   font-weight: 600;
 }
 
-.buttonGo{
+.buttonGo {
   margin-top: 30px;
   margin-right: 10px;
 }
 
 .customMarginTop {
-    margin-top: 18px !important;
-    justify-content: 80px; 
-    margin-left: 79px;
+  margin-top: 18px !important;
+  justify-content: 80px;
+  margin-left: 79px;
 }
 
 .sapUiFormTitle {
@@ -569,7 +570,6 @@
 .sapUiForm .sapMLabel {
   font-weight: 600;
   color: #080808;
-
 }
 
 .sapUiForm .sapMText,
@@ -595,79 +595,68 @@
   transition: box-shadow 0.3s ease;
 }
 
-
 .fioriHeaderBox .sapMObjectHeaderTitle {
   color: #0a3556;
   font-weight: 700;
   font-size: 1.4rem;
 }
 
-
 .fioriHeaderBox .sapMObjectHeaderIntro {
   color: #2f3c48;
   font-style: italic;
 }
 
-
 .fioriHeaderBox .sapMObjectNumberText,
 .fioriHeaderBox .sapMObjectNumberUnit {
-  color: #0854a0;                    
+  color: #0854a0;
   font-weight: 600;
 }
-
 
 .sapMLabel {
   font-weight: 600;
   color: #000000;
   margin-top: 0.1rem;
-   /* margin-left: 30px; */
 }
 
 .sapMText,
 .sapMLnk {
   color: #000000;
-  /* margin-left: 30px; */
 }
 
 .fioriSectionBox .sapMLabel {
   display: block;
-  margin-top: 0.75rem;  
+  margin-top: 0.75rem;
 }
-
-
-
 
 .fioriSectionBox .sapMText,
 .fioriSectionBox .sapMLnk {
   display: block;
-  margin-bottom: 0.5rem; 
-}  
+  margin-bottom: 0.5rem;
+}
 
 .sapMOHIcon .sapMImg {
-  max-height: 5rem; 
+  max-height: 5rem;
   max-width: 5rem;
   border-radius: 10px;
-  object-fit: cover; /* ✅ giúp ảnh không méo */
+  object-fit: cover;
   border: 1px solid #c5d9f0;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
   margin-right: 1rem;
 }
 
-
 #objHeader .sapMObjectHeaderIntro {
-  margin-left: 5.5rem;  /* ✅ gần hơn */
+  margin-left: 5.5rem;
   font-size: 1rem;
   color: #2f3c48;
   font-weight: 500;
 }
-
 
 /* ====== HEADER BOX ====== */
 .customHeaderBox {
   border: 1px solid #d1e0f0;
   border-radius: 3px;
   background-color: #f4f8fc;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   padding: 1.5rem 2rem;
   margin-bottom: 1rem;
 }
@@ -681,7 +670,7 @@
 .headerProfileImage {
   border-radius: 5px;
   border: 1px solid #c5d9f0;
-  box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
   object-fit: cover;
 }
 
@@ -723,7 +712,8 @@
     text-align: center;
   }
 
-  .headerImageContainer, .headerInfoContainer {
+  .headerImageContainer,
+  .headerInfoContainer {
     width: 100% !important;
   }
 
@@ -734,4 +724,66 @@
   }
 }
 
+/* ============================================================
+   🎯 VIEW SETTINGS DIALOG ENHANCEMENTS
+   ============================================================ */
 
+/* Make dialog wider for better UX */
+.sapMDialog.sapMVSD {
+  min-width: 600px !important;
+}
+
+/* Tab bar styling */
+.sapMVSD .sapMITBHead {
+  border-bottom: 2px solid #e5e5e5;
+}
+
+/* Selected tab */
+.sapMVSD .sapMITBSelected {
+  border-bottom: 3px solid #0854a0;
+}
+
+/* Filter items list */
+.sapMVSD .sapMList {
+  border: 1px solid #e5e5e5;
+  border-radius: 4px;
+}
+
+/* Search field in dialog */
+.sapMVSD .sapMSFF {
+  margin-bottom: 0.5rem;
+}
+
+/* Checkboxes alignment */
+.sapMVSD .sapMCb {
+  margin-right: 0.5rem;
+}
+
+/* Item text */
+.sapMVSD .sapMSLITitle {
+  font-weight: 500;
+  color: #32363a;
+}
+
+/* Selected items highlight */
+.sapMVSD .sapMSLI.sapMSLISelected {
+  background-color: #e5f0fa;
+}
+
+/* Reset button styling */
+.sapMVSD .sapMBarChild .sapMBtn[title*="Reset"] {
+  color: #bb0000;
+}
+
+/* Show Selected button */
+.sapMVSD .sapMBtn[text*="Show Selected"] {
+  color: #0854a0;
+  font-weight: 600;
+}
+
+/* Responsive dialog */
+@media (max-width: 768px) {
+  .sapMDialog.sapMVSD {
+    min-width: 95% !important;
+  }
+}

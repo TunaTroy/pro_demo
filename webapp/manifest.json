@@ -3,7 +3,14 @@
   "sap.app": {
     "id": "demodashboard",
     "type": "application",
-    "i18n": "i18n/i18n.properties",
+    "i18n": {
+      "bundleUrl": "i18n/i18n.properties",
+      "supportedLocales": [
+        "",
+        "vi"  
+      ],
+      "fallbackLocale": "vi"
+    },
     "applicationVersion": {
       "version": "0.0.1"
     },
