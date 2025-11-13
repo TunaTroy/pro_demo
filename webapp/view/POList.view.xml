@@ -11,23 +11,6 @@
   <Page id="poListPage"
         title="Purchase Order List">
 
-    <!-- ==================== SUB HEADER ==================== -->
-    <subHeader>
-      <Toolbar>
-        <SearchField id="searchField"
-                     liveChange=".onSearch"
-                     width="300px"
-                     placeholder="Search PO Number, Vendor, Material..."/>
-        <ToolbarSpacer/>
-        <Button icon="sap-icon://excel-attachment"
-                tooltip="Export to Excel"
-                press=".onExportExcel"/>
-        <Button icon="sap-icon://print"
-                tooltip="Print PO"
-                press=".onPrint"/>
-      </Toolbar>
-    </subHeader>
-
     <!-- ========= PAGE CONTENT MUST WRAP EVERYTHING ========= -->
     <content>
 
@@ -143,9 +126,9 @@
                     <Text text="{ path:'po>Aedat', formatter:'.formatter.dateFormat' }"/>
                     <Text text="{po>ItemCount}"/>
                     <ObjectStatus
-                      text="{path:'po>Frgzu', formatter:'.formatter.formatReleaseStatusText'}"
-                      state="{path:'po>Frgzu', formatter:'.formatter.formatReleaseStatusState'}"
-                      icon="{path:'po>Frgzu', formatter:'.formatter.formatReleaseStatusIcon'}"/>
+                      text="{path:'po>Frgke', formatter:'.formatter.formatReleaseStatusText'}"
+                      state="{path:'po>Frgke', formatter:'.formatter.formatReleaseStatusState'}"
+                      icon="{path:'po>Frgke', formatter:'.formatter.formatReleaseStatusIcon'}"/>
                   </cells>
                 </ColumnListItem>
               </items>
@@ -176,7 +159,7 @@
     <!-- Dòng tiêu đề + nút đóng -->
     <HBox justifyContent="SpaceBetween" alignItems="Center" class="sapUiTinyMarginBottom">
       <Text text="{detailPO>Ebeln}" class="sapUiTinyMarginEnd sapUiTinyMarginBottom sapMTitle sapMTitleStyleH4"/>
-      <Button icon="sap-icon://decline" press=".onCloseDetail" type="Transparent"/>
+      <Button icon="sap-icon://decline" press="onCloseDetail" type="Transparent"/>
     </HBox>
 
     <!-- Loại PO -->
@@ -203,9 +186,9 @@
     <HBox class="sapUiTinyMarginTop" alignItems="Center">
       <Text text="Status:"/>
       <ObjectStatus
-        text="{path:'detailPO>Frgzu', formatter:'.formatter.formatReleaseStatusText'}"
-        state="{path:'detailPO>Frgzu', formatter:'.formatter.formatReleaseStatusState'}"
-        icon="{path:'detailPO>Frgzu', formatter:'.formatter.formatReleaseStatusIcon'}"
+        text="{path:'detailPO>Frgke', formatter:'.formatter.formatReleaseStatusText'}"
+        state="{path:'detailPO>Frgke', formatter:'.formatter.formatReleaseStatusState'}"
+        icon="{path:'detailPO>Frgke', formatter:'.formatter.formatReleaseStatusIcon'}"
         class="sapUiTinyMarginBegin"/>
     </HBox>
 
