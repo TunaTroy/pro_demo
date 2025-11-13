@@ -11,23 +11,6 @@
   <Page id="poListPage"
         title="Purchase Order List">
 
-    <!-- ==================== SUB HEADER ==================== -->
-    <subHeader>
-      <Toolbar>
-        <SearchField id="searchField"
-                     liveChange=".onSearch"
-                     width="300px"
-                     placeholder="Search PO Number, Vendor, Material..."/>
-        <ToolbarSpacer/>
-        <Button icon="sap-icon://excel-attachment"
-                tooltip="Export to Excel"
-                press=".onExportExcel"/>
-        <Button icon="sap-icon://print"
-                tooltip="Print PO"
-                press=".onPrint"/>
-      </Toolbar>
-    </subHeader>
-
     <!-- ========= PAGE CONTENT MUST WRAP EVERYTHING ========= -->
     <content>
 
