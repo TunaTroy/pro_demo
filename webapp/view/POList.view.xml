@@ -1,102 +1,64 @@
-<mvc:View
-  controllerName="demodashboard.controller.POList"
+<mvc:View controllerName="demodashboard.controller.POList"
   xmlns:mvc="sap.ui.core.mvc"
   xmlns="sap.m"
   xmlns:core="sap.ui.core"
   xmlns:fb="sap.ui.comp.filterbar"
-  xmlns:l="sap.ui.layout"
-  displayBlock="true">
-
-
-  <Page id="poListPage"
-        title="Purchase Order List">
-
+  xmlns:l="sap.ui.layout" displayBlock="true">
+  <Page id="poListPage" title="Purchase Order List">
     <!-- ========= PAGE CONTENT MUST WRAP EVERYTHING ========= -->
     <content>
-
       <!-- ==================== FILTER BAR ==================== -->
-      <fb:FilterBar id=".onFilterSearch"
-                    persistencyKey="poFilterBar"
-                    useToolbar="false"
-                    search=".onFilterSearch">
-
+      <fb:FilterBar id=".onFilterSearch" persistencyKey="poFilterBar" useToolbar="false" search=".onFilterSearch">
         <fb:filterGroupItems>
-
           <fb:FilterGroupItem name="Ebeln" label="PO Number" groupName="default" visibleInFilterBar="true">
             <fb:control>
-              <MultiInput id="poFilter"
-                          showValueHelp="true"
-                          valueHelpRequest=".onValueHelpPO"/>
+              <MultiInput id="poFilter" showValueHelp="true" valueHelpRequest=".onValueHelpPO"/>
             </fb:control>
           </fb:FilterGroupItem>
-
           <fb:FilterGroupItem name="Bsart" label="Order Type" groupName="default" visibleInFilterBar="true">
             <fb:control>
-              <MultiInput id="orderTypeFilter"
-                          showValueHelp="true"
-                          valueHelpRequest=".onValueHelpOrderType"/>
+              <MultiInput id="orderTypeFilter" showValueHelp="true" valueHelpRequest=".onValueHelpOrderType"/>
             </fb:control>
           </fb:FilterGroupItem>
-
           <fb:FilterGroupItem name="Aedat" label="Created Date" groupName="default" visibleInFilterBar="true">
             <fb:control>
               <DateRangeSelection id="dateFilter" displayFormat="dd.MM.yyyy"/>
             </fb:control>
           </fb:FilterGroupItem>
-
           <fb:FilterGroupItem name="Frgke" label="Release Status" groupName="default" visibleInFilterBar="true">
             <fb:control>
-              <Select id="statusFilter">
+              <Select id="statusFilter" selectedKey="ALL">
                 <items>
-                  <core:Item key="" text="All"/>
-                  <core:Item key="R" text="Released"/>
-                  <core:Item key="C" text="Pending"/>
-                  <core:Item key="A" text="Blocked"/>
+                  <core:Item key="ALL" text="All"/>
+                  <core:Item key="Approved" text="Approved"/>
+                  <core:Item key="Pending" text="Pending"/>
+                  <core:Item key="Rejected" text="Rejected"/>
+                  <core:Item key="Others" text="Others"/>
                 </items>
               </Select>
             </fb:control>
           </fb:FilterGroupItem>
-
           <fb:FilterGroupItem name="Ekgrp" label="Purch. Group" groupName="default" visibleInFilterBar="true">
-  <fb:control>
-    <MultiInput id="ekgrpFilter"
-                showValueHelp="true"
-                valueHelpRequest=".onValueHelpEkgrp"/>
-  </fb:control>
-</fb:FilterGroupItem>
-
-
-          <fb:FilterGroupItem name="Ernam" label="Created By"  groupName="default" visibleInFilterBar="true">
-  <fb:control>
-    <MultiInput id="humanFilter"
-                showValueHelp="true"
-                valueHelpRequest=".onValueHelpErnam"/>
-  </fb:control>
-</fb:FilterGroupItem>
-
-
+            <fb:control>
+              <MultiInput id="ekgrpFilter" showValueHelp="true" valueHelpRequest=".onValueHelpEkgrp"/>
+            </fb:control>
+          </fb:FilterGroupItem>
+          <fb:FilterGroupItem name="Ernam" label="Created By" groupName="default" visibleInFilterBar="true">
+            <fb:control>
+              <MultiInput id="humanFilter" showValueHelp="true" valueHelpRequest=".onValueHelpErnam"/>
+            </fb:control>
+          </fb:FilterGroupItem>
         </fb:filterGroupItems>
       </fb:FilterBar>
-
       <!-- ========== RESPONSIVE SPLITTER ========== -->
       <l:ResponsiveSplitter id="mainSplitter" defaultPane="poTablePane">
-
         <l:PaneContainer orientation="Horizontal">
-
           <!-- LEFT TABLE PANE -->
           <l:SplitPane id="poTablePane">
             <l:layoutData>
               <l:SplitterLayoutData id="poTableLayout" size="100%" resizable="true"/>
             </l:layoutData>
-
-            <Table id="poTable"
-                   items="{path: 'po>/'}"
-                   mode="SingleSelectLeft"
-                   selectionChange=".onSelectPO"
-                   growing="true"
-                   growingThreshold="50"
-                   width="100%">
-
+            <Table id="poTable" items="{path: 'po>/'}" mode="SingleSelectLeft" selectionChange=".onSelectPO" growing="true" growingThreshold="50" width="100%">
               <headerToolbar>
                 <OverflowToolbar>
                   <Title text="PO List ({= ${po>/}.length } items)" level="H2"/>
@@ -105,17 +67,31 @@
                   <Button icon="sap-icon://filter" press=".onFilter"/>
                 </OverflowToolbar>
               </headerToolbar>
-
               <columns>
-                <Column width="120px"><Text text="Purchase Order."/></Column>
-                <Column width="100px"><Text text="Order Type"/></Column>
-                <Column width="130px"><Text text="Purch. Group"/></Column>
-                <Column width="130px"><Text text="Created By"/></Column>
-                <Column width="110px"><Text text="Created Date"/></Column>
-                <Column width="100px"><Text text="Items Count"/></Column>
-                <Column width="100px"><Text text="Status"/></Column>
+                <Column width="120px">
+                  <Text text="Purchase Order."/>
+                </Column>
+                <Column width="100px">
+                  <Text text="Order Type"/>
+                </Column>
+                <Column width="130px">
+                  <Text text="Purch. Group"/>
+                </Column>
+                <Column width="130px">
+                  <Text text="Created By"/>
+                </Column>
+                <Column id="colCreatedDate" width="140px" hAlign="Left">
+                  <HBox width="100%" justifyContent="Start">
+                    <Link text="Created Date" press=".onSortCreatedDate" subtle="true"/>
+                  </HBox>
+                </Column>
+                <Column width="100px">
+                  <Text text="Items Count"/>
+                </Column>
+                <Column width="100px">
+                  <Text text="Status"/>
+                </Column>
               </columns>
-
               <items>
                 <ColumnListItem>
                   <cells>
@@ -125,185 +101,98 @@
                     <Text text="{po>Ernam}"/>
                     <Text text="{ path:'po>Aedat', formatter:'.formatter.dateFormat' }"/>
                     <Text text="{po>ItemCount}"/>
-                    <ObjectStatus
-                      text="{path:'po>Frgke', formatter:'.formatter.formatReleaseStatusText'}"
-                      state="{path:'po>Frgke', formatter:'.formatter.formatReleaseStatusState'}"
-                      icon="{path:'po>Frgke', formatter:'.formatter.formatReleaseStatusIcon'}"/>
+                    <ObjectStatus text="{path:'po>Frgke', formatter:'.formatter.formatReleaseStatusText'}" state="{path:'po>Frgke', formatter:'.formatter.formatReleaseStatusState'}" icon="{path:'po>Frgke', formatter:'.formatter.formatReleaseStatusIcon'}"/>
                   </cells>
                 </ColumnListItem>
               </items>
-
             </Table>
           </l:SplitPane>
-
           <!-- RIGHT DETAIL PANEL -->
           <l:SplitPane id="poDetailPane">
-  <l:layoutData>
-    <l:SplitterLayoutData size="40%" minSize="350px" resizable="true"/>
-  </l:layoutData>
-
-  <VBox
-    id="poDetailPanel"
-    visible="false"
-    class="sapUiMediumMargin sapUiSizeCompact sapUiNoContentPadding sapUiResponsiveContentPadding">
-
-    <!-- ===== HEADER CARD ===== -->
-    <Panel
-  id="panelPODetailHeader"
-  class="sapUiNoContentPadding sapUiResponsiveContentPadding sapUiSizeCompact sapUiMediumMarginBottom"
-  width="100%"
-  headerText="PO Details">
-
-  <VBox class="sapUiSmallMargin sapUiSizeCompact">
-
-    <!-- Dòng tiêu đề + nút đóng -->
-    <HBox justifyContent="SpaceBetween" alignItems="Center" class="sapUiTinyMarginBottom">
-      <Text text="{detailPO>Ebeln}" class="sapUiTinyMarginEnd sapUiTinyMarginBottom sapMTitle sapMTitleStyleH4"/>
-      <Button icon="sap-icon://decline" press="onCloseDetail" type="Transparent"/>
-    </HBox>
-
-    <!-- Loại PO -->
-    <Text text="{detailPO>Bsart}" class="prHeaderSubTitle"/>
-
-    <!-- Group / Created By / Created On -->
-    <HBox class="sapUiTinyMarginTop" wrap="Wrap">
-      <Text
-        text="{= 'Group: ' + ${detailPO>Ekgrp}
+            <l:layoutData>
+              <l:SplitterLayoutData size="40%" minSize="350px" resizable="true"/>
+            </l:layoutData>
+            <VBox id="poDetailPanel" visible="false" class="sapUiMediumMargin sapUiSizeCompact sapUiNoContentPadding sapUiResponsiveContentPadding">
+              <!-- ===== HEADER CARD ===== -->
+              <Panel id="panelPODetailHeader" class="sapUiNoContentPadding sapUiResponsiveContentPadding sapUiSizeCompact sapUiMediumMarginBottom" width="100%" headerText="PO Details">
+                <VBox class="sapUiSmallMargin sapUiSizeCompact">
+                  <!-- Dòng tiêu đề + nút đóng -->
+                  <HBox justifyContent="SpaceBetween" alignItems="Center" class="sapUiTinyMarginBottom">
+                    <Text text="{detailPO>Ebeln}" class="sapUiTinyMarginEnd sapUiTinyMarginBottom sapMTitle sapMTitleStyleH4"/>
+                    <Button icon="sap-icon://decline" press="onCloseDetail" type="Transparent"/>
+                  </HBox>
+                  <!-- Loại PO -->
+                  <Text text="{detailPO>Bsart}" class="prHeaderSubTitle"/>
+                  <!-- Group / Created By / Created On -->
+                  <HBox class="sapUiTinyMarginTop" wrap="Wrap">
+                    <Text text="{= 'Group: ' + ${detailPO>Ekgrp}
                 + ' • Created By: ' + ${detailPO>Ernam}
                 + ' • Created On: ' + ${path:'detailPO>Aedat', formatter:'.formatter.dateFormat'} }"/>
-    </HBox>
-
-    <!-- 🆕 Quotation Deadline -->
-    <HBox class="sapUiTinyMarginTop" alignItems="Center">
-      <Text text="Quotation Deadline:" class="sapUiSmallMarginEnd"/>
-      <ObjectStatus
-        text="{ path:'detailPO>Agdat', formatter:'.formatter.dateFormat' }"
-        state="Information"
-        icon="sap-icon://calendar"/>
-    </HBox>
-
-    <!-- Status -->
-    <HBox class="sapUiTinyMarginTop" alignItems="Center">
-      <Text text="Status:"/>
-      <ObjectStatus
-        text="{path:'detailPO>Frgke', formatter:'.formatter.formatReleaseStatusText'}"
-        state="{path:'detailPO>Frgke', formatter:'.formatter.formatReleaseStatusState'}"
-        icon="{path:'detailPO>Frgke', formatter:'.formatter.formatReleaseStatusIcon'}"
-        class="sapUiTinyMarginBegin"/>
-    </HBox>
-
-  </VBox>
-</Panel>
-
-
-    <!-- ===== ITEMS TABLE ===== -->
-    <Panel
-      id="panelPOItems"
-      headerText="📦 Items"
-      
-      class="sapUiNoContentPadding sapUiResponsiveContentPadding sapUiSizeCompact"
-      width="100%">
-
-      <Table
-        id="tblPOItems"
-        mode="SingleSelectMaster"
-        selectionChange="onItemPress"
-        items="{detailPO>/Items}"
-        class="sapUiSizeCompact"
-        width="100%">
-
-        <columns>
-          <Column><Text text="Item"/></Column>
-          <Column><Text text="Material"/></Column>
-          <Column><Text text="Quantity"/></Column>
-          <Column><Text text="Net Price"/></Column>         
-          <Column><Text text="Deadline"/></Column>
-        </columns>
-
-        <items>
-          <ColumnListItem>
-            <cells>
-              <Text text="{detailPO>Ebelp}"/>
-              <Text text="{detailPO>Matnr}"/>
-              <Text text="{detailPO>Menge}"/>
-              <Text text="{detailPO>Netpr}"/>            
-              <Text text="{path:'detailPO>Agdat', formatter:'.formatter.dateFormat'}"/>
-            </cells>
-          </ColumnListItem>
-        </items>
-      </Table>
-    </Panel>
-
-      <Panel
-  id="panelNotePO"
-  headerText="📝 Manager Note"
-  class="sapUiNoContentPadding sapUiResponsiveContentPadding sapUiSizeCompact sapUiMediumMarginTop prHeaderCard"
-  width="100%">
-
-  <VBox id="vboxNotePO" class="sapUiSmallMargin sapUiSizeCompact">
-
-    <!-- 📄 Hiển thị nội dung note khi chưa bật chế độ edit -->
-    <Text
-      id="txtPONote"
-      text="{poNoteModel>/Note}"
-      wrapping="true"
-      visible="{= !${poNoteModel>/Editable} }"
-      class="sapUiTinyMarginTop sapUiSmallMarginBottom sapUiSmallPadding"/>
-
-    <!-- ✏️ TextArea cho chế độ chỉnh sửa -->
-    <TextArea
-      id="taPONoteEdit"
-      value="{poNoteModel>/Note}"
-      rows="4"
-      width="100%"
-      visible="{poNoteModel>/Editable}"
-      placeholder="Enter note here..."
-      class="sapUiTinyMarginTop sapUiSmallMarginBottom sapUiSmallPadding"/>
-
-    <!-- 🔘 Nút hành động -->
-    <HBox id="hboxNoteButtonsPO" class="sapUiTinyMarginTop" justifyContent="End">
-
-     
-      <Button
-  id="btnEditNotePO"
-  text="Edit"
-  type="Transparent"
-  icon="sap-icon://edit"
-  visible="{poNoteModel>/CanEdit}"
-  enabled="{= !${poNoteModel>/Editable} }"
-  press=".onEditNotePo"/>
-
-
-
-      <Button
-        id="btnSaveNotePO"
-        text="Save"
-        type="Emphasized"
-        icon="sap-icon://save"
-        visible="{poNoteModel>/Editable}"
-        press=".onSaveNotePo"/>
-
-      <Button
-        id="btnCancelNotePO"
-        text="Cancel"
-        type="Reject"
-        icon="sap-icon://decline"
-        visible="{poNoteModel>/Editable}"
-        press=".onCancelEditNotePo"/>
-
-    </HBox>
-  </VBox>
-</Panel>
-
-
-  </VBox>
-</l:SplitPane>
-
+                  </HBox>
+                  <!-- 🆕 Quotation Deadline -->
+                  <HBox class="sapUiTinyMarginTop" alignItems="Center">
+                    <Text text="Quotation Deadline:" class="sapUiSmallMarginEnd"/>
+                    <ObjectStatus text="{ path:'detailPO>Agdat', formatter:'.formatter.dateFormat' }" state="Information" icon="sap-icon://calendar"/>
+                  </HBox>
+                  <!-- Status -->
+                  <HBox class="sapUiTinyMarginTop" alignItems="Center">
+                    <Text text="Status:"/>
+                    <ObjectStatus text="{path:'detailPO>Frgke', formatter:'.formatter.formatReleaseStatusText'}" state="{path:'detailPO>Frgke', formatter:'.formatter.formatReleaseStatusState'}" icon="{path:'detailPO>Frgke', formatter:'.formatter.formatReleaseStatusIcon'}" class="sapUiTinyMarginBegin"/>
+                  </HBox>
+                </VBox>
+              </Panel>
+              <!-- ===== ITEMS TABLE ===== -->
+              <Panel id="panelPOItems" headerText="📦 Items" class="sapUiNoContentPadding sapUiResponsiveContentPadding sapUiSizeCompact" width="100%">
+                <Table id="tblPOItems" mode="SingleSelectMaster" selectionChange="onItemPress" items="{detailPO>/Items}" class="sapUiSizeCompact" width="100%">
+                  <columns>
+                    <Column>
+                      <Text text="Item"/>
+                    </Column>
+                    <Column>
+                      <Text text="Material"/>
+                    </Column>
+                    <Column>
+                      <Text text="Quantity"/>
+                    </Column>
+                    <Column>
+                      <Text text="Net Price"/>
+                    </Column>
+                    <Column>
+                      <Text text="Deadline"/>
+                    </Column>
+                  </columns>
+                  <items>
+                    <ColumnListItem>
+                      <cells>
+                        <Text text="{detailPO>Ebelp}"/>
+                        <Text text="{detailPO>Matnr}"/>
+                        <Text text="{detailPO>Menge}"/>
+                        <Text text="{detailPO>Netpr}"/>
+                        <Text text="{path:'detailPO>Agdat', formatter:'.formatter.dateFormat'}"/>
+                      </cells>
+                    </ColumnListItem>
+                  </items>
+                </Table>
+              </Panel>
+              <Panel id="panelNotePO" headerText="📝 Manager Note" class="sapUiNoContentPadding sapUiResponsiveContentPadding sapUiSizeCompact sapUiMediumMarginTop prHeaderCard" width="100%">
+                <VBox id="vboxNotePO" class="sapUiSmallMargin sapUiSizeCompact">
+                  <!-- 📄 Hiển thị nội dung note khi chưa bật chế độ edit -->
+                  <Text id="txtPONote" text="{poNoteModel>/Note}" wrapping="true" visible="{= !${poNoteModel>/Editable} }" class="sapUiTinyMarginTop sapUiSmallMarginBottom sapUiSmallPadding"/>
+                  <!-- ✏️ TextArea cho chế độ chỉnh sửa -->
+                  <TextArea id="taPONoteEdit" value="{poNoteModel>/Note}" rows="4" width="100%" visible="{poNoteModel>/Editable}" placeholder="Enter note here..." class="sapUiTinyMarginTop sapUiSmallMarginBottom sapUiSmallPadding"/>
+                  <!-- 🔘 Nút hành động -->
+                  <HBox id="hboxNoteButtonsPO" class="sapUiTinyMarginTop" justifyContent="End">
+                    <Button id="btnEditNotePO" text="Edit" type="Transparent" icon="sap-icon://edit" visible="{poNoteModel>/CanEdit}" enabled="{= !${poNoteModel>/Editable} }" press=".onEditNotePo"/>
+                    <Button id="btnSaveNotePO" text="Save" type="Emphasized" icon="sap-icon://save" visible="{poNoteModel>/Editable}" press=".onSaveNotePo"/>
+                    <Button id="btnCancelNotePO" text="Cancel" type="Reject" icon="sap-icon://decline" visible="{poNoteModel>/Editable}" press=".onCancelEditNotePo"/>
+                  </HBox>
+                </VBox>
+              </Panel>
+            </VBox>
+          </l:SplitPane>
         </l:PaneContainer>
       </l:ResponsiveSplitter>
-
     </content>
-
     <!-- ==================== FOOTER ==================== -->
     <footer>
       <OverflowToolbar>
@@ -312,7 +201,5 @@
         <Button text="Follow-up" icon="sap-icon://activity-items" press=".onFollowUp"/>
       </OverflowToolbar>
     </footer>
-
   </Page>
-
 </mvc:View>
