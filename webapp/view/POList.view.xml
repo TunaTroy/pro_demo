@@ -176,7 +176,7 @@
     <!-- Dòng tiêu đề + nút đóng -->
     <HBox justifyContent="SpaceBetween" alignItems="Center" class="sapUiTinyMarginBottom">
       <Text text="{detailPO>Ebeln}" class="sapUiTinyMarginEnd sapUiTinyMarginBottom sapMTitle sapMTitleStyleH4"/>
-      <Button icon="sap-icon://decline" press=".onCloseDetail" type="Transparent"/>
+      <Button icon="sap-icon://decline" press="onCloseDetail" type="Transparent"/>
     </HBox>
 
     <!-- Loại PO -->
