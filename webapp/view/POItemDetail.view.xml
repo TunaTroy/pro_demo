@@ -97,7 +97,7 @@
               <Text text="{Matnr}" />
               <Label text="Description:" />
               <Text text="{Txz01}" />
-              <Label text="Quantity:" />
+              <Label text="Order Quantity:" />
               <Text text="{Menge} {Meins}" />
               <Label text="Net Price:" />
               <Text text="{Netpr} {Waers}" />
@@ -113,8 +113,8 @@
               <Text text="{Werks}" />
               <Label text="Storage Location:" />
               <Text text="{Lgort}" />
-              <Label text="Delivery Date:" />
-              <Text text="{path:'Agdat', formatter:'.formatter.dateFormat'}" />
+              <Label text="Changed On:" />
+              <Text text="{path:'Aedat', formatter:'.formatter.dateFormat'}" />
               <Label text="Created By:" />
               <Text text="{Ernam}" />
               <Label text="Vendor:" />
@@ -134,7 +134,7 @@
           columnsL="1"
           columnsM="1">
 
-          <Label text="Delivery Date" />
+          <Label text="Quotation Deadline" />
           <Text text="{path:'Agdat', formatter:'.formatter.dateFormat'}" />
 
           <Label text="Delivery Address" />

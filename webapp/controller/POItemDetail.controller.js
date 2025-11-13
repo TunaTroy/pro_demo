@@ -7,7 +7,15 @@ sap.ui.define([
   "use strict";
 
   return Controller.extend("demodashboard.controller.POItemDetail", {
-    
+
+     formatter: {
+      dateFormat: function (sDate) {
+        if (!sDate) return "";
+        const oDate = new Date(sDate);
+        return oDate.toLocaleDateString("en-GB");
+      },
+     },
+     
     onInit: function () {
       const oRouter = sap.ui.core.UIComponent.getRouterFor(this);
       oRouter.getRoute("POItemDetail").attachPatternMatched(this._onObjectMatched, this);
@@ -17,14 +25,17 @@ sap.ui.define([
   const sEbeln = oEvent.getParameter("arguments").Ebeln;
   const sEbelp = oEvent.getParameter("arguments").Ebelp;
 
+    const oModel = this.getOwnerComponent().getModel();
+   this.getView().setModel(oModel);
+
   const sPath = `/ProcurementItemSet(Ebeln='${sEbeln}',Ebelp='${sEbelp}')`;
   console.log(" Binding path:", sPath); // ✅ dùng sau khi đã khai báo
 
-  const oModel = this.getOwnerComponent().getModel();
-  this.getView().setModel(oModel);
+ 
 
   this.getView().bindElement({
     path: sPath,
+    
     events: {
       dataRequested: () => sap.ui.core.BusyIndicator.show(0),
       dataReceived: (oEvt) => {

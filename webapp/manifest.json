@@ -142,7 +142,7 @@
         },
         {
           "name": "POItemDetail",
-         "pattern": "POItemDetail/{Ebeln}/{Ebelp}/:?query:",
+         "pattern": "POItemDetail/{Ebeln}/{Ebelp}",
           "target": [
             "TargetPOItemDetail"
           ]
