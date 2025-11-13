@@ -48,6 +48,16 @@ sap.ui.define([
       }
     },
 
+
+
+      onCloseDetail: function () {
+  this.byId("poDetailPanel").setVisible(false);
+  this.byId("poTablePane").getLayoutData().setSize("100%");
+},
+
+
+
+
     // ============================
     // INIT
     // ============================
