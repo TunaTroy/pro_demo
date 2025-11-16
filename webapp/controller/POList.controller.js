@@ -1,258 +1,610 @@
-sap.ui.define([
-  "sap/ui/core/mvc/Controller",
-  "sap/ui/model/json/JSONModel",
-  "sap/ui/model/Filter",
-  "sap/ui/model/FilterOperator",
-  "sap/m/MessageBox",
-  "sap/m/MessageToast",
-  "sap/ui/export/Spreadsheet",
-  "sap/ui/table/Table",
-  "sap/ui/table/Column"
-], function (Controller, JSONModel, Filter, FilterOperator, MessageBox, MessageToast, Spreadsheet, Table, Column) {
-  "use strict";
+sap.ui.define(
+  [
+    "sap/ui/core/mvc/Controller",
+    "sap/ui/model/json/JSONModel",
+    "sap/ui/model/Filter",
+    "sap/ui/model/FilterOperator",
+    "sap/m/MessageBox",
+    "sap/m/MessageToast",
+    "sap/ui/export/Spreadsheet",
+    "sap/ui/table/Table",
+    "sap/ui/table/Column",
+  ],
+  function (
+    Controller,
+    JSONModel,
+    Filter,
+    FilterOperator,
+    MessageBox,
+    MessageToast,
+    Spreadsheet,
+    Table,
+    Column
+  ) {
+    "use strict";
 
-  return Controller.extend("demodashboard.controller.POList", {
+    return Controller.extend("demodashboard.controller.POList", {
+      formatter: {
+        dateFormat: function (sDate) {
+          if (!sDate) return "";
+          const oDate = new Date(sDate);
+          return oDate.toLocaleDateString("en-GB");
+        },
 
-    formatter: {
-      dateFormat: function (sDate) {
-        if (!sDate) return "";
-        const oDate = new Date(sDate);
-        return oDate.toLocaleDateString("en-GB");
+        formatReleaseStatusText: function (s) {
+          switch (s) {
+            // Approved
+            case "R": // Released, no changes
+            case "T": // PO Changeable
+              return "Approved";
+
+            // Pending
+            case "0": // Changeable
+            case "C": // Processing/Changeable
+              return "Pending";
+
+            // Rejected
+            case "A":
+              return "Rejected";
+
+            // Others
+            case "B": // Blocked, no changes
+            case "G": // Blocked, no changes
+            case "X": // Blocked
+            default:
+              return "Others";
+          }
+        },
+
+        formatReleaseStatusState: function (s) {
+          switch (s) {
+            case "R":
+            case "T":
+              return "Success"; // Green
+
+            case "0":
+            case "C":
+              return "Warning"; // Orange
+
+            case "A":
+              return "Error"; // Red
+
+            default:
+              return "None"; // Grey
+          }
+        },
+
+        formatReleaseStatusIcon: function (s) {
+          switch (s) {
+            case "R":
+            case "T":
+              return "sap-icon://accept";
+
+            case "0":
+            case "C":
+              return "sap-icon://pending";
+
+            case "A":
+              return "sap-icon://decline";
+
+            default:
+              return "sap-icon://document";
+          }
+        },
       },
 
-      formatReleaseStatusText: function (s) {
-        switch (s) {
-          case "R": return "Released";
-          case "C": return "Pending";
-          case "A": return "Blocked";
-          default: return "Not Rel.";
-        }
+      // ============================
+      // INIT
+      // ============================
+      onInit: function () {
+        this.oODataModel = this.getOwnerComponent().getModel();
+        this.getView().setModel(new JSONModel(), "detailPO");
+        this.getView().setModel(new JSONModel(), "po");
+        this.getView().setModel(new JSONModel({ busy: false }), "view");
+
+        this._createdDateSortState = 0; // 🔥 0: none, 1: ASC, 2: DESC
+
+        this._loadPOList();
       },
 
-      formatReleaseStatusState: function (s) {
-        switch (s) {
-          case "R": return "Success";
-          case "C": return "Warning";
-          case "A": return "Error";
-          default: return "None";
+      // ============================
+      // SELECT PO HEADER
+      // ============================
+      onSelectPO: function (oEvent) {
+        const oSelectedItem = oEvent.getParameter("listItem");
+        if (!oSelectedItem) {
+          this.byId("poDetailPanel").setVisible(false);
+          this.byId("poTablePane").getLayoutData().setSize("100%");
+          return;
         }
+
+        const oPOData = oSelectedItem.getBindingContext("po").getObject();
+        this.getView().getModel("detailPO").setData(oPOData);
+
+        // ✅ Đặt binding context gốc cho detailPO
+        this.byId("poDetailPanel").bindElement("detailPO>/");
+
+        this.byId("poDetailPanel").setVisible(true);
+        this.byId("poTablePane").getLayoutData().setSize("60%");
+
+        const oItemTable = this.byId("tblPOItems");
+        if (oItemTable) {
+          oItemTable.removeSelections(true);
+        }
+
+        this._loadPONote(oPOData.Ebeln);
       },
 
-      formatReleaseStatusIcon: function (s) {
-        switch (s) {
-          case "R": return "sap-icon://accept";
-          case "C": return "sap-icon://pending";
-          case "A": return "sap-icon://decline";
-          default: return "sap-icon://document";
-        }
-      }
-    },
-
-
-
-      onCloseDetail: function () {
-  this.byId("poDetailPanel").setVisible(false);
-  this.byId("poTablePane").getLayoutData().setSize("100%");
-}, 
-
-
-
-
-    // ============================
-    // INIT
-    // ============================
-    onInit: function () {
-      this.oODataModel = this.getOwnerComponent().getModel();
-      this.getView().setModel(new JSONModel(), "detailPO");
-      this.getView().setModel(new JSONModel(), "po");
-      this.getView().setModel(new JSONModel({ busy: false }), "view");
-
-      this._loadPOList();
-    },
-
-    // ============================
-    // SELECT PO HEADER
-    // ============================
-    onSelectPO: function (oEvent) {
-      const oSelectedItem = oEvent.getParameter("listItem");
-      if (!oSelectedItem) {
+      // ============================
+      // ITEM CLICK (to detail screen)
+      // ============================
+      onItemPress: function (oEvent) {
+        // 🔥 Hide PO detail panel so that the list returns to 100%
         this.byId("poDetailPanel").setVisible(false);
         this.byId("poTablePane").getLayoutData().setSize("100%");
-        return;
-      }
 
-      const oPOData = oSelectedItem.getBindingContext("po").getObject();
-      this.getView().getModel("detailPO").setData(oPOData);
+        const oItem = oEvent.getParameter("listItem");
+        const oCtx = oItem.getBindingContext("detailPO");
+        if (!oCtx) return;
 
-      const oPanel = this.byId("poDetailPanel");
-      oPanel.setVisible(true);
-      this.byId("poTablePane").getLayoutData().setSize("60%");
-
-      // 🔹 Load manager note for this PO
-      this._loadPONote(oPOData.Ebeln);
-    },
-
-    // ============================
-    // ITEM CLICK (to detail screen)
-    // ============================
-    onItemPress: function (oEvent) {
-      const oItem = oEvent.getParameter("listItem");
-      const oCtx = oItem.getBindingContext("detailPO");
-      if (!oCtx) return;
-
-      const oData = oCtx.getObject();
-      const oRouter = sap.ui.core.UIComponent.getRouterFor(this);
-      oRouter.navTo("POItemDetail", {
-        Ebeln: oData.Ebeln,
-        Ebelp: oData.Ebelp
-      });
-    },
-
-    
-
-    // ============================
-    // LOAD PO LIST
-    // ============================
-    _loadPOList: function () {
-      sap.ui.core.BusyIndicator.show(0);
-      const pHeader = new Promise((resolve, reject) => {
-        this.oODataModel.read("/ProcurementHeaderSet", {
-          filters: [new Filter("Bstyp", FilterOperator.EQ, "F")],
-          success: d => resolve(d.results),
-          error: reject
+        const oData = oCtx.getObject();
+        const oRouter = sap.ui.core.UIComponent.getRouterFor(this);
+        oRouter.navTo("POItemDetail", {
+          Ebeln: oData.Ebeln,
+          Ebelp: oData.Ebelp,
         });
-      });
+      },
 
-      const pItems = new Promise((resolve, reject) => {
-        this.oODataModel.read("/ProcurementItemSet", {
-          success: d => resolve(d.results),
-          error: reject
-        });
-      });
+      onFilterSearch: function () {
+        const oTable = this.byId("poTable");
+        const aFilters = [];
 
-      Promise.all([pHeader, pItems]).then(([aHeader, aItems]) => {
-        const mapItems = {};
-        aItems.forEach(it => {
-          if (!mapItems[it.Ebeln]) mapItems[it.Ebeln] = [];
-          mapItems[it.Ebeln].push(it);
-        });
-
-        aHeader.forEach(h => {
-          h.Items = mapItems[h.Ebeln] || [];
-          h.ItemCount = h.Items.length;
-          h.TotalNetValue = h.Items.reduce((s, it) => s + (parseFloat(it.Netwr) || 0), 0).toFixed(2);
-        });
-
-        this.getView().setModel(new JSONModel(aHeader), "po");
-        sap.ui.core.BusyIndicator.hide();
-      }).catch(() => {
-        sap.ui.core.BusyIndicator.hide();
-        MessageBox.error("Cannot load PO data.");
-      });
-    },
-
-    // ====================================================
-    // 📝 MANAGER NOTE (PO)
-    // ====================================================
-    _loadPONote: function (sEbeln) {
-  console.log("📡 Loading note for PO:", sEbeln);
-
-  const oModel = this.getView().getModel();
-  const oNoteModel =
-    this.getView().getModel("poNoteModel") ||
-    new sap.ui.model.json.JSONModel({
-      Ebeln: sEbeln,
-      Note: "",
-      Editable: false,
-      CanEdit: true // ✅ Mặc định: ai cũng có thể edit
-    });
-  this.getView().setModel(oNoteModel, "poNoteModel");
-
-  const sKeyEbeln = String(sEbeln || "").trim().padStart(10, "0");
-  oNoteModel.setProperty("/Ebeln", sKeyEbeln);
-  oNoteModel.setProperty("/Note", "Loading...");
-  oNoteModel.setProperty("/Editable", false);
-  oNoteModel.setProperty("/CanEdit", true); // ✅ Luôn true
-
-  sap.ui.core.BusyIndicator.show(0);
-
-  // Không cần lấy user nữa vì ai cũng có quyền
-  oModel.read(`/PONoteSet(Ebeln='${sKeyEbeln}')`, {
-    success: (oData) => {
-      sap.ui.core.BusyIndicator.hide();
-      oNoteModel.setProperty("/Note", oData.Note || "— No note available —");
-      oNoteModel.setProperty("/CanEdit", true); // ✅ Giữ luôn true
-      console.log("✅ PO note loaded, edit enabled for all users");
-    },
-    error: (err) => {
-      sap.ui.core.BusyIndicator.hide();
-      oNoteModel.setProperty("/Note", "— No note available —");
-      oNoteModel.setProperty("/CanEdit", true); // ✅ Cho phép edit cả khi chưa có note
-      console.warn("⚠️ Cannot load PO note:", err);
-    },
-  });
-},
-
-
-
-
-    onEditNotePo: function () {
-      const oNoteModel = this.getView().getModel("poNoteModel");
-      if (!oNoteModel) return;
-      oNoteModel.setProperty("/Editable", true);
-      MessageToast.show("✏️ Edit mode enabled for PO note.");
-    },
-
-    onCancelEditNotePo: function () {
-      const oNoteModel = this.getView().getModel("poNoteModel");
-      if (!oNoteModel) return;
-      oNoteModel.setProperty("/Editable", false);
-      MessageToast.show("❌ Edit cancelled.");
-    },
-
-    onSaveNotePo: function () {
-      const oModel = this.getView().getModel();
-      const oNoteModel = this.getView().getModel("poNoteModel");
-
-      const sEbeln = oNoteModel.getProperty("/Ebeln");
-      const sNote = oNoteModel.getProperty("/Note");
-      if (!sEbeln) return MessageToast.show("⚠️ No PO selected.");
-
-      const oEntry = { Ebeln: sEbeln, Note: sNote };
-
-      sap.ui.core.BusyIndicator.show(0);
-
-      oModel.read(`/PONoteSet(Ebeln='${sEbeln}')`, {
-        success: () => {
-          oModel.update(`/PONoteSet(Ebeln='${sEbeln}')`, oEntry, {
-            success: () => {
-              sap.ui.core.BusyIndicator.hide();
-              MessageToast.show("✅ PO note updated successfully!");
-              oNoteModel.setProperty("/Editable", false);
-            },
-            error: (err) => {
-              sap.ui.core.BusyIndicator.hide();
-              console.error("❌ Update failed:", err);
-              MessageToast.show("❌ Failed to update note.");
-            }
-          });
-        },
-        error: () => {
-          oModel.create("/PONoteSet", oEntry, {
-            success: () => {
-              sap.ui.core.BusyIndicator.hide();
-              MessageToast.show("✅ PO note created successfully!");
-              oNoteModel.setProperty("/Editable", false);
-            },
-            error: (err) => {
-              sap.ui.core.BusyIndicator.hide();
-              console.error("❌ Create failed:", err);
-              MessageToast.show("❌ Failed to create note.");
-            }
-          });
+        // ====== ⛔ 1. AUTO TOKEN FOR PO NUMBER ======
+        const oPO = this.byId("poFilter");
+        const sPOtyped = oPO.getValue().trim();
+        if (sPOtyped) {
+          oPO.addToken(new sap.m.Token({ key: sPOtyped, text: sPOtyped }));
+          oPO.setValue("");
         }
-      });
-    }
 
-  });
-});
+        const aPOTokens = oPO.getTokens();
+        if (aPOTokens.length > 0) {
+          const aPOFilters = aPOTokens.map(
+            (t) =>
+              new sap.ui.model.Filter(
+                "Ebeln",
+                sap.ui.model.FilterOperator.EQ,
+                t.getKey()
+              )
+          );
+          aFilters.push(new sap.ui.model.Filter(aPOFilters, false)); // OR
+        }
+
+        // ====== ⛔ 2. AUTO TOKEN FOR ORDER TYPE (Bsart) ======
+        const oBsart = this.byId("orderTypeFilter");
+        const sBsartTyped = oBsart.getValue().trim();
+        if (sBsartTyped) {
+          oBsart.addToken(
+            new sap.m.Token({ key: sBsartTyped, text: sBsartTyped })
+          );
+          oBsart.setValue("");
+        }
+
+        const aBsartTokens = oBsart.getTokens();
+        if (aBsartTokens.length > 0) {
+          const aBsartFilters = aBsartTokens.map(
+            (t) =>
+              new sap.ui.model.Filter(
+                "Bsart",
+                sap.ui.model.FilterOperator.EQ,
+                t.getKey()
+              )
+          );
+          aFilters.push(new sap.ui.model.Filter(aBsartFilters, false));
+        }
+
+        // ====== ⛔ 3. AUTO TOKEN FOR PURCH. GROUP (Ekgrp) ======
+        const oEkgrp = this.byId("ekgrpFilterd");
+        const sEkgrpTyped = oEkgrp.getValue().trim();
+        if (sEkgrpTyped) {
+          oEkgrp.addToken(
+            new sap.m.Token({ key: sEkgrpTyped, text: sEkgrpTyped })
+          );
+          oEkgrp.setValue("");
+        }
+
+        const aEkgrpTokens = oEkgrp.getTokens();
+        if (aEkgrpTokens.length > 0) {
+          const aEkgrpFilters = aEkgrpTokens.map(
+            (t) =>
+              new sap.ui.model.Filter(
+                "Ekgrp",
+                sap.ui.model.FilterOperator.EQ,
+                t.getKey()
+              )
+          );
+          aFilters.push(new sap.ui.model.Filter(aEkgrpFilters, false));
+        }
+
+        // ====== ⛔ 4. AUTO TOKEN FOR CREATED BY (Ernam) ======
+        const oErnam = this.byId("humanFilter");
+        const sErnamTyped = oErnam.getValue().trim();
+        if (sErnamTyped) {
+          oErnam.addToken(
+            new sap.m.Token({ key: sErnamTyped, text: sErnamTyped })
+          );
+          oErnam.setValue("");
+        }
+
+        const aErnamTokens = oErnam.getTokens();
+        if (aErnamTokens.length > 0) {
+          const aErnamFilters = aErnamTokens.map(
+            (t) =>
+              new sap.ui.model.Filter(
+                "Ernam",
+                sap.ui.model.FilterOperator.EQ,
+                t.getKey()
+              )
+          );
+          aFilters.push(new sap.ui.model.Filter(aErnamFilters, false));
+        }
+
+        // ====== CREATED DATE ======
+        const oDateFrom = this.byId("dateFilter").getDateValue();
+        const oDateTo = this.byId("dateFilter").getSecondDateValue();
+        if (oDateFrom && oDateTo) {
+          aFilters.push(
+            new sap.ui.model.Filter(
+              "Aedat",
+              sap.ui.model.FilterOperator.BT,
+              oDateFrom,
+              oDateTo
+            )
+          );
+        }
+
+        // ====== STATUS ======
+        const sStatus = this.byId("statusFilter").getSelectedKey();
+
+        if (sStatus && sStatus !== "ALL") {
+          let aStatusValues = [];
+
+          switch (sStatus) {
+            case "Approved":
+              aStatusValues = ["R", "T"];
+              break;
+
+            case "Pending":
+              aStatusValues = ["0", "C"];
+              break;
+
+            case "Rejected":
+              aStatusValues = ["A"];
+              break;
+
+            case "Others":
+              aStatusValues = ["B", "G", "X"];
+              break;
+          }
+
+          if (aStatusValues.length > 0) {
+            aFilters.push(
+              new sap.ui.model.Filter(
+                aStatusValues.map(
+                  (v) => new sap.ui.model.Filter("Frgke", FilterOperator.EQ, v)
+                ),
+                false // OR
+              )
+            );
+          }
+        }
+
+        // ===== APPLY TO TABLE ======
+        oTable.getBinding("items").filter(aFilters);
+      },
+
+      onValueHelpPO: function (oEvent) {
+        const aData = this.getView().getModel("po").getData() || [];
+        this._createSimpleValueHelp(
+          oEvent,
+          "PO Number",
+          "Ebeln",
+          aData.map((i) => i.Ebeln)
+        );
+      },
+
+      onValueHelpOrderType: function (oEvent) {
+        const aData = this.getView().getModel("po").getData() || [];
+        const aTypes = [...new Set(aData.map((i) => i.Bsart))];
+        this._createSimpleValueHelp(oEvent, "Order Type", "Bsart", aTypes);
+      },
+
+      onValueHelpEkgrp: function (oEvent) {
+        const aData = this.getView().getModel("po").getData() || [];
+        const aGroups = [...new Set(aData.map((i) => i.Ekgrp))];
+        this._createSimpleValueHelp(oEvent, "Purch. Group", "Ekgrp", aGroups);
+      },
+
+      onValueHelpErnam: function (oEvent) {
+        const aData = this.getView().getModel("po").getData() || [];
+        const aUsers = [...new Set(aData.map((i) => i.Ernam))];
+        this._createSimpleValueHelp(oEvent, "Created By", "Ernam", aUsers);
+      },
+
+      // ============================
+      // LOAD PO LIST
+      // ============================
+      _loadPOList: function () {
+        sap.ui.core.BusyIndicator.show(0);
+        const pHeader = new Promise((resolve, reject) => {
+          this.oODataModel.read("/ProcurementHeaderSet", {
+            filters: [new Filter("Bstyp", FilterOperator.EQ, "F")],
+            success: (d) => resolve(d.results),
+            error: reject,
+          });
+        });
+
+        const pItems = new Promise((resolve, reject) => {
+          this.oODataModel.read("/ProcurementItemSet", {
+            success: (d) => resolve(d.results),
+            error: reject,
+          });
+        });
+
+        Promise.all([pHeader, pItems])
+          .then(([aHeader, aItems]) => {
+            const mapItems = {};
+            aItems.forEach((it) => {
+              if (!mapItems[it.Ebeln]) mapItems[it.Ebeln] = [];
+              mapItems[it.Ebeln].push(it);
+            });
+
+            aHeader.forEach((h) => {
+              h.Items = mapItems[h.Ebeln] || [];
+              h.ItemCount = h.Items.length;
+              h.TotalNetValue = h.Items.reduce(
+                (s, it) => s + (parseFloat(it.Netwr) || 0),
+                0
+              ).toFixed(2);
+            });
+
+            this.getView().setModel(new JSONModel(aHeader), "po");
+
+            // 🔥 Lưu lại bản gốc để reset sort
+            this._originalPOData = JSON.parse(JSON.stringify(aHeader));
+
+            sap.ui.core.BusyIndicator.hide();
+          })
+          .catch(() => {
+            sap.ui.core.BusyIndicator.hide();
+            MessageBox.error("Cannot load PO data.");
+          });
+      },
+
+      _createSimpleValueHelp: function (oEvent, sTitle, sKey, aValues) {
+        // Convert values -> [{ key: "..."}]
+        const aRows = aValues.map((v) => {
+          let obj = {};
+          obj[sKey] = v;
+          return obj;
+        });
+
+        const oRowsModel = new sap.ui.model.json.JSONModel({ rows: aRows });
+
+        // ===== TABLE =====
+        const oTable = new sap.ui.table.Table({
+          visibleRowCount: 12,
+          selectionMode: "MultiToggle",
+          columns: [
+            new sap.ui.table.Column({
+              width: "180px",
+              label: new sap.m.Label({ text: sTitle }),
+              template: new sap.m.Text({ text: `{${sKey}}` }),
+            }),
+          ],
+        });
+
+        oTable.setModel(oRowsModel);
+        oTable.bindRows("/rows");
+
+        // ===== SEARCH FIELD =====
+        const oSearch = new sap.m.SearchField({
+          width: "100%",
+          placeholder: "Search...",
+          liveChange: (e) => {
+            const q = (e.getParameter("newValue") || "").toUpperCase();
+
+            const filtered = aRows.filter((r) =>
+              String(r[sKey]).toUpperCase().includes(q)
+            );
+
+            // Cập nhật model khi search
+            oRowsModel.setData({ rows: filtered });
+          },
+        });
+
+        // ===== FILTER BAR =====
+        const oFilterBar = new sap.ui.comp.filterbar.FilterBar({
+          advancedMode: false,
+          filterGroupItems: [],
+          basicSearch: oSearch,
+        });
+
+        // ===== DIALOG =====
+        const oMI = oEvent.getSource();
+        const oVH = new sap.ui.comp.valuehelpdialog.ValueHelpDialog({
+          title: sTitle,
+          key: sKey,
+          supportMultiselect: true,
+          supportRanges: false,
+          supportRangesOnly: false,
+
+          ok: () => {
+            const aIdx = oTable.getSelectedIndices();
+            const aSelected = aIdx.map(
+              (i) => oTable.getContextByIndex(i).getObject()[sKey]
+            );
+
+            oMI.removeAllTokens();
+            aSelected.forEach((v) =>
+              oMI.addToken(new sap.m.Token({ key: v, text: v }))
+            );
+
+            oVH.close();
+          },
+
+          cancel: () => oVH.close(),
+        });
+
+        // Áp dụng FilterBar & Table cho VHD
+        oVH.setFilterBar(oFilterBar);
+
+        // phải dùng oVH.setTable() cho Smart ValueHelpDialog
+        oVH.setTable(oTable);
+
+        oVH.open();
+      },
+
+      // ====================================================
+      // 📝 MANAGER NOTE (PO)
+      // ====================================================
+      _loadPONote: function (sEbeln) {
+        console.log("📡 Loading note for PO:", sEbeln);
+
+        const oModel = this.getView().getModel();
+        const oNoteModel =
+          this.getView().getModel("poNoteModel") ||
+          new sap.ui.model.json.JSONModel({
+            Ebeln: sEbeln,
+            Note: "",
+            Editable: false,
+            CanEdit: true, // ✅ Mặc định: ai cũng có thể edit
+          });
+        this.getView().setModel(oNoteModel, "poNoteModel");
+
+        const sKeyEbeln = String(sEbeln || "")
+          .trim()
+          .padStart(10, "0");
+        oNoteModel.setProperty("/Ebeln", sKeyEbeln);
+        oNoteModel.setProperty("/Note", "Loading...");
+        oNoteModel.setProperty("/Editable", false);
+        oNoteModel.setProperty("/CanEdit", true); // ✅ Luôn true
+
+        sap.ui.core.BusyIndicator.show(0);
+
+        // Không cần lấy user nữa vì ai cũng có quyền
+        oModel.read(`/PONoteSet(Ebeln='${sKeyEbeln}')`, {
+          success: (oData) => {
+            sap.ui.core.BusyIndicator.hide();
+            oNoteModel.setProperty(
+              "/Note",
+              oData.Note || "— No note available —"
+            );
+            oNoteModel.setProperty("/CanEdit", true); // ✅ Giữ luôn true
+            console.log("✅ PO note loaded, edit enabled for all users");
+          },
+          error: (err) => {
+            sap.ui.core.BusyIndicator.hide();
+            oNoteModel.setProperty("/Note", "— No note available —");
+            oNoteModel.setProperty("/CanEdit", true); // ✅ Cho phép edit cả khi chưa có note
+            console.warn("⚠️ Cannot load PO note:", err);
+          },
+        });
+      },
+
+      onCloseDetail: function () {
+        this.byId("poDetailPanel").setVisible(false);
+        this.byId("poTablePane").getLayoutData().setSize("100%");
+        this.byId("poTable").removeSelections(true);
+      },
+
+      onEditNotePo: function () {
+        const oNoteModel = this.getView().getModel("poNoteModel");
+        if (!oNoteModel) return;
+        oNoteModel.setProperty("/Editable", true);
+        MessageToast.show("✏️ Edit mode enabled for PO note.");
+      },
+
+      onCancelEditNotePo: function () {
+        const oNoteModel = this.getView().getModel("poNoteModel");
+        if (!oNoteModel) return;
+        oNoteModel.setProperty("/Editable", false);
+        MessageToast.show("❌ Edit cancelled.");
+      },
+
+      onSaveNotePo: function () {
+        const oModel = this.getView().getModel();
+        const oNoteModel = this.getView().getModel("poNoteModel");
+
+        const sEbeln = oNoteModel.getProperty("/Ebeln");
+        const sNote = oNoteModel.getProperty("/Note");
+        if (!sEbeln) return MessageToast.show("⚠️ No PO selected.");
+
+        const oEntry = { Ebeln: sEbeln, Note: sNote };
+
+        sap.ui.core.BusyIndicator.show(0);
+
+        oModel.read(`/PONoteSet(Ebeln='${sEbeln}')`, {
+          success: () => {
+            oModel.update(`/PONoteSet(Ebeln='${sEbeln}')`, oEntry, {
+              success: () => {
+                sap.ui.core.BusyIndicator.hide();
+                MessageToast.show("✅ PO note updated successfully!");
+                oNoteModel.setProperty("/Editable", false);
+              },
+              error: (err) => {
+                sap.ui.core.BusyIndicator.hide();
+                console.error("❌ Update failed:", err);
+                MessageToast.show("❌ Failed to update note.");
+              },
+            });
+          },
+          error: () => {
+            oModel.create("/PONoteSet", oEntry, {
+              success: () => {
+                sap.ui.core.BusyIndicator.hide();
+                MessageToast.show("✅ PO note created successfully!");
+                oNoteModel.setProperty("/Editable", false);
+              },
+              error: (err) => {
+                sap.ui.core.BusyIndicator.hide();
+                console.error("❌ Create failed:", err);
+                MessageToast.show("❌ Failed to create note.");
+              },
+            });
+          },
+        });
+      },
+
+      onSortCreatedDate: function () {
+        const oTable = this.byId("poTable");
+        const oBinding = oTable.getBinding("items");
+
+        // Tăng trạng thái: 0 → 1 → 2 → 0
+        this._createdDateSortState = (this._createdDateSortState + 1) % 3;
+
+        let aSorters = [];
+
+        if (this._createdDateSortState === 1) {
+          // ASC
+          aSorters.push(new sap.ui.model.Sorter("Aedat", false));
+          MessageToast.show("🔼 Sorted by Created Date (Ascending)");
+        } else if (this._createdDateSortState === 2) {
+          // DESC
+          aSorters.push(new sap.ui.model.Sorter("Aedat", true));
+          MessageToast.show("🔽 Sorted by Created Date (Descending)");
+        } else {
+          // ⛔ RESET VỀ THỨ TỰ GỐC
+          const oOriginalModel = new JSONModel(this._originalPOData);
+          this.getView().setModel(oOriginalModel, "po");
+
+          MessageToast.show("↩️ Sort reset (Back to original order)");
+          return;
+        }
+
+        // Apply sorting
+        oBinding.sort(aSorters);
+      },
+    });
+  }
+);
