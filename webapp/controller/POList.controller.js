@@ -97,13 +97,27 @@ sap.ui.define(
       // INIT
       // ============================
       onInit: function () {
-        this.oODataModel = this.getOwnerComponent().getModel();
+        // 🔥 Model riêng dùng cho PO, không dùng model global từ Component nữa
+        this.oODataModel = new sap.ui.model.odata.v2.ODataModel(
+          "/sap/opu/odata/sap/ZGW_PRO_G18_SRV/",
+          {
+            useBatch: false,
+            defaultUpdateMethod: sap.ui.model.odata.UpdateMethod.PUT,
+            json: true,
+          }
+        );
+
+        // Gán model cho view để binding UI
+        this.getView().setModel(this.oODataModel);
+
+        // Models cho UI
         this.getView().setModel(new JSONModel(), "detailPO");
         this.getView().setModel(new JSONModel(), "po");
         this.getView().setModel(new JSONModel({ busy: false }), "view");
 
-        this._createdDateSortState = 0; // 🔥 0: none, 1: ASC, 2: DESC
+        this._createdDateSortState = 0;
 
+        // 🔥 Load PO List
         this._loadPOList();
       },
 
@@ -576,6 +590,41 @@ sap.ui.define(
         });
       },
 
+      onApprovePO: function () {
+        const oPO = this.getView().getModel("detailPO").getData();
+        const sEbeln = String(oPO.Ebeln).padStart(10, "0");
+
+        MessageBox.confirm(`Approve PO ${sEbeln}?`, {
+          onClose: (sAction) => {
+            if (sAction !== MessageBox.Action.OK) return;
+
+            sap.ui.core.BusyIndicator.show(0);
+
+            const oModel = this.oODataModel;
+
+            const sPath = `/ProcurementHeaderSet(Ebeln='${sEbeln}')`;
+
+            const oPayload = {
+              Ebeln: sEbeln,
+              Frgke: "R", // 🎯 Approved for header
+            };
+
+            oModel.update(sPath, oPayload, {
+              success: () => {
+                sap.ui.core.BusyIndicator.hide();
+                MessageBox.success(`PO ${sEbeln} approved!`);
+                this._refreshPOAfterAction(sEbeln);
+              },
+              error: (err) => {
+                sap.ui.core.BusyIndicator.hide();
+                console.error(err);
+                MessageBox.error("Failed to approve PO.");
+              },
+            });
+          },
+        });
+      },
+
       onSortCreatedDate: function () {
         const oTable = this.byId("poTable");
         const oBinding = oTable.getBinding("items");
@@ -604,6 +653,58 @@ sap.ui.define(
 
         // Apply sorting
         oBinding.sort(aSorters);
+      },
+
+      _refreshPOAfterAction: function (sEbeln) {
+        const oModel = this.getView().getModel();
+
+        // Refresh PO header + items
+        sap.ui.core.BusyIndicator.show(0);
+
+        const pHeader = new Promise((resolve, reject) => {
+          oModel.read("/ProcurementHeaderSet", {
+            filters: [
+              new sap.ui.model.Filter(
+                "Ebeln",
+                sap.ui.model.FilterOperator.EQ,
+                sEbeln
+              ),
+            ],
+            success: (d) => resolve(d.results[0]),
+            error: reject,
+          });
+        });
+
+        const pItems = new Promise((resolve, reject) => {
+          oModel.read("/ProcurementItemSet", {
+            filters: [
+              new sap.ui.model.Filter(
+                "Ebeln",
+                sap.ui.model.FilterOperator.EQ,
+                sEbeln
+              ),
+            ],
+            success: (d) => resolve(d.results),
+            error: reject,
+          });
+        });
+
+        Promise.all([pHeader, pItems])
+          .then(([header, items]) => {
+            sap.ui.core.BusyIndicator.hide();
+            if (!header) return;
+
+            header.Items = items || [];
+            header.ItemCount = header.Items.length;
+
+            this.getView().getModel("detailPO").setData(header);
+
+            MessageToast.show(`🔄 PO ${sEbeln} refreshed successfully`);
+          })
+          .catch(() => {
+            sap.ui.core.BusyIndicator.hide();
+            MessageToast.show("⚠️ Cannot refresh PO details.");
+          });
       },
     });
   }
