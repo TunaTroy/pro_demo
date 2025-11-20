@@ -145,6 +145,13 @@
             icon="sap-icon://accept" 
             type="Emphasized"
             press=".onApprovePO"/>
+
+        <Button id="btnRejectPO"
+            text="Reject PO"
+            icon="sap-icon://decline"
+            type="Reject"
+            press=".onRejectPO"
+            class="sapUiTinyMarginEnd"/>
 </HBox>
                     
                 </VBox>

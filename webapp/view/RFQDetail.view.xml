@@ -3,155 +3,136 @@
   xmlns:mvc="sap.ui.core.mvc"
   xmlns:uxap="sap.uxap"
   xmlns:m="sap.m"
-  xmlns:l="sap.ui.layout"
   xmlns:form="sap.ui.layout.form"
+  xmlns:l="sap.ui.layout"
   displayBlock="true">
-
-  <uxap:ObjectPageLayout
-    id="rfqDetailPage"
-    showTitleInHeaderContent="true"
-    useIconTabBar="false">
-
-    <!-- ================= HEADER TOP ================= -->
-    <uxap:headerTitle>
-      <uxap:ObjectPageDynamicHeaderTitle>
-        <uxap:expandedHeading>
-          <m:VBox>
-            <m:Title text="{/RfqDesc}" level="H2"/>
-            <m:Text text="{/Ebeln}" design="Bold" />
-          </m:VBox>
-        </uxap:expandedHeading>
-
-        <uxap:snappedHeading>
-          <m:Title text="{/RfqDesc}" level="H4"/>
-        </uxap:snappedHeading>
-
-        <uxap:actions>
-          <m:Button text="Edit" icon="sap-icon://edit" type="Transparent"/>
-        </uxap:actions>
-      </uxap:ObjectPageDynamicHeaderTitle>
-    </uxap:headerTitle>
-
-    <!-- ================= HEADER CONTENT (IMAGE + INFO) ================= -->
-    <uxap:headerContent>
-      <m:HBox width="100%" alignItems="Center" justifyContent="SpaceBetween">
-
-        <!-- LEFT: IMAGE -->
-        <m:VBox width="20%">
-          <m:Image
-            src="images/user.png"
-            width="120px"
-            height="120px"
-          />
-        </m:VBox>
-
-        <!-- RIGHT: INFO -->
-        <m:VBox width="75%">
-
-          <m:FlexBox wrap="Wrap" justifyContent="Start" class="sapUiSmallMarginBottom">
-
-            <m:VBox width="45%">
-              <m:ObjectStatus title="Created By" text="{/Ernam}" />
-              <m:ObjectStatus title="Created On" text="{ path:'/Aedat', formatter:'.formatter.formatDate' }"/>
-              <m:ObjectStatus title="Publishing Date" text="—" />
-            </m:VBox>
-
-            <m:VBox width="45%">
-              <m:ObjectStatus title="Approver" text="Not started" />
-              <m:ObjectStatus title="Status" text="{/Status}" state="Information"/>
-            </m:VBox>
-
-          </m:FlexBox>
-
-        </m:VBox>
-      </m:HBox>
-    </uxap:headerContent>
-
-    <!-- ==================== SECTIONS (TABS) ==================== -->
-    <uxap:sections>
-
-      <!-- ===== GENERAL INFORMATION ===== -->
-      <uxap:ObjectPageSection title="General Information">
-        <uxap:subSections>
-          <uxap:ObjectPageSubSection>
-            <uxap:blocks>
-              <form:SimpleForm editable="false">
-                <form:content>
-                  <m:Label text="RFQ Number"/>
-                  <m:Text text="{/Ebeln}"/>
-
-                  <m:Label text="Description"/>
-                  <m:Text text="{/RfqDesc}"/>
-
-                  <m:Label text="Purchasing Group"/>
-                  <m:Text text="{/Ekgrp}"/>
-                </form:content>
-              </form:SimpleForm>
-            </uxap:blocks>
-          </uxap:ObjectPageSubSection>
-        </uxap:subSections>
-      </uxap:ObjectPageSection>
-
-      <!-- ===== DELIVERY TERMS ===== -->
-      <uxap:ObjectPageSection title="Delivery and Payment Terms">
-        <uxap:subSections>
-          <uxap:ObjectPageSubSection>
-            <uxap:blocks>
-              <m:Text text="Delivery terms here..."/>
-            </uxap:blocks>
-          </uxap:ObjectPageSubSection>
-        </uxap:subSections>
-      </uxap:ObjectPageSection>
-
-      <!-- ===== ITEMS ===== -->
-      <uxap:ObjectPageSection title="Items">
-        <uxap:subSections>
-          <uxap:ObjectPageSubSection>
-            <uxap:blocks>
-              <m:Table items="{/Items}">
-                <m:columns>
-                  <m:Column><m:Text text="Item"/></m:Column>
-                  <m:Column><m:Text text="Material"/></m:Column>
-                  <m:Column><m:Text text="Quantity"/></m:Column>
-                </m:columns>
-
-                <m:ColumnListItem>
-                  <m:cells>
-                    <m:Text text="{Ebelp}"/>
-                    <m:Text text="{Matnr}"/>
-                    <m:Text text="{Menge}"/>
-                  </m:cells>
-                </m:ColumnListItem>
-
-              </m:Table>
-            </uxap:blocks>
-          </uxap:ObjectPageSubSection>
-        </uxap:subSections>
-      </uxap:ObjectPageSection>
-
-      <!-- ===== BIDDERS ===== -->
-      <uxap:ObjectPageSection title="Bidders">
-        <uxap:subSections>
-          <uxap:ObjectPageSubSection>
-            <uxap:blocks>
-              <m:Text text="Vendors here..."/>
-            </uxap:blocks>
-          </uxap:ObjectPageSubSection>
-        </uxap:subSections>
-      </uxap:ObjectPageSection>
-
-      <!-- ===== NOTES ===== -->
-      <uxap:ObjectPageSection title="Notes">
-        <uxap:subSections>
-          <uxap:ObjectPageSubSection>
-            <uxap:blocks>
-              <m:Text text="{/Note}" />
-            </uxap:blocks>
-          </uxap:ObjectPageSubSection>
-        </uxap:subSections>
-      </uxap:ObjectPageSection>
-
-    </uxap:sections>
-  </uxap:ObjectPageLayout>
-
+    <!-- =================== OBJECT PAGE ==================== -->
+    <uxap:ObjectPageLayout
+      id="rfqDetailPage"
+      showTitleInHeaderContent="false"
+      useIconTabBar="false"
+      alwaysShowContentHeader="true"
+      upperCaseAnchorBar="false"
+      showHeaderContent="true"
+      toggleHeaderOnTitleClick="false">
+        <!-- =================== HEADER TITLE (SIMPLE & ALWAYS VISIBLE) ==================== -->
+        <uxap:headerTitle>
+            <uxap:ObjectPageHeader
+          objectTitle="{rfq>/RfqDesc}"
+          objectSubtitle="{rfq>/Ebeln}"
+          isObjectTitleAlwaysVisible="true"
+          isObjectSubtitleAlwaysVisible="true">
+                <uxap:actions>
+                    <m:OverflowToolbarButton text="Edit" icon="sap-icon://edit" type="Emphasized"/>
+                </uxap:actions>
+            </uxap:ObjectPageHeader>
+        </uxap:headerTitle>
+        <!-- =================== HEADER CONTENT (ALWAYS EXPANDED) ==================== -->
+        <uxap:headerContent>
+            <m:HBox width="100%" alignItems="Center" justifyContent="Start" class="sapUiMediumMargin">
+                <!-- LEFT AVATAR / IMAGE -->
+                <m:VBox width="120px">
+                    <m:Image src="images/user.png" width="100px" height="100px"/>
+                </m:VBox>
+                <!-- RIGHT INFORMATION AREA -->
+                <m:FlexBox wrap="Wrap" width="100%" justifyContent="SpaceBetween">
+                    <!-- COLUMN 1 -->
+                    <m:VBox class="sapUiSmallMargin">
+                        <m:ObjectStatus title="Created By" text="{rfq>/Ernam}"/>
+                        <m:ObjectStatus title="Created On" text="{ path: 'rfq>/Aedat', formatter: '.formatter.formatDate' }"/>
+                        <m:ObjectStatus title="Purchasing Group" text="{rfq>/Ekgrp}"/>
+                        <m:ObjectStatus title="Purchasing Org." text="{rfq>/Ekorg}"/>
+                    </m:VBox>
+                    <!-- COLUMN 2 -->
+                    <m:VBox class="sapUiSmallMargin">
+                        <m:ObjectStatus title="Status" text="{rfq>/Statu}"/>
+                        <m:ObjectStatus title="Target Value" text="{rfq>/Ktwrt} {rfq>/Waers}"/>
+                        <m:ObjectStatus title="Quotation Deadline" text="{ path: 'rfq>/Angdt', formatter: '.formatter.formatDate' }"/>
+                        <m:ObjectStatus title="Company Code" text="{rfq>/Bukrs}"/>
+                    </m:VBox>
+                    <!-- COLUMN 3 -->
+                    <m:VBox class="sapUiSmallMargin">
+                        <m:ObjectStatus title="Language" text="{rfq>/Spras}"/>
+                        <m:ObjectStatus title="Payment Terms" text="{rfq>/Zterm}"/>
+                        <m:ObjectStatus title="Quotation" text="{rfq>/Angnr}"/>
+                    </m:VBox>
+                </m:FlexBox>
+            </m:HBox>
+        </uxap:headerContent>
+        <!-- =================== ALL SECTIONS SHOWN AT ONCE ==================== -->
+        <uxap:sections>
+            <!-- GENERAL INFORMATION -->
+            <uxap:ObjectPageSection title="General Information">
+                <uxap:subSections>
+                    <uxap:ObjectPageSubSection>
+                        <uxap:blocks>
+                            <form:SimpleForm editable="false" layout="ResponsiveGridLayout">
+                                <form:content>
+                                    <m:Label text="RFQ Number"/>
+                                    <m:Text text="{rfq>/Ebeln}"/>
+                                    <m:Label text="Description"/>
+                                    <m:Text text="{rfq>/RfqDesc}"/>
+                                    <m:Label text="Purchasing Group"/>
+                                    <m:Text text="{rfq>/Ekgrp}"/>
+                                    <m:Label text="Purchasing Org."/>
+                                    <m:Text text="{rfq>/Ekorg}"/>
+                                    <m:Label text="Company Code"/>
+                                    <m:Text text="{rfq>/Bukrs}"/>
+                                </form:content>
+                            </form:SimpleForm>
+                        </uxap:blocks>
+                    </uxap:ObjectPageSubSection>
+                </uxap:subSections>
+            </uxap:ObjectPageSection>
+            <!-- DELIVERY TERMS -->
+            <uxap:ObjectPageSection title="Delivery and Payment Terms">
+                <uxap:subSections>
+                    <uxap:ObjectPageSubSection>
+                        <uxap:blocks>
+                            <m:Text text="Delivery terms here..."/>
+                        </uxap:blocks>
+                    </uxap:ObjectPageSubSection>
+                </uxap:subSections>
+            </uxap:ObjectPageSection>
+            <!-- ITEMS TABLE -->
+            <uxap:ObjectPageSection title="Items">
+                <uxap:subSections>
+                    <uxap:ObjectPageSubSection>
+                        <uxap:blocks>
+                            <m:Table items="{rfq>/Items}">
+                                <m:columns>
+                                    <m:Column>
+                                        <m:Text text="Item"/>
+                                    </m:Column>
+                                    <m:Column>
+                                        <m:Text text="Material"/>
+                                    </m:Column>
+                                    <m:Column>
+                                        <m:Text text="Quantity"/>
+                                    </m:Column>
+                                </m:columns>
+                                <m:ColumnListItem>
+                                    <m:cells>
+                                        <m:Text text="{rfq>Ebelp}"/>
+                                        <m:Text text="{rfq>Matnr}"/>
+                                        <m:Text text="{rfq>Menge}"/>
+                                    </m:cells>
+                                </m:ColumnListItem>
+                            </m:Table>
+                        </uxap:blocks>
+                    </uxap:ObjectPageSubSection>
+                </uxap:subSections>
+            </uxap:ObjectPageSection>
+            <!-- NOTES -->
+            <uxap:ObjectPageSection title="Notes">
+                <uxap:subSections>
+                    <uxap:ObjectPageSubSection>
+                        <uxap:blocks>
+                            <m:Text text="{rfq>/Note}"/>
+                        </uxap:blocks>
+                    </uxap:ObjectPageSubSection>
+                </uxap:subSections>
+            </uxap:ObjectPageSection>
+        </uxap:sections>
+    </uxap:ObjectPageLayout>
 </mvc:View>

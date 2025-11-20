@@ -625,6 +625,41 @@ sap.ui.define(
         });
       },
 
+      onRejectPO: function () {
+        const oPO = this.getView().getModel("detailPO").getData();
+        const sEbeln = String(oPO.Ebeln).padStart(10, "0");
+
+        MessageBox.confirm(`Reject PO ${sEbeln}?`, {
+          onClose: (sAction) => {
+            if (sAction !== MessageBox.Action.OK) return;
+
+            sap.ui.core.BusyIndicator.show(0);
+
+            const oModel = this.oODataModel;
+
+            const sPath = `/ProcurementHeaderSet(Ebeln='${sEbeln}')`;
+
+            const oPayload = {
+              Ebeln: sEbeln,
+              Frgke: "A", // ❌ Rejected
+            };
+
+            oModel.update(sPath, oPayload, {
+              success: () => {
+                sap.ui.core.BusyIndicator.hide();
+                MessageBox.success(`PO ${sEbeln} rejected!`);
+                this._refreshPOAfterAction(sEbeln);
+              },
+              error: (err) => {
+                sap.ui.core.BusyIndicator.hide();
+                console.error(err);
+                MessageBox.error("Failed to reject PO.");
+              },
+            });
+          },
+        });
+      },
+
       onSortCreatedDate: function () {
         const oTable = this.byId("poTable");
         const oBinding = oTable.getBinding("items");

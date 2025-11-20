@@ -26,7 +26,6 @@ sap.ui.define(
       _onObjectMatched: function (oEvent) {
         const sEbeln = oEvent.getParameter("arguments").Ebeln;
 
-        // Model chính cho View
         this.getView().setModel(new JSONModel({}), "rfq");
 
         this._loadHeader(sEbeln);
@@ -45,13 +44,19 @@ sap.ui.define(
       },
 
       _loadItems: function (sEbeln) {
+        // ✅ GỌI QUA NAVIGATION → Backend sẽ nhận được lt_source_keys với Ebeln
         this.getOwnerComponent()
           .getModel()
-          .read("/ProcurementHeaderSet('" + sEbeln + "')/to_Items", {
+          .read("/ProcurementHeaderSet('" + sEbeln + "')/NP_RFQDetails", {
             success: (oData) => {
+              console.log("✅ Items loaded via navigation:", oData.results);
               this.getView()
                 .getModel("rfq")
                 .setProperty("/Items", oData.results);
+            },
+            error: (oError) => {
+              console.error("❌ Error loading items:", oError);
+              this.getView().getModel("rfq").setProperty("/Items", []);
             },
           });
       },
