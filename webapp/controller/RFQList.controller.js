@@ -491,27 +491,11 @@ sap.ui.define(
       onItemPress: function (oEvent) {
         const oItem = oEvent.getParameter("listItem") || oEvent.getSource();
         const oContext = oItem.getBindingContext("rfq");
-        const oData = oContext.getObject();
+        const sEbeln = oContext.getProperty("Ebeln");
 
-        MessageBox.information(
-          `RFQ Number: ${oData.Ebeln}\n\n` +
-            `Description: ${oData.Txz01}\n` +
-            `Status: ${this.formatter.statusText(oData.Statu)}\n` +
-            `Target Value: ${this.formatter.numberFormat(oData.Ktwrt)} ${
-              oData.Waers
-            }\n` +
-            `Quotation Deadline: ${this.formatter.dateFormat(oData.Angdt)}\n` +
-            `Created On: ${this.formatter.dateFormat(oData.Aedat)} by ${
-              oData.Ernam
-            }\n\n` +
-            `Company: ${this.formatter.companyCodeText(oData.Bukrs)}\n` +
-            `Purchasing Org: ${this.formatter.purchOrgText(oData.Ekorg)}\n` +
-            `Purchasing Group: ${this.formatter.purchGroupText(oData.Ekgrp)}`,
-          {
-            title: "RFQ Details",
-            actions: [MessageBox.Action.CLOSE],
-          }
-        );
+        this.getOwnerComponent()
+          .getRouter()
+          .navTo("RFQDetail", { Ebeln: sEbeln });
       },
 
       // ========= RFQ PRESS (Link) =========

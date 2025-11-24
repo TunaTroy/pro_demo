@@ -139,8 +139,27 @@
                     <Text text="Status:"/>
                     <ObjectStatus text="{path:'detailPO>Frgke', formatter:'.formatter.formatReleaseStatusText'}" state="{path:'detailPO>Frgke', formatter:'.formatter.formatReleaseStatusState'}" icon="{path:'detailPO>Frgke', formatter:'.formatter.formatReleaseStatusIcon'}" class="sapUiTinyMarginBegin"/>
                   </HBox>
+<HBox class="sapUiTinyMarginTop" justifyContent="End">
+    <Button id="btnApprovePO" 
+            text="Approve PO" 
+            icon="sap-icon://accept" 
+            type="Emphasized"
+            press=".onApprovePO"/>
+
+        <Button id="btnRejectPO"
+            text="Reject PO"
+            icon="sap-icon://decline"
+            type="Reject"
+            press=".onRejectPO"
+            class="sapUiTinyMarginEnd"/>
+</HBox>
+                    
                 </VBox>
+                  
+
               </Panel>
+              
+
               <!-- ===== ITEMS TABLE ===== -->
               <Panel id="panelPOItems" headerText="📦 Items" class="sapUiNoContentPadding sapUiResponsiveContentPadding sapUiSizeCompact" width="100%">
                 <Table id="tblPOItems" mode="SingleSelectMaster" selectionChange="onItemPress" items="{detailPO>/Items}" class="sapUiSizeCompact" width="100%">
