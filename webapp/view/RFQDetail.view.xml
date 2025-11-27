@@ -1,138 +1,219 @@
 <mvc:View
-  controllerName="demodashboard.controller.RFQDetail"
-  xmlns:mvc="sap.ui.core.mvc"
-  xmlns:uxap="sap.uxap"
-  xmlns:m="sap.m"
-  xmlns:form="sap.ui.layout.form"
-  xmlns:l="sap.ui.layout"
-  displayBlock="true">
-    <!-- =================== OBJECT PAGE ==================== -->
-    <uxap:ObjectPageLayout
-      id="rfqDetailPage"
-      showTitleInHeaderContent="false"
-      useIconTabBar="false"
-      alwaysShowContentHeader="true"
-      upperCaseAnchorBar="false"
-      showHeaderContent="true"
-      toggleHeaderOnTitleClick="false">
-        <!-- =================== HEADER TITLE (SIMPLE & ALWAYS VISIBLE) ==================== -->
-        <uxap:headerTitle>
-            <uxap:ObjectPageHeader
-          objectTitle="{rfq>/RfqDesc}"
-          objectSubtitle="{rfq>/Ebeln}"
-          isObjectTitleAlwaysVisible="true"
-          isObjectSubtitleAlwaysVisible="true">
-                <uxap:actions>
-                    <m:OverflowToolbarButton text="Edit" icon="sap-icon://edit" type="Emphasized"/>
-                </uxap:actions>
-            </uxap:ObjectPageHeader>
-        </uxap:headerTitle>
-        <!-- =================== HEADER CONTENT (ALWAYS EXPANDED) ==================== -->
-        <uxap:headerContent>
-            <m:HBox width="100%" alignItems="Center" justifyContent="Start" class="sapUiMediumMargin">
-                <!-- LEFT AVATAR / IMAGE -->
-                <m:VBox width="120px">
-                    <m:Image src="images/user.png" width="100px" height="100px"/>
-                </m:VBox>
-                <!-- RIGHT INFORMATION AREA -->
-                <m:FlexBox wrap="Wrap" width="100%" justifyContent="SpaceBetween">
-                    <!-- COLUMN 1 -->
-                    <m:VBox class="sapUiSmallMargin">
-                        <m:ObjectStatus title="Created By" text="{rfq>/Ernam}"/>
-                        <m:ObjectStatus title="Created On" text="{ path: 'rfq>/Aedat', formatter: '.formatter.formatDate' }"/>
-                        <m:ObjectStatus title="Purchasing Group" text="{rfq>/Ekgrp}"/>
-                        <m:ObjectStatus title="Purchasing Org." text="{rfq>/Ekorg}"/>
-                    </m:VBox>
-                    <!-- COLUMN 2 -->
-                    <m:VBox class="sapUiSmallMargin">
-                        <m:ObjectStatus title="Status" text="{rfq>/Statu}"/>
-                        <m:ObjectStatus title="Target Value" text="{rfq>/Ktwrt} {rfq>/Waers}"/>
-                        <m:ObjectStatus title="Quotation Deadline" text="{ path: 'rfq>/Angdt', formatter: '.formatter.formatDate' }"/>
-                        <m:ObjectStatus title="Company Code" text="{rfq>/Bukrs}"/>
-                    </m:VBox>
-                    <!-- COLUMN 3 -->
-                    <m:VBox class="sapUiSmallMargin">
-                        <m:ObjectStatus title="Language" text="{rfq>/Spras}"/>
-                        <m:ObjectStatus title="Payment Terms" text="{rfq>/Zterm}"/>
-                        <m:ObjectStatus title="Quotation" text="{rfq>/Angnr}"/>
-                    </m:VBox>
-                </m:FlexBox>
-            </m:HBox>
-        </uxap:headerContent>
-        <!-- =================== ALL SECTIONS SHOWN AT ONCE ==================== -->
-        <uxap:sections>
-            <!-- GENERAL INFORMATION -->
-            <uxap:ObjectPageSection title="General Information">
-                <uxap:subSections>
-                    <uxap:ObjectPageSubSection>
-                        <uxap:blocks>
-                            <form:SimpleForm editable="false" layout="ResponsiveGridLayout">
-                                <form:content>
-                                    <m:Label text="RFQ Number"/>
-                                    <m:Text text="{rfq>/Ebeln}"/>
-                                    <m:Label text="Description"/>
-                                    <m:Text text="{rfq>/RfqDesc}"/>
-                                    <m:Label text="Purchasing Group"/>
-                                    <m:Text text="{rfq>/Ekgrp}"/>
-                                    <m:Label text="Purchasing Org."/>
-                                    <m:Text text="{rfq>/Ekorg}"/>
-                                    <m:Label text="Company Code"/>
-                                    <m:Text text="{rfq>/Bukrs}"/>
-                                </form:content>
-                            </form:SimpleForm>
-                        </uxap:blocks>
-                    </uxap:ObjectPageSubSection>
-                </uxap:subSections>
-            </uxap:ObjectPageSection>
-            <!-- DELIVERY TERMS -->
-            <uxap:ObjectPageSection title="Delivery and Payment Terms">
-                <uxap:subSections>
-                    <uxap:ObjectPageSubSection>
-                        <uxap:blocks>
-                            <m:Text text="Delivery terms here..."/>
-                        </uxap:blocks>
-                    </uxap:ObjectPageSubSection>
-                </uxap:subSections>
-            </uxap:ObjectPageSection>
-            <!-- ITEMS TABLE -->
-            <uxap:ObjectPageSection title="Items">
-                <uxap:subSections>
-                    <uxap:ObjectPageSubSection>
-                        <uxap:blocks>
-                            <m:Table items="{rfq>/Items}">
-                                <m:columns>
-                                    <m:Column>
-                                        <m:Text text="Item"/>
-                                    </m:Column>
-                                    <m:Column>
-                                        <m:Text text="Material"/>
-                                    </m:Column>
-                                    <m:Column>
-                                        <m:Text text="Quantity"/>
-                                    </m:Column>
-                                </m:columns>
-                                <m:ColumnListItem>
-                                    <m:cells>
-                                        <m:Text text="{rfq>Ebelp}"/>
-                                        <m:Text text="{rfq>Matnr}"/>
-                                        <m:Text text="{rfq>Menge}"/>
-                                    </m:cells>
-                                </m:ColumnListItem>
-                            </m:Table>
-                        </uxap:blocks>
-                    </uxap:ObjectPageSubSection>
-                </uxap:subSections>
-            </uxap:ObjectPageSection>
-            <!-- NOTES -->
-            <uxap:ObjectPageSection title="Notes">
-                <uxap:subSections>
-                    <uxap:ObjectPageSubSection>
-                        <uxap:blocks>
-                            <m:Text text="{rfq>/Note}"/>
-                        </uxap:blocks>
-                    </uxap:ObjectPageSubSection>
-                </uxap:subSections>
-            </uxap:ObjectPageSection>
-        </uxap:sections>
-    </uxap:ObjectPageLayout>
+    controllerName="demodashboard.controller.RFQDetail"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:l="sap.ui.layout"
+    xmlns:form="sap.ui.layout.form"
+    displayBlock="true"
+>
+    <Page
+        id="rfqDetailPage"
+        title="📄 RFQ Detail"
+    >
+        <!-- ================================= -->
+        <!-- BACK BUTTON -->
+        <!-- ================================= -->
+        <headerContent>
+            <Button
+                icon="sap-icon://nav-back"
+                type="Transparent"
+                press=".onNavBack"
+            />
+        </headerContent>
+        <content>
+            <!-- ================================= -->
+            <!-- 1) HEADER RFQ (Avatar + RFQ info) -->
+            <!-- ================================= -->
+            <HBox
+                id="rfqHeaderBox"
+                class="customHeaderBox"
+                alignItems="Center"
+                justifyContent="SpaceBetween"
+            >
+                <!-- LEFT: Avatar -->
+                <VBox
+                    width="25%"
+                    alignItems="Center"
+                    class="headerImageContainer"
+                >
+                    <Image
+                        src="images/user.png"
+                        width="140px"
+                        height="140px"
+                        decorative="false"
+                        class="headerProfileImage"
+                    />
+                </VBox>
+                <!-- RIGHT: RFQ Information -->
+                <VBox
+                    width="75%"
+                    class="headerInfoContainer"
+                >
+                    <!-- DESCRIPTION (Txz01) -->
+                    <Text
+                        text="{rfq>/Txz01}"
+                        class="headerIntroText"
+                    />
+                    <!-- RFQ NUMBER (Value only) -->
+                    <Title
+                        text="{rfq>/Ebeln}"
+                        level="H2"
+                        class="headerTitleText"
+                    />
+                    <!-- STATUS USING SAME FORMATTER AS LIST -->
+                    <HBox
+                        alignItems="Center"
+                        class="headerItemBox"
+                    >
+                        <ObjectStatus
+                            text="{ path:'rfq>/Statu', formatter:'.formatter.statusText' }"
+                            state="{ path:'rfq>/Statu', formatter:'.formatter.statusState' }"
+                            inverted="false"
+                        />
+                    </HBox>
+                </VBox>
+            </HBox>
+            <!-- ================================= -->
+            <!-- GRID 2 COLUMN LAYOUT FOR SECTIONS -->
+            <!-- ================================= -->
+            <l:Grid
+                defaultSpan="L6 M12 S12"
+                hSpacing="2"
+                vSpacing="1"
+                class="sapUiMediumMarginBottom"
+            >
+<!-- ================================= -->
+<!-- 2) BASIC DATA PANEL -->
+<!-- ================================= -->
+<Panel
+    headerText="Basic Data"
+    expandable="false"
+    class="sapUiNoContentPadding sapUiSmallMarginBottom fioriSectionBox"
+>
+    <HBox justifyContent="SpaceBetween" class="sapUiSmallMargin">
+
+        <!-- LEFT COLUMN -->
+        <VBox width="48%">
+
+            <Label text="Created By:" />
+            <Text text="{rfq>/Ernam}" />
+
+            <Label text="Created On:" />
+            <Text
+                text="{ path:'rfq>/Aedat', formatter:'.formatter.dateFormat' }"
+            />
+
+            <Label text="Purchasing Group:" />
+            <Text
+                text="{ path:'rfq>/Ekgrp', formatter:'.formatter.purchGroupText' }"
+            />
+
+            <!-- RFQ Type (BSART) -->
+            <Label text="RFQ Type:" />
+            <Text 
+                text="{ path:'rfq>/Bsart', formatter:'.formatter.rfqTypeText' }"
+            />
+        </VBox>
+
+        <!-- RIGHT COLUMN -->
+        <VBox width="48%">
+
+            <Label text="Purchasing Org:" />
+            <Text 
+                text="{ path:'rfq>/Ekorg', formatter:'.formatter.purchOrgText' }"
+            />
+
+            <Label text="Company Code:" />
+            <Text 
+                text="{ path:'rfq>/Bukrs', formatter:'.formatter.companyCodeText' }"
+            />
+
+            <Label text="Language:" />
+            <Text text="{rfq>/Spras}" />
+
+            <!-- Quotation Deadline -->
+            <Label text="Quotation Deadline:" />
+            <Text
+                text="{ path:'rfq>/Angdt', formatter:'.formatter.dateFormat' }"
+            />
+
+            <Label text="Target Value:" />
+            <ObjectNumber
+                number="{ path:'rfq>/Ktwrt', formatter:'.formatter.numberFormat' }"
+                unit="{rfq>/Waers}"
+                emphasized="false"
+            />
+        </VBox>
+
+    </HBox>
+</Panel>
+
+
+                <!-- ================================= -->
+                <!-- 3) ITEMS SECTION -->
+                <!-- ================================= -->
+                <Panel
+                    headerText="Items"
+                    expandable="false"
+                    class="sapUiNoContentPadding sapUiSmallMarginBottom fioriSectionBox"
+                >
+                    <Table items="{rfq>/Items}">
+                        <columns>
+                            <Column>
+                                <Text text="Item" />
+                            </Column>
+                            <Column>
+                                <Text text="Material" />
+                            </Column>
+                            <Column>
+                                <Text text="Quantity" />
+                            </Column>
+                        </columns>
+                        <ColumnListItem>
+                            <cells>
+                                <Text text="{rfq>Ebelp}" />
+                                <Text text="{rfq>Matnr}" />
+                                <Text text="{rfq>Menge}" />
+                            </cells>
+                        </ColumnListItem>
+                    </Table>
+                </Panel>
+                <!-- ================================= -->
+                <!-- 4) VENDOR SECTION -->
+                <!-- ================================= -->
+                <Panel
+                    headerText="Vendor"
+                    expandable="false"
+                    class="sapUiNoContentPadding sapUiSmallMarginBottom fioriSectionBox"
+                >
+                    <VBox class="sapUiSmallMargin">
+                        <Label text="Vendor (Lifnr):" />
+                        <Text text="{rfq>/Lifnr}" />
+                    </VBox>
+                </Panel>
+            </l:Grid>
+            <!-- ================================= -->
+            <!-- 5) NOTES SECTION (FULL WIDTH + ALIGN LEFT/RIGHT LIKE GRID) -->
+            <!-- ================================= -->
+            <l:Grid
+                defaultSpan="L12 M12 S12"
+                class="sapUiSmallMarginTop sapUiMediumMarginBottom sapUiMediumMarginBegin sapUiMediumMarginEnd"
+            >
+                <Panel
+                    headerText="Notes"
+                    expandable="false"
+                    class="sapUiNoContentPadding sapUiSmallMarginBottom fioriSectionBox"
+                >
+                    <VBox class="sapUiSmallMargin">
+                        <TextArea
+                            rows="5"
+                            editable="false"
+                            width="100%"
+                            value="{rfq>/Note}"
+                        />
+                    </VBox>
+                </Panel>
+            </l:Grid>
+        </content>
+    </Page>
 </mvc:View>
