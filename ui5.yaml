@@ -1,9 +1,20 @@
-
 # yaml-language-server: $schema=https://sap.github.io/ui5-tooling/schema/ui5.yaml.json
 specVersion: "3.1"
 metadata:
   name: demodashboard
 type: application
+
+framework:
+  name: SAPUI5
+  version: 1.120.0
+  libraries:
+    - name: sap.m
+    - name: sap.ui.core
+    - name: sap.ui.layout
+    - name: sap.f
+    - name: sap.ushell
+    - name: sap.ui.unified
+    - name: sap.tnt
 
 server:
   customMiddleware:
@@ -32,4 +43,4 @@ server:
       afterMiddleware: fiori-tools-appreload
       configuration:
         flp:
-          theme: sap_horizon
+          theme: sap_horizons

@@ -44,7 +44,7 @@ sap.ui.define(
       },
 
       _loadItems: function (sEbeln) {
-        // ✅ GỌI QUA NAVIGATION → Backend sẽ nhận được lt_source_keys với Ebeln
+       
         this.getOwnerComponent()
           .getModel()
           .read("/ProcurementHeaderSet('" + sEbeln + "')/NP_RFQDetails", {

@@ -885,7 +885,7 @@ sap.ui.define(
             }
 
             // Assign index (STT) after sorting and slice top N if needed
-            const aTop = aUsers.slice(0, 30).map((item, idx) => {
+            const aTop = aUsers.slice(0, 40).map((item, idx) => {
               return Object.assign({}, item, {
                 index: idx + 1,
                 // format fields for display

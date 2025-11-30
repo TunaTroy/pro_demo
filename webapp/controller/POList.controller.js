@@ -153,7 +153,7 @@ sap.ui.define(
       // ITEM CLICK (to detail screen)
       // ============================
       onItemPress: function (oEvent) {
-        // 🔥 Hide PO detail panel so that the list returns to 100%
+    
         this.byId("poDetailPanel").setVisible(false);
         this.byId("poTablePane").getLayoutData().setSize("100%");
 
@@ -194,7 +194,6 @@ sap.ui.define(
           aFilters.push(new sap.ui.model.Filter(aPOFilters, false)); // OR
         }
 
-        // ====== ⛔ 2. AUTO TOKEN FOR ORDER TYPE (Bsart) ======
         const oBsart = this.byId("orderTypeFilter");
         const sBsartTyped = oBsart.getValue().trim();
         if (sBsartTyped) {
@@ -217,7 +216,6 @@ sap.ui.define(
           aFilters.push(new sap.ui.model.Filter(aBsartFilters, false));
         }
 
-        // ====== ⛔ 3. AUTO TOKEN FOR PURCH. GROUP (Ekgrp) ======
         const oEkgrp = this.byId("ekgrpFilterd");
         const sEkgrpTyped = oEkgrp.getValue().trim();
         if (sEkgrpTyped) {
@@ -240,7 +238,6 @@ sap.ui.define(
           aFilters.push(new sap.ui.model.Filter(aEkgrpFilters, false));
         }
 
-        // ====== ⛔ 4. AUTO TOKEN FOR CREATED BY (Ernam) ======
         const oErnam = this.byId("humanFilter");
         const sErnamTyped = oErnam.getValue().trim();
         if (sErnamTyped) {

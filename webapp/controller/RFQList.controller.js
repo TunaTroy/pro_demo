@@ -647,7 +647,7 @@ sap.ui.define(
           { key: "Statu", text: "Status", selected: false },
         ];
       },
-
+ 
       // ========= Confirm View Settings =========
       onConfirmViewSettings: function (oEvent) {
         const mParams = oEvent.getParameters();
