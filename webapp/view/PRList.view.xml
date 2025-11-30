@@ -4,84 +4,98 @@
   xmlns="sap.m"
   xmlns:l="sap.ui.layout"
   xmlns:core="sap.ui.core"
+  xmlns:fb="sap.ui.comp.filterbar"
+  xmlns:table="sap.ui.table"
   displayBlock="true">
-
   <Page id="pagePRList" title="📄 Purchase Requisition List">
-
     <!-- ===== HEADER BUTTONS ===== -->
     <headerContent>
-      <HBox id="headerButtons" alignItems="Center" justifyContent="End" class="sapUiTinyMarginEnd sapUiTinyMarginTop">
-        <Button id="btnHome" icon="sap-icon://home" text="Home" press="onNavHome" type="Transparent"/>
-        <Button id="btnReload" icon="sap-icon://refresh" text="Reload" press="onGoFilter" type="Transparent"/>
-        <Button id="btnExportExcel" icon="sap-icon://excel-attachment" text="Export Excel" press="onExportExcel" type="Transparent"/>
+      <HBox alignItems="Center" justifyContent="End" class="sapUiTinyMarginEnd sapUiTinyMarginTop">
+        <Button icon="sap-icon://home" text="Home" press="onNavHome" type="Transparent"/>
+        <Button icon="sap-icon://refresh" text="Reload" press="onGoFilter" type="Transparent"/>
+        <Button icon="sap-icon://excel-attachment" text="Export Excel" press="onExportExcel" type="Transparent"/>
       </HBox>
     </headerContent>
-
     <content>
-
-      <!-- 🔍 FILTER PANEL -->
-      <Panel
-        id="panelFilter"
-        headerText="Filter Criteria"
-        expandable="true"
-        class="sapUiNoContentPadding sapUiResponsiveContentPadding sapUiSizeCompact filterPanel">
-
-        <l:Grid
-          id="gridFilter"
-          defaultSpan="L2 M4 S6"
-          hSpacing="1"
-          vSpacing="0.5"
-          class="sapUiTinyMarginBottom">
-
-          <VBox id="vboxBanfn" width="12rem">
-            <Label id="lblBanfn" text="Purchase Req."/>
-            <Input id="inpBanfn" placeholder="Select PR No." showValueHelp="true" valueHelpRequest="onValueHelpBanfn"/>
-          </VBox>
-
-          <VBox id="vboxBsart" width="12rem">
-            <Label id="lblBsart" text="Document Type"/>
-            <Input id="inpBsart" placeholder="Select Doc Type" showValueHelp="true" valueHelpRequest="onValueHelpBsart"/>
-          </VBox>
-
-          <VBox id="vboxEkgrp" width="12rem">
-            <Label id="lblEkgrp" text="Purchasing Group"/>
-            <Input id="inpEkgrp" placeholder="Select Group" showValueHelp="true" valueHelpRequest="onValueHelpEkgrp"/>
-          </VBox>
-
-          <VBox id="vboxErnam" width="12rem">
-            <Label id="lblErnam" text="Created By"/>
-            <Input id="inpErnam" placeholder="Select User" showValueHelp="true" valueHelpRequest="onValueHelpErnam"/>
-          </VBox>
-
-          <VBox id="vboxDateRange" width="14rem">
-            <Label id="lblDateRange" text="Requisition Date Range"/>
-            <DateRangeSelection
-              id="inpDateRange"
-              delimiter=" to "
-              displayFormat="dd/MM/yyyy"
-              valueFormat="yyyy-MM-dd"
-              placeholder="Select date range"
-              width="100%"/>
-          </VBox>
-
-          <HBox id="hboxFilterButtons" class="customMarginTop">
-            <Button id="btnGo" text="Go" type="Emphasized" press="onGoFilter"/>
-            <Button id="btnClear" text="Clear" icon="sap-icon://refresh" press="onClearFilter" type="Transparent"/>
-          </HBox>
-
-        </l:Grid>
-      </Panel>
-
-      <!-- 📋 TABLE + DETAIL -->
+      <!-- ======== FILTER BAR (giống RFQList) ======== -->
+      <fb:FilterBar
+        id="prFilterBar"
+        useToolbar="false"
+        search=".onGoFilter"
+        showRestoreButton="true"
+        showClearButton="true"
+        showGoOnFB="true"
+        filterBarExpanded="true">
+        <fb:filterGroupItems>
+          <!-- PR Number -->
+          <fb:FilterGroupItem name="Banfn" label="Purchase Req." groupName="PR" visibleInFilterBar="true">
+            <fb:control>
+              <MultiInput id="inpBanfn"
+                  showValueHelp="true"
+                  valueHelpRequest=".onValueHelpBanfn"
+                  placeholder="Enter PR Number"/>
+            </fb:control>
+          </fb:FilterGroupItem>
+          <!-- Document Type -->
+          <fb:FilterGroupItem name="Bsart" label="Document Type" groupName="PR" visibleInFilterBar="true">
+            <fb:control>
+              <MultiInput id="inpBsart"
+                  showValueHelp="true"
+                  valueHelpRequest=".onValueHelpBsart"
+                  placeholder="Select Doc Type"/>
+            </fb:control>
+          </fb:FilterGroupItem>
+          <!-- Purchasing Group -->
+          <fb:FilterGroupItem name="Ekgrp" label="Purchasing Group" groupName="PR" visibleInFilterBar="true">
+            <fb:control>
+              <MultiInput id="inpEkgrp"
+                  showValueHelp="true"
+                  valueHelpRequest=".onValueHelpEkgrp"
+                  placeholder="Select Group"/>
+            </fb:control>
+          </fb:FilterGroupItem>
+          <!-- Created By -->
+          <fb:FilterGroupItem name="Ernam" label="Created By" groupName="PR" visibleInFilterBar="true">
+            <fb:control>
+              <MultiInput id="inpErnam"
+                  showValueHelp="true"
+                  valueHelpRequest=".onValueHelpErnam"
+                  placeholder="Select User"/>
+            </fb:control>
+          </fb:FilterGroupItem>
+          <!-- Date Range -->
+          <fb:FilterGroupItem name="Badat" label="Requisition Date Range" groupName="PR" visibleInFilterBar="true">
+            <fb:control>
+              <DateRangeSelection id="inpDateRange"
+                          delimiter=" to "
+                          displayFormat="dd.MM.yyyy"
+                          valueFormat="yyyy-MM-dd"
+                          placeholder="Select date range"/>
+            </fb:control>
+          </fb:FilterGroupItem>
+          <!-- Status -->
+          <fb:FilterGroupItem name="Frgkz" label="Status" groupName="PR" visibleInFilterBar="true">
+            <fb:control>
+              <Select id="inpStatus">
+                <items>
+                  <core:Item key="" text="All"/>
+                  <core:Item key="R" text="Approved"/>
+                  <core:Item key="C" text="Pending"/>
+                  <core:Item key="X" text="Rejected"/>
+                </items>
+              </Select>
+            </fb:control>
+          </fb:FilterGroupItem>
+        </fb:filterGroupItems>
+      </fb:FilterBar>
+      <!-- ======== MAIN LAYOUT (table + detail) ======== -->
       <l:ResponsiveSplitter id="splitPR" defaultPane="paneMaster">
         <l:PaneContainer id="paneContainerMain" orientation="Horizontal">
-
           <!-- LEFT TABLE -->
           <l:SplitPane id="paneMaster">
             <l:layoutData>
               <l:SplitterLayoutData id="layoutMaster" size="100%" resizable="true"/>
             </l:layoutData>
-
             <Table
               id="tblPRList"
               items="{ path: '/groups' }"
@@ -92,36 +106,46 @@
               growingThreshold="100"
               growingScrollToLoad="true"
               width="100%">
-
               <noData>
                 <IllustratedMessage
-                  id="msgNoData"
                   illustrationType="sapIllus-NoData"
                   title="No matching Purchase Requisitions found"
                   description="Try adjusting your filters or clear all filters to see more results."/>
               </noData>
-
               <columns>
-                <Column id="colBanfn"><Text id="txtColBanfn" text="Purchase Requisition"/></Column>
-                <Column id="colBsart"><Text id="txtColBsart" text="Document Type"/></Column>
-                <Column id="colEkgrp"><Text id="txtColEkgrp" text="Purchasing Group"/></Column>
-                <Column id="colErnam"><Text id="txtColErnam" text="Created By"/></Column>
-                <Column id="colBadat"><Text id="txtColBadat" text="Requisition Date"/></Column>
-                <Column id="colItemCount"><Text id="txtColItemCount" text="Item Count"/></Column>
-                <Column id="colStatus"><Text id="txtColStatus" text="Status"/></Column>
+                <Column>
+                  <Text text="Purchase Requisition"/>
+                </Column>
+                <Column>
+                  <Text text="Document Type"/>
+                </Column>
+                <Column>
+                  <Text text="Purchasing Group"/>
+                </Column>
+                <Column>
+                  <Text text="Created By"/>
+                </Column>
+                <Column>
+                  <Text text="Requisition Date"/>
+                </Column>
+                <Column>
+                  <Text text="Item Count"/>
+                </Column>
+                <Column>
+                  <Text text="Status"/>
+                </Column>
               </columns>
-
               <items>
-                <ColumnListItem id="listItemPR" type="Active" press="onSelectPR" vAlign="Top">
+                <ColumnListItem type="Active" press="onSelectPR" vAlign="Top">
                   <cells>
-                    <Link id="lnkBanfn" text="{path:'Banfn', formatter:'.formatter.padBanfn'}"/>
-                    <Text id="txtBsart" text="{path:'Bsart', formatter:'.formatter.docTypeText'}"/>
-                    <Text id="txtEkgrp" text="{Ekgrp}"/>
-                    <Text id="txtErnam" text="{Ernam}"/>
-                    <Text id="txtBadat" text="{path:'Badat', formatter:'.formatter.dateFormat'}"/>
-                    <Text id="txtItemCount" text="{ItemCount}"/>
+                    <!-- hiển thị trực tiếp Banfn, không pad 10 ký tự -->
+                    <Link text="{Banfn}"/>
+                    <Text text="{path:'Bsart', formatter:'.formatter.docTypeText'}"/>
+                    <Text text="{Ekgrp}"/>
+                    <Text text="{Ernam}"/>
+                    <Text text="{path:'Badat', formatter:'.formatter.dateFormat'}"/>
+                    <Text text="{ItemCount}"/>
                     <ObjectStatus
-                      id="statusFrgkz"
                       text="{path:'Frgkz', formatter:'.formatter.statusText'}"
                       state="{path:'Frgkz', formatter:'.formatter.statusState'}"/>
                   </cells>
@@ -129,33 +153,31 @@
               </items>
             </Table>
           </l:SplitPane>
-
           <!-- RIGHT DETAIL PANEL -->
           <l:SplitPane id="paneDetail">
             <VBox
               id="detailPanel"
               visible="false"
               class="sapUiMediumMargin sapUiSizeCompact sapUiNoContentPadding">
-
+              <!-- HEADER -->
               <Panel
                 id="panelDetailHeader"
                 class="sapUiNoContentPadding sapUiResponsiveContentPadding sapUiSizeCompact sapUiMediumMarginBottom"
                 width="100%">
-
-                <VBox id="vboxDetailHeader" class="sapUiSmallMargin sapUiSizeCompact">
-                  <HBox id="hboxDetailHeaderTop" justifyContent="SpaceBetween" alignItems="Center" class="sapUiTinyMarginBottom">
-                    <Text id="txtBanfnDetail" text="{path:'Banfn', formatter:'.formatter.padBanfn'}"/>
+                <VBox class="sapUiSmallMargin sapUiSizeCompact">
+                  <HBox justifyContent="SpaceBetween" alignItems="Center" class="sapUiTinyMarginBottom">
+                    <!-- Banfn raw -->
+                    <Text id="txtBanfnDetail" text="{Banfn}"/>
                     <Button id="btnCloseDetail" icon="sap-icon://decline" press="onCloseDetail" type="Transparent"/>
                   </HBox>
-
                   <Text id="txtBsartDetail" text="{Bsart}" class="prHeaderSubTitle"/>
-
-                  <HBox id="hboxDetailMeta" class="sapUiTinyMarginTop" wrap="Wrap">
-                    <Text id="txtDetailMeta" text="{= 'Group: ' + ${Ekgrp} + ' • Created By: ' + ${Ernam} + ' • Req. Date: ' + ${path:'Badat', formatter:'.formatter.dateFormat'} }"/>
+                  <HBox class="sapUiTinyMarginTop" wrap="Wrap">
+                    <Text
+                      id="txtDetailMeta"
+                      text="{= 'Group: ' + ${Ekgrp} + ' • Created By: ' + ${Ernam} + ' • Req. Date: ' + ${path:'Badat', formatter:'.formatter.dateFormat'} }"/>
                   </HBox>
-
-                  <HBox id="hboxDetailStatus" class="sapUiTinyMarginTop" alignItems="Center">
-                    <Text id="lblStatus" text="Status:"/>
+                  <HBox class="sapUiTinyMarginTop" alignItems="Center">
+                    <Text text="Status:"/>
                     <ObjectStatus
                       id="statusDetail"
                       text="{path:'Frgkz', formatter:'.formatter.statusText'}"
@@ -164,18 +186,17 @@
                   </HBox>
                 </VBox>
               </Panel>
-
-              <HBox id="hboxActionButtons" class="sapUiTinyMarginBottom" justifyContent="End">
-                <Button id="btnApproveAll" icon="sap-icon://accept" text="Approve All Items" type="Emphasized" press="onApprovePR"/>
-                <Button id="btnRejectAll" icon="sap-icon://decline" text="Reject All Items" type="Reject" press="onRejectPR" class="sapUiTinyMarginBegin"/>
+              <!-- ACTION BUTTONS -->
+              <HBox class="sapUiTinyMarginBottom" justifyContent="End">
+                <Button icon="sap-icon://accept" text="Approve All Items" type="Emphasized" press="onApprovePR"/>
+                <Button icon="sap-icon://decline" text="Reject All Items" type="Reject" press="onRejectPR" class="sapUiTinyMarginBegin"/>
               </HBox>
-
+              <!-- ITEMS TABLE -->
               <Panel
                 id="panelItems"
                 headerText="📦 Items"
                 class="sapUiNoContentPadding sapUiResponsiveContentPadding sapUiSizeCompact"
                 width="100%">
-
                 <Table
                   id="tblPRItems"
                   mode="SingleSelectMaster"
@@ -183,24 +204,31 @@
                   items="{path:'/Items'}"
                   class="sapUiSizeCompact"
                   width="100%">
-
                   <columns>
-                    <Column id="colItem"><Text id="txtColItem" text="Item"/></Column>
-                    <Column id="colMaterial"><Text id="txtColMaterial" text="Material"/></Column>
-                    <Column id="colQuantity"><Text id="txtColQuantity" text="Quantity"/></Column>
-                    <Column id="colReqDate"><Text id="txtColReqDate" text="Requisition Date"/></Column>
-                    <Column id="colItemStatus"><Text id="txtColItemStatus" text="Status"/></Column>
+                    <Column>
+                      <Text text="Item"/>
+                    </Column>
+                    <Column>
+                      <Text text="Material"/>
+                    </Column>
+                    <Column>
+                      <Text text="Quantity"/>
+                    </Column>
+                    <Column>
+                      <Text text="Requisition Date"/>
+                    </Column>
+                    <Column>
+                      <Text text="Status"/>
+                    </Column>
                   </columns>
-
                   <items>
-                    <ColumnListItem id="listItemPRItem">
+                    <ColumnListItem>
                       <cells>
-                        <Text id="txtBnfpo" text="{Bnfpo}"/>
-                        <Text id="txtTxz01" text="{Txz01}"/>
-                        <Text id="txtMenge" text="{path:'Menge', formatter:'.formatter.quantityFormat'}" textAlign="End"/>
-                        <Text id="txtBadatItem" text="{path:'Badat', formatter:'.formatter.dateFormat'}"/>
+                        <Text text="{Bnfpo}"/>
+                        <Text text="{Txz01}"/>
+                        <Text text="{path:'Menge', formatter:'.formatter.quantityFormat'}" textAlign="End"/>
+                        <Text text="{path:'Badat', formatter:'.formatter.dateFormat'}"/>
                         <ObjectStatus
-                          id="statusFrgkzItem"
                           text="{path:'Frgkz', formatter:'.formatter.statusText'}"
                           state="{path:'Frgkz', formatter:'.formatter.statusState'}"/>
                       </cells>
@@ -208,21 +236,19 @@
                   </items>
                 </Table>
               </Panel>
-
+              <!-- NOTE PANEL -->
               <Panel
                 id="panelNote"
                 headerText="📝 Note"
                 class="sapUiNoContentPadding sapUiResponsiveContentPadding sapUiSizeCompact sapUiMediumMarginTop prHeaderCard"
                 width="100%">
-
-                <VBox id="vboxNote" class="sapUiSmallMargin sapUiSizeCompact">
+                <VBox class="sapUiSmallMargin sapUiSizeCompact">
                   <Text
                     id="txtPRNote"
                     text="{noteModel>/Note}"
                     wrapping="true"
                     visible="{= !${noteModel>/Editable} }"
                     class="sapUiTinyMarginTop sapUiSmallMarginBottom sapUiSmallPadding"/>
-
                   <TextArea
                     id="taPRNoteEdit"
                     value="{noteModel>/Note}"
@@ -231,8 +257,7 @@
                     visible="{noteModel>/Editable}"
                     placeholder="Enter note here..."
                     class="sapUiTinyMarginTop sapUiSmallMarginBottom sapUiSmallPadding"/>
-
-                  <HBox id="hboxNoteButtons" class="sapUiTinyMarginTop" justifyContent="End">
+                  <HBox class="sapUiTinyMarginTop" justifyContent="End">
                     <Button
                       id="btnEditNote"
                       text="Edit"
@@ -257,13 +282,10 @@
                   </HBox>
                 </VBox>
               </Panel>
-
             </VBox>
           </l:SplitPane>
-
         </l:PaneContainer>
       </l:ResponsiveSplitter>
-
     </content>
   </Page>
 </mvc:View>

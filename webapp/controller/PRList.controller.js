@@ -8,6 +8,8 @@ sap.ui.define(
     "sap/ui/model/json/JSONModel",
     "sap/ui/model/Filter",
     "sap/ui/model/FilterOperator",
+    "sap/ui/table/Table",
+    "sap/ui/table/Column",
   ],
   function (
     Controller,
@@ -17,7 +19,9 @@ sap.ui.define(
     Spreadsheet,
     JSONModel,
     Filter,
-    FilterOperator
+    FilterOperator,
+    Table,
+    Column
   ) {
     "use strict";
 
@@ -43,7 +47,7 @@ sap.ui.define(
           switch (s) {
             case "R":
               return "Success";
-            case "C":DateFormat
+            case "C":
               return "None";
             case "X":
               return "Error";
@@ -108,6 +112,82 @@ sap.ui.define(
         this._loadCaches();
       },
 
+      // ⭐ Sử dụng giống RFQList: sap.ui.table.Table + sap.ui.table.Column
+
+      _createSimpleValueHelp: function (oEvent, sTitle, sKey, aValues) {
+        const aRows = aValues.map((v) => {
+          const o = {};
+          o[sKey] = v;
+          return o;
+        });
+
+        const oRowsModel = new sap.ui.model.json.JSONModel({ rows: aRows });
+
+        const oTable = new sap.ui.table.Table({
+          visibleRowCount: 12,
+          selectionMode: "MultiToggle",
+          columns: [
+            new sap.ui.table.Column({
+              width: "180px",
+              label: new sap.m.Label({ text: sTitle }),
+              template: new sap.m.Text({ text: `{${sKey}}` }),
+            }),
+          ],
+        });
+
+        oTable.setModel(oRowsModel);
+        oTable.bindRows("/rows");
+
+        const oSearch = new sap.m.SearchField({
+          width: "100%",
+          placeholder: "Search...",
+          liveChange: function (e) {
+            const q = (e.getParameter("newValue") || "").toUpperCase();
+            const filtered = aRows.filter((r) =>
+              String(r[sKey]).toUpperCase().includes(q)
+            );
+            oRowsModel.setData({ rows: filtered });
+          },
+        });
+
+        const oFilterBar = new sap.ui.comp.filterbar.FilterBar({
+          advancedMode: false,
+          filterGroupItems: [],
+          basicSearch: oSearch,
+        });
+
+        const oMI = oEvent.getSource();
+
+        const oVH = new sap.ui.comp.valuehelpdialog.ValueHelpDialog({
+          title: sTitle,
+          key: sKey,
+          supportMultiselect: true,
+          supportRanges: false,
+          supportRangesOnly: false,
+
+          ok: function () {
+            const aIdx = oTable.getSelectedIndices();
+            const aSelected = aIdx.map(
+              (i) => oTable.getContextByIndex(i).getObject()[sKey]
+            );
+
+            oMI.removeAllTokens();
+            aSelected.forEach((v) =>
+              oMI.addToken(new sap.m.Token({ key: v, text: v }))
+            );
+
+            oVH.close();
+          },
+          cancel: function () {
+            oVH.close();
+          },
+        });
+
+        oVH.setFilterBar(oFilterBar);
+        oVH.setTable(oTable);
+        oVH.open();
+      },
+
       // =========================================================
       // FILTER + GROUP
       // =========================================================
@@ -115,120 +195,69 @@ sap.ui.define(
         const oView = this.getView();
         const oModel = oView.getModel();
         const oTable = oView.byId("tblPRList");
-
-        // Reset selectedKey nếu input rỗng
-        ["inpBanfn", "inpBsart", "inpEkgrp", "inpErnam"].forEach(function (id) {
-          const oInp = oView.byId(id);
-          if (oInp && !oInp.getValue().trim()) {
-            oInp.data("selectedKey", "");
-          }
-        });
-
-        // Hàm lấy key ưu tiên
-        const getKey = function (id) {
-          const oInp = oView.byId(id);
-          const key =
-            oInp && oInp.data("selectedKey")
-              ? oInp.data("selectedKey").trim()
-              : "";
-          return key && key !== "" ? key : oInp ? oInp.getValue().trim() : "";
-        };
-
-        const sBanfn = getKey("inpBanfn");
-        let sBsart = getKey("inpBsart");
-        const sEkgrp = getKey("inpEkgrp");
-        const sErnam = getKey("inpErnam");
-
-        // Lọc code Bsart trong ngoặc
-        if (sBsart && sBsart.includes("(")) {
-          const match = sBsart.match(/\(([^)]+)\)$/);
-          if (match && match[1]) {
-            sBsart = match[1];
-          }
-        }
-
-        const oDateRange = oView.byId("inpDateRange");
-        const dFrom = oDateRange ? oDateRange.getDateValue() : null;
-        const dTo = oDateRange ? oDateRange.getSecondDateValue() : null;
-
-        // Tạo filters
         const aFilters = [];
-        if (sBanfn) {
-          aFilters.push(new Filter("Banfn", FilterOperator.Contains, sBanfn));
+
+        function handleTokenInput(id, field) {
+          const oInput = oView.byId(id);
+          const typed = oInput.getValue().trim();
+          if (typed) {
+            oInput.addToken(new sap.m.Token({ key: typed, text: typed }));
+            oInput.setValue("");
+          }
+          const tokens = oInput
+            .getTokens()
+            .map((t) => new Filter(field, FilterOperator.EQ, t.getKey()));
+          if (tokens.length) aFilters.push(new Filter(tokens, false));
         }
-        if (sBsart) {
-          aFilters.push(new Filter("Bsart", FilterOperator.EQ, sBsart));
-        }
-        if (sEkgrp) {
-          aFilters.push(new Filter("Ekgrp", FilterOperator.Contains, sEkgrp));
-        }
-        if (sErnam) {
-          aFilters.push(
-            new Filter("Ernam", FilterOperator.EQ, sErnam.toUpperCase())
-          );
-        }
+
+        handleTokenInput("inpBanfn", "Banfn");
+        handleTokenInput("inpBsart", "Bsart");
+        handleTokenInput("inpEkgrp", "Ekgrp");
+        handleTokenInput("inpErnam", "Ernam");
+
+        const oDR = oView.byId("inpDateRange");
+        const dFrom = oDR.getDateValue();
+        const dTo = oDR.getSecondDateValue();
+
         if (dFrom && dTo) {
           aFilters.push(new Filter("Badat", FilterOperator.BT, dFrom, dTo));
-        } else if (dFrom) {
-          aFilters.push(new Filter("Badat", FilterOperator.GE, dFrom));
-        } else if (dTo) {
-          aFilters.push(new Filter("Badat", FilterOperator.LE, dTo));
         }
 
-        const bNoFilter =
-          !sBanfn && !sBsart && !sEkgrp && !sErnam && !dFrom && !dTo;
+        const sStatus = this.byId("inpStatus").getSelectedKey();
+        if (sStatus) {
+          aFilters.push(new Filter("Frgkz", FilterOperator.EQ, sStatus));
+        }
 
         sap.ui.core.BusyIndicator.show(0);
-        oModel.read("/PRsSet", {
-          filters: bNoFilter ? [] : aFilters,
-          urlParameters: { $top: 10000, $orderby: "Banfn asc" },
-          success: function (data) {
-            sap.ui.core.BusyIndicator.hide();
-            const all = data.results || [];
-            const groups = [];
 
-            all.forEach(function (row) {
-              let g = groups.find(function (gg) {
-                return gg.Banfn === row.Banfn;
-              });
+        oModel.read("/PRsSet", {
+          filters: aFilters,
+          urlParameters: { $top: 10000 },
+          success: (data) => {
+            sap.ui.core.BusyIndicator.hide();
+
+            const groups = [];
+            data.results.forEach((r) => {
+              let g = groups.find((e) => e.Banfn === r.Banfn);
               if (!g) {
                 g = {
-                  Banfn: row.Banfn,
-                  Bsart: row.Bsart,
-                  Ekgrp: row.Ekgrp,
-                  Ernam: row.Ernam,
-                  Badat: row.Badat,
-                  Frgkz: row.Frgkz,
-                  Items: [row],
+                  Banfn: r.Banfn,
+                  Bsart: r.Bsart,
+                  Ekgrp: r.Ekgrp,
+                  Ernam: r.Ernam,
+                  Badat: r.Badat,
+                  Frgkz: r.Frgkz,
+                  Items: [],
                 };
                 groups.push(g);
-              } else {
-                g.Items.push(row);
               }
+              g.Items.push(r);
             });
 
-            groups.forEach(function (g) {
-              g.ItemCount = g.Items.length;
-            });
+            groups.forEach((g) => (g.ItemCount = g.Items.length));
 
-            oTable.setModel(new JSONModel({ groups: groups }));
-            MessageToast.show(
-              bNoFilter
-                ? "📋 Loaded all " +
-                    groups.length +
-                    " PRs (" +
-                    all.length +
-                    " records)."
-                : "✅ Loaded " +
-                    groups.length +
-                    " filtered PRs (" +
-                    all.length +
-                    " records)."
-            );
-          },
-          error: function () {
-            sap.ui.core.BusyIndicator.hide();
-            MessageToast.show("❌ Error loading data from server.");
+            oTable.setModel(new JSONModel({ groups }));
+            MessageToast.show(`${groups.length} PR found`);
           },
         });
       },
@@ -400,7 +429,6 @@ sap.ui.define(
         oLayout.setSize("100%");
         this.byId("tblPRList").removeSelections();
       },
-
 
       // =========================================================
       // APPROVE ALL PENDING ITEMS
@@ -721,288 +749,67 @@ sap.ui.define(
       // =========================================================
       // VALUE HELP DIALOGS
       // =========================================================
-      onValueHelpBanfn: function () {
-        const oView = this.getView();
-        const oModel = oView.getModel();
-
-        const padBanfn = function (sBanfn) {
-          return String(sBanfn || "")
-            .trim()
-            .padStart(10, "0");
-        };
-
-        if (!this._oBanfnDialog) {
-          this._oBanfnDialog = new sap.m.SelectDialog({
-            title: "Select Purchase Requisition",
-            search: function (e) {
-              const sVal = e.getParameter("value")
-                ? e.getParameter("value").trim()
-                : "";
-              e.getSource()
-                .getBinding("items")
-                .filter([new Filter("Banfn", FilterOperator.Contains, sVal)]);
-            },
-            confirm: function (e) {
-              const oItem = e.getParameter("selectedItem");
-              if (oItem) {
-                const sBanfn = oItem.getTitle();
-                oView.byId("inpBanfn").setValue(sBanfn);
-                oView.byId("inpBanfn").data("selectedKey", sBanfn);
-              }
-            },
-            items: {
-              path: "/uniqueBanfn",
-              template: new sap.m.StandardListItem({
-                title: "{Banfn}",
-              }),
-            },
-          });
-        }
-
+      onValueHelpBanfn: function (oEvent) {
+        const oModel = this.getView().getModel();
         sap.ui.core.BusyIndicator.show(0);
+
         oModel.read("/PRsSet", {
-          urlParameters: { $top: 5000, $orderby: "Banfn asc" },
-          success: function (data) {
+          urlParameters: { $top: 5000 },
+          success: (d) => {
             sap.ui.core.BusyIndicator.hide();
-
-            const unique = [];
-            const seen = new Set();
-            const results = data.results || [];
-
-            results.forEach(function (row) {
-              const padded = padBanfn(row.Banfn);
-              if (!seen.has(padded)) {
-                seen.add(padded);
-                unique.push({ Banfn: padded });
-              }
-            });
-
-            const oLocalModel = new JSONModel({ uniqueBanfn: unique });
-            this._oBanfnDialog.setModel(oLocalModel);
-            this._oBanfnDialog.open();
-          }.bind(this),
-          error: function () {
-            sap.ui.core.BusyIndicator.hide();
-            MessageToast.show("❌ Cannot load Purchase Requisition list.");
+            const a = [
+              ...new Set(
+                d.results.map((o) => String(o.Banfn).padStart(10, "0"))
+              ),
+            ];
+            this._createSimpleValueHelp(
+              oEvent,
+              "Purchase Requisition",
+              "Banfn",
+              a
+            );
           },
         });
       },
 
-      onValueHelpBsart: function () {
-        const oView = this.getView();
-        const oModel = oView.getModel();
-
-        const docTypeMap = {
-          NB: "Purchase Requisition",
-          ZNB1: "Service PR Type 1",
-          ZNB2: "Service PR Type 2",
-          ZNB3: "Maintenance PR",
-          ZNB4: "Material Request",
-          ZNB5: "Internal Purchase",
-          ZNB6: "Stock PR",
-          ZNB7: "Subcontracting PR",
-          ZNB8: "External Purchase",
-          ZNB9: "Repair PR",
-          AN: "Quotation Request",
-          UB: "Stock Transfer",
-        };
-
-        if (!this._oBsartDialog) {
-          this._oBsartDialog = new sap.m.SelectDialog({
-            title: "Select Document Type",
-            search: function (e) {
-              const sVal = e.getParameter("value")
-                ? e.getParameter("value").trim().toUpperCase()
-                : "";
-              e.getSource()
-                .getBinding("items")
-                .filter([new Filter("Bsart", FilterOperator.Contains, sVal)]);
-            },
-            confirm: function (e) {
-              const oItem = e.getParameter("selectedItem");
-              if (oItem) {
-                const sBsart = oItem.getTitle();
-                const sDesc = oItem.getDescription();
-                const display = sDesc + " (" + sBsart + ")";
-                oView.byId("inpBsart").setValue(display);
-                oView.byId("inpBsart").data("selectedKey", sBsart);
-              }
-            },
-            items: {
-              path: "/DocTypes",
-              template: new sap.m.StandardListItem({
-                title: "{Bsart}",
-                description: "{Batxt}",
-              }),
-            },
-          });
-        }
-
+      onValueHelpBsart: function (oEvent) {
+        const oModel = this.getView().getModel();
         sap.ui.core.BusyIndicator.show(0);
+
         oModel.read("/PRsSet", {
-          urlParameters: { $top: 10000 },
-          success: function (data) {
+          urlParameters: { $top: 5000 },
+          success: (d) => {
             sap.ui.core.BusyIndicator.hide();
-            const seen = new Set();
-            const unique = [];
-            const results = data.results || [];
-
-            results.forEach(function (row) {
-              const code = row.Bsart ? row.Bsart.trim() : "";
-              if (code && !seen.has(code)) {
-                seen.add(code);
-                unique.push({
-                  Bsart: code,
-                  Batxt: docTypeMap[code] || "Unknown Type",
-                });
-              }
-            });
-
-            unique.sort(function (a, b) {
-              return a.Bsart.localeCompare(b.Bsart);
-            });
-
-            const oLocalModel = new JSONModel({ DocTypes: unique });
-            this._oBsartDialog.setModel(oLocalModel);
-            this._oBsartDialog.open();
-          }.bind(this),
-          error: function () {
-            sap.ui.core.BusyIndicator.hide();
-            MessageToast.show("❌ Cannot load Document Type list.");
+            const a = [...new Set(d.results.map((o) => o.Bsart))];
+            this._createSimpleValueHelp(oEvent, "Document Type", "Bsart", a);
           },
         });
       },
 
-      onValueHelpEkgrp: function () {
-        const oView = this.getView();
-        const oModel = oView.getModel();
-
-        if (!this._oEkgrpDialog) {
-          this._oEkgrpDialog = new sap.m.SelectDialog({
-            title: "Select Purchasing Group",
-            search: function (e) {
-              const sVal = e.getParameter("value")
-                ? e.getParameter("value").trim().toUpperCase()
-                : "";
-              e.getSource()
-                .getBinding("items")
-                .filter([new Filter("Ekgrp", FilterOperator.Contains, sVal)]);
-            },
-            confirm: function (e) {
-              const oItem = e.getParameter("selectedItem");
-              if (oItem) {
-                const sEkgrp = oItem.getTitle();
-                const sDesc = oItem.getDescription();
-                oView.byId("inpEkgrp").setValue(sDesc);
-                oView.byId("inpEkgrp").data("selectedKey", sEkgrp);
-              }
-            },
-            items: {
-              path: "/PurchGroups",
-              template: new sap.m.StandardListItem({
-                title: "{Ekgrp}",
-                description: "{Eknam}",
-              }),
-            },
-          });
-        }
-
+      onValueHelpEkgrp: function (oEvent) {
+        const oModel = this.getView().getModel();
         sap.ui.core.BusyIndicator.show(0);
+
         oModel.read("/PRsSet", {
-          urlParameters: { $top: 10000 },
-          success: function (data) {
+          urlParameters: { $top: 5000 },
+          success: (d) => {
             sap.ui.core.BusyIndicator.hide();
-            const seen = new Set();
-            const unique = [];
-            const results = data.results || [];
-
-            results.forEach(function (row) {
-              const code = row.Ekgrp ? row.Ekgrp.trim() : "";
-              const name = row.Eknam ? row.Eknam.trim() : "";
-              if (code && !seen.has(code)) {
-                seen.add(code);
-                unique.push({
-                  Ekgrp: code,
-                  Eknam: name || code,
-                });
-              }
-            });
-
-            unique.sort(function (a, b) {
-              return a.Ekgrp.localeCompare(b.Ekgrp);
-            });
-
-            const oLocalModel = new JSONModel({ PurchGroups: unique });
-            this._oEkgrpDialog.setModel(oLocalModel);
-            this._oEkgrpDialog.open();
-          }.bind(this),
-          error: function () {
-            sap.ui.core.BusyIndicator.hide();
-            MessageToast.show("❌ Cannot load Purchasing Group list.");
+            const a = [...new Set(d.results.map((o) => o.Ekgrp))];
+            this._createSimpleValueHelp(oEvent, "Purchasing Group", "Ekgrp", a);
           },
         });
       },
 
-      onValueHelpErnam: function () {
-        const oView = this.getView();
-        const oModel = oView.getModel();
-
-        if (!this._oErnamDialog) {
-          this._oErnamDialog = new sap.m.SelectDialog({
-            title: "Select Created By",
-            search: function (e) {
-              const sVal = e.getParameter("value")
-                ? e.getParameter("value").trim().toUpperCase()
-                : "";
-              e.getSource()
-                .getBinding("items")
-                .filter([new Filter("Ernam", FilterOperator.Contains, sVal)]);
-            },
-            confirm: function (e) {
-              const oItem = e.getParameter("selectedItem");
-              if (oItem) {
-                const sErnam = oItem.getTitle();
-                oView.byId("inpErnam").setValue(sErnam);
-                oView.byId("inpErnam").data("selectedKey", sErnam);
-              }
-            },
-            items: {
-              path: "/Users",
-              template: new sap.m.StandardListItem({
-                title: "{Ernam}",
-              }),
-            },
-          });
-        }
-
+      onValueHelpErnam: function (oEvent) {
+        const oModel = this.getView().getModel();
         sap.ui.core.BusyIndicator.show(0);
+
         oModel.read("/PRsSet", {
-          urlParameters: { $top: 10000 },
-          success: function (data) {
+          urlParameters: { $top: 5000 },
+          success: (d) => {
             sap.ui.core.BusyIndicator.hide();
-            const seen = new Set();
-            const unique = [];
-            const results = data.results || [];
-
-            results.forEach(function (row) {
-              const code = row.Ernam ? row.Ernam.trim() : "";
-              if (code && !seen.has(code)) {
-                seen.add(code);
-                unique.push({ Ernam: code });
-              }
-            });
-
-            unique.sort(function (a, b) {
-              return a.Ernam.localeCompare(b.Ernam);
-            });
-
-            const oLocalModel = new JSONModel({ Users: unique });
-            this._oErnamDialog.setModel(oLocalModel);
-            this._oErnamDialog.open();
-          }.bind(this),
-          error: function () {
-            sap.ui.core.BusyIndicator.hide();
-            MessageToast.show("❌ Cannot load Created By list.");
+            const a = [...new Set(d.results.map((o) => o.Ernam))];
+            this._createSimpleValueHelp(oEvent, "Created By", "Ernam", a);
           },
         });
       },

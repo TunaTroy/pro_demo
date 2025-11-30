@@ -5,14 +5,69 @@ sap.ui.define(
 
     return Controller.extend("demodashboard.controller.RFQDetail", {
       formatter: {
-        formatDate: function (value) {
-          if (!value) return "";
+        dateFormat: function (sDate) {
+          if (!sDate) return "";
           try {
-            const date = new Date(value);
-            return date.toLocaleDateString("en-GB");
+            let timestamp;
+
+            if (typeof sDate === "string" && sDate.indexOf("/Date(") === 0) {
+              timestamp = parseInt(sDate.replace(/[^0-9]/g, ""), 10);
+            } else {
+              timestamp = Date.parse(sDate);
+            }
+
+            if (isNaN(timestamp)) return "";
+            const d = new Date(timestamp);
+            const dd = ("0" + d.getDate()).slice(-2);
+            const mm = ("0" + (d.getMonth() + 1)).slice(-2);
+            const yy = d.getFullYear();
+            return `${dd}.${mm}.${yy}`;
           } catch (e) {
-            return value;
+            return "";
           }
+        },
+
+        /** Status text mapping */
+        statusText: function (status) {
+          const statusMap = {
+            A: "In Preparation",
+            R: "Released",
+            P: "Pending Approval",
+            C: "Completed",
+            X: "Cancelled",
+            "": "Unknown",
+          };
+          return statusMap[status] || status;
+        },
+
+        /** Status color mapping */
+        statusState: function (status) {
+          const stateMap = {
+            R: "Success",
+            A: "Warning",
+            P: "Information",
+            C: "Success",
+            X: "Error",
+          };
+          return stateMap[status] || "None";
+        },
+
+        /** RFQ Type (BSART) mapping — CHUẨN SAP ECC */
+        rfqTypeText: function (bsart) {
+          const map = {
+            AN: "RFQ (AN)",
+            CPL: "Stock Inquiry (CPL)",
+            RAN: "Stock Inquiry (RAN)",
+            RFQ: "Request for Quotation (RFQ)",
+            ZRFQ: "Request for Quotation (ZRFQ)",
+            AB: "Request for GP Bid (AB)",
+
+            RQ: "Request for Quote (RQ)",
+            RE: "External Sourcing Request (RE)",
+
+            "": "Unknown",
+          };
+          return map[bsart] || bsart;
         },
       },
 
@@ -44,19 +99,37 @@ sap.ui.define(
       },
 
       _loadItems: function (sEbeln) {
+<<<<<<< HEAD
        
+=======
+>>>>>>> e28cf27b11d21e8a708780c042c17841a18f3fdf
         this.getOwnerComponent()
           .getModel()
           .read("/ProcurementHeaderSet('" + sEbeln + "')/NP_RFQDetails", {
             success: (oData) => {
-              console.log("✅ Items loaded via navigation:", oData.results);
-              this.getView()
-                .getModel("rfq")
-                .setProperty("/Items", oData.results);
+              const aItems = oData.results || [];
+
+              // Gán Items vào model
+              this.getView().getModel("rfq").setProperty("/Items", aItems);
+
+              // Nếu có item → lấy Txz01 từ item đầu tiên
+              if (aItems.length > 0) {
+                this.getView()
+                  .getModel("rfq")
+                  .setProperty("/Txz01", aItems[0].Txz01);
+              } else {
+                this.getView().getModel("rfq").setProperty("/Txz01", "");
+              }
+
+              console.log(
+                "TXZ01 header:",
+                this.getView().getModel("rfq").getProperty("/Txz01")
+              );
             },
             error: (oError) => {
               console.error("❌ Error loading items:", oError);
               this.getView().getModel("rfq").setProperty("/Items", []);
+              this.getView().getModel("rfq").setProperty("/Txz01", "");
             },
           });
       },
