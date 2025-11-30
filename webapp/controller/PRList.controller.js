@@ -191,6 +191,9 @@ sap.ui.define(
       // =========================================================
       // FILTER + GROUP
       // =========================================================
+      // =========================================================
+      // FILTER + GROUP
+      // =========================================================
       onGoFilter: function () {
         const oView = this.getView();
         const oModel = oView.getModel();
@@ -223,8 +226,12 @@ sap.ui.define(
           aFilters.push(new Filter("Badat", FilterOperator.BT, dFrom, dTo));
         }
 
+        // ✅ SỬA LẠI LOGIC STATUS CHO ĐÚNG VỚI EBAN
         const sStatus = this.byId("inpStatus").getSelectedKey();
-        if (sStatus) {
+
+        if (sStatus && sStatus !== "") {
+          // ⚠️ CHỈ GỬI ĐÚNG 1 GIÁ TRỊ, KHÔNG DÙNG ARRAY
+          // Vì EBAN chỉ có R, C, X - không có mapping phức tạp
           aFilters.push(new Filter("Frgkz", FilterOperator.EQ, sStatus));
         }
 
@@ -258,6 +265,10 @@ sap.ui.define(
 
             oTable.setModel(new JSONModel({ groups }));
             MessageToast.show(`${groups.length} PR found`);
+          },
+          error: () => {
+            sap.ui.core.BusyIndicator.hide();
+            MessageToast.show("⚠️ Error loading data");
           },
         });
       },
@@ -300,29 +311,31 @@ sap.ui.define(
         const group = oCtx.getObject();
         const sBanfn = group.Banfn;
 
-        // Pad functions
-        const pad5 = function (v) {
-          return String(v || "")
+        const sKeyBanfn = String(sBanfn || "")
+          .trim()
+          .padStart(10, "0");
+
+        const oNoteModel = new sap.ui.model.json.JSONModel({
+          Banfn: sKeyBanfn,
+          Note: "Loading...",
+        });
+        this.getView().setModel(oNoteModel, "noteModel");
+
+        const pad5 = (v) =>
+          String(v || "")
             .trim()
             .padStart(5, "0");
-        };
-
         const aLeftItems = Array.isArray(group.Items) ? group.Items : [];
 
-        const hasMatnrOrTxz = aLeftItems.some(function (it) {
-          return it.Matnr || it.Txz01;
-        });
-
-        const leftKey = function (it) {
+        const hasMatnrOrTxz = aLeftItems.some((it) => it.Matnr || it.Txz01);
+        const leftKey = (it) => {
           const k1 = pad5(it.Bnfpo);
           const k2 = (it.Matnr || it.Txz01 || "").trim();
-          return hasMatnrOrTxz ? k1 + "|" + k2 : k1;
+          return hasMatnrOrTxz ? `${k1}|${k2}` : k1;
         };
-
         const leftKeySet = new Set(aLeftItems.map(leftKey));
 
-        // Tạo detail model
-        const oDetailModel = new JSONModel({
+        const oDetailModel = new sap.ui.model.json.JSONModel({
           Banfn: group.Banfn,
           Bsart: group.Bsart,
           Ekgrp: group.Ekgrp,
@@ -332,60 +345,62 @@ sap.ui.define(
           Items: [],
         });
 
-        // Đọc EBAN
         sap.ui.core.BusyIndicator.show(0);
-        oModel.read("/PRsSet", {
-          filters: [new Filter("Banfn", FilterOperator.EQ, sBanfn)],
-          success: function (oData) {
-            sap.ui.core.BusyIndicator.hide();
-            const aEban = oData && oData.results ? oData.results : [];
 
-            const ebanKey = function (it) {
+        oModel.read("/PRsSet", {
+          filters: [
+            new sap.ui.model.Filter(
+              "Banfn",
+              sap.ui.model.FilterOperator.EQ,
+              sKeyBanfn
+            ),
+          ],
+          success: (oData) => {
+            sap.ui.core.BusyIndicator.hide();
+            let aEban = oData?.results || [];
+
+            const ebanKey = (it) => {
               const k1 = pad5(it.Bnfpo);
               const k2 = (it.Matnr || it.Txz01 || "").trim();
-              return hasMatnrOrTxz ? k1 + "|" + k2 : k1;
+              return hasMatnrOrTxz ? `${k1}|${k2}` : k1;
             };
 
-            // Intersect
-            let aIntersect = aEban.filter(function (it) {
-              return leftKeySet.has(ebanKey(it));
-            });
+            let aIntersect = aEban.filter((it) => leftKeySet.has(ebanKey(it)));
 
-            // Fallback nếu không match được
-            if (aIntersect.length === 0) {
+            if (!aIntersect.length) {
               const leftBnfpoSet = new Set(
-                aLeftItems.map(function (it) {
-                  return pad5(it.Bnfpo);
-                })
+                aLeftItems.map((it) => pad5(it.Bnfpo))
               );
-              aIntersect = aEban.filter(function (it) {
-                return leftBnfpoSet.has(pad5(it.Bnfpo));
-              });
+              aIntersect = aEban.filter((it) =>
+                leftBnfpoSet.has(pad5(it.Bnfpo))
+              );
             }
 
-            // Sort
-            aIntersect.sort(function (a, b) {
-              return pad5(a.Bnfpo).localeCompare(pad5(b.Bnfpo));
-            });
+            aIntersect.sort((a, b) =>
+              pad5(a.Bnfpo).localeCompare(pad5(b.Bnfpo))
+            );
 
             oDetailModel.setProperty("/Items", aIntersect);
             oDetail.setModel(oDetailModel);
-            oDetail.bindElement("/");
             oDetail.setVisible(true);
             oLayout.setSize("65%");
 
             const oItemTable = this.byId("tblPRItems");
-            if (oItemTable) {
-              oItemTable.setModel(oDetailModel);
-            }
-          }.bind(this),
-          error: function () {
+            if (oItemTable) oItemTable.setModel(oDetailModel);
+
+            this._loadPRNote(sKeyBanfn);
+          },
+
+          error: () => {
             sap.ui.core.BusyIndicator.hide();
+
             oDetailModel.setProperty("/Items", aLeftItems);
             oDetail.setModel(oDetailModel);
-            oDetail.bindElement("/");
+
             oDetail.setVisible(true);
             oLayout.setSize("60%");
+
+            this._loadPRNote(sKeyBanfn);
           },
         });
       },
@@ -528,115 +543,103 @@ sap.ui.define(
       // =========================================================
       // REJECT ALL PENDING ITEMS
       // =========================================================
-      onSelectPR: function (oEvent) {
-        const oItem = oEvent.getParameter("listItem");
-        const oCtx = oItem.getBindingContext();
+
+      // =========================================================
+      // REJECT ALL PENDING ITEMS
+      // =========================================================
+      onRejectPR: function () {
         const oDetail = this.byId("detailPanel");
-        const oLayout = this.byId("layoutMaster");
-        const oModel = this.getView().getModel();
+        const oDetailModel = oDetail.getModel();
+        const aItems = oDetailModel ? oDetailModel.getProperty("/Items") : [];
+        const sBanfn = oDetailModel ? oDetailModel.getProperty("/Banfn") : "";
 
-        if (!oCtx) return;
+        if (!aItems.length) {
+          return sap.m.MessageToast.show("⚠️ No items to reject.");
+        }
 
-        const group = oCtx.getObject();
-        const sBanfn = group.Banfn;
+        const aPendingItems = aItems.filter((it) => it.Frgkz === "C");
+        const aLockedItems = aItems.filter(
+          (it) => it.Frgkz === "R" || it.Frgkz === "X"
+        );
 
-        // 🔹 Chuẩn hóa PR Number về 10 ký tự (phù hợp key backend)
-        const sKeyBanfn = String(sBanfn || "")
-          .trim()
-          .padStart(10, "0");
+        if (aPendingItems.length === 0) {
+          return sap.m.MessageToast.show("ℹ️ All items already processed.");
+        }
 
-        // 🔹 Tạo noteModel (để binding trong XML)
-        const oNoteModel = new sap.ui.model.json.JSONModel({
-          Banfn: sKeyBanfn,
-          Note: "Loading...",
-        });
-        this.getView().setModel(oNoteModel, "noteModel");
+        sap.m.MessageBox.confirm(
+          "Reject " +
+            aPendingItems.length +
+            " pending item(s) for PR " +
+            sBanfn +
+            "?",
+          {
+            onClose: function (sAction) {
+              if (sAction !== sap.m.MessageBox.Action.OK) return;
 
-        // === LOAD EBAN ITEMS ===
-        const pad5 = (v) =>
-          String(v || "")
-            .trim()
-            .padStart(5, "0");
-        const aLeftItems = Array.isArray(group.Items) ? group.Items : [];
+              const oModel = this.getView().getModel();
+              sap.ui.core.BusyIndicator.show(0);
 
-        const hasMatnrOrTxz = aLeftItems.some((it) => it.Matnr || it.Txz01);
-        const leftKey = (it) => {
-          const k1 = pad5(it.Bnfpo);
-          const k2 = (it.Matnr || it.Txz01 || "").trim();
-          return hasMatnrOrTxz ? `${k1}|${k2}` : k1;
-        };
-        const leftKeySet = new Set(aLeftItems.map(leftKey));
+              oModel.setHeaders({
+                "Content-Type": "application/json",
+                Accept: "application/json",
+                "X-Requested-With": "XMLHttpRequest",
+              });
+              oModel.refreshSecurityToken();
 
-        const oDetailModel = new sap.ui.model.json.JSONModel({
-          Banfn: group.Banfn,
-          Bsart: group.Bsart,
-          Ekgrp: group.Ekgrp,
-          Ernam: group.Ernam,
-          Badat: group.Badat,
-          Frgkz: group.Frgkz,
-          Items: [],
-        });
+              let iSuccess = 0;
+              let iFail = 0;
 
-        sap.ui.core.BusyIndicator.show(0);
-        oModel.read("/PRsSet", {
-          filters: [
-            new sap.ui.model.Filter(
-              "Banfn",
-              sap.ui.model.FilterOperator.EQ,
-              sKeyBanfn
-            ),
-          ],
+              const processItems = function (items, index) {
+                if (index >= items.length) {
+                  sap.ui.core.BusyIndicator.hide();
 
-          success: (oData) => {
-            sap.ui.core.BusyIndicator.hide();
-            const aEban = oData?.results || [];
+                  let sMsg = "Rejected " + iSuccess + " item(s).";
+                  if (iFail > 0) {
+                    sMsg += " " + iFail + " failed.";
+                  }
+                  if (aLockedItems.length > 0) {
+                    sMsg += " Skipped " + aLockedItems.length + " locked.";
+                  }
 
-            const ebanKey = (it) => {
-              const k1 = pad5(it.Bnfpo);
-              const k2 = (it.Matnr || it.Txz01 || "").trim();
-              return hasMatnrOrTxz ? `${k1}|${k2}` : k1;
-            };
+                  sap.m.MessageBox.success(sMsg);
+                  this._refreshAfterAction(sBanfn);
+                  return;
+                }
 
-            let aIntersect = aEban.filter((it) => leftKeySet.has(ebanKey(it)));
+                const item = items[index];
 
-            if (aIntersect.length === 0) {
-              const leftBnfpoSet = new Set(
-                aLeftItems.map((it) => pad5(it.Bnfpo))
-              );
-              aIntersect = aEban.filter((it) =>
-                leftBnfpoSet.has(pad5(it.Bnfpo))
-              );
-            }
+                const sBanfnPadded = String(item.Banfn).padStart(10, "0");
+                const sBnfpoPadded = String(item.Bnfpo).padStart(5, "0");
 
-            aIntersect.sort((a, b) =>
-              pad5(a.Bnfpo).localeCompare(pad5(b.Bnfpo))
-            );
+                const sPath =
+                  "/PRsSet(Banfn='" +
+                  sBanfnPadded +
+                  "',Bnfpo='" +
+                  sBnfpoPadded +
+                  "')";
 
-            oDetailModel.setProperty("/Items", aIntersect);
-            oDetail.setModel(oDetailModel);
-            oDetail.bindElement("/");
-            oDetail.setVisible(true);
-            oLayout.setSize("65%");
+                const oPayload = {
+                  Banfn: sBanfnPadded,
+                  Bnfpo: sBnfpoPadded,
+                  Frgkz: "X", // ❗ REJECT FLAG
+                };
 
-            const oItemTable = this.byId("tblPRItems");
-            if (oItemTable) oItemTable.setModel(oDetailModel);
+                oModel.update(sPath, oPayload, {
+                  success: function () {
+                    iSuccess++;
+                    processItems.call(this, items, index + 1);
+                  }.bind(this),
+                  error: function () {
+                    iFail++;
+                    processItems.call(this, items, index + 1);
+                  }.bind(this),
+                });
+              }.bind(this);
 
-            // === SAU KHI LOAD EBAN THÌ LOAD NOTE ===
-            this._loadPRNote(sKeyBanfn);
-          },
-
-          error: () => {
-            sap.ui.core.BusyIndicator.hide();
-            oDetailModel.setProperty("/Items", aLeftItems);
-            oDetail.setModel(oDetailModel);
-            oDetail.bindElement("/");
-            oDetail.setVisible(true);
-            oLayout.setSize("60%");
-
-            // Load note vẫn chạy dù EBAN lỗi
-            this._loadPRNote(sKeyBanfn);
-          },
-        });
+              processItems(aPendingItems, 0);
+            }.bind(this),
+          }
+        );
       },
 
       // =========================================================

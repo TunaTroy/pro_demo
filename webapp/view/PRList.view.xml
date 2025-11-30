@@ -136,7 +136,7 @@
                 </Column>
               </columns>
               <items>
-                <ColumnListItem type="Active" press="onSelectPR" vAlign="Top">
+                <ColumnListItem type="Active" vAlign="Top">
                   <cells>
                     <!-- hiển thị trực tiếp Banfn, không pad 10 ký tự -->
                     <Link text="{Banfn}"/>

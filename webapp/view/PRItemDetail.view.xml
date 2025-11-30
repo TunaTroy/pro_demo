@@ -6,14 +6,14 @@
   xmlns:l="sap.ui.layout"
   displayBlock="true">
   <Page id="pagePRItemDetail" title="📦 PR Item Detail">
-    <!-- ===== HEADER BUTTON ===== -->
+    <!-- HEADER BUTTON -->
     <headerContent>
       <Button id="btnNavBack" icon="sap-icon://nav-back" press="onNavBack" type="Transparent" />
     </headerContent>
     <content>
       <!-- 🧾 HEADER SECTION -->
       <HBox id="hboxHeader" class="customHeaderBox" alignItems="Center" justifyContent="SpaceBetween">
-        <!-- 🟩 LEFT COLUMN: IMAGE -->
+        <!-- 🟩 LEFT: IMAGE -->
         <VBox id="vboxHeaderImage" width="25%" alignItems="Center" class="headerImageContainer">
           <Image
             id="imgMaterial"
@@ -24,7 +24,7 @@
             densityAware="false"
             class="headerProfileImage" />
         </VBox>
-        <!-- 🟦 RIGHT COLUMN: BASIC INFO -->
+        <!-- 🟦 RIGHT: BASIC INFO -->
         <VBox id="vboxHeaderInfo" width="75%" class="headerInfoContainer">
           <Text id="txtHeaderDesc" text="{Txz01}" class="headerIntroText" />
           <Title id="txtHeaderTitle" text="{= 'PR ' + ${Banfn}}" level="H2" class="headerTitleText" />
@@ -52,31 +52,29 @@
             justifyContent="SpaceBetween">
             <!-- LEFT BOX -->
             <VBox id="vboxBasicLeft" width="48%" class="sapUiSmallMarginEnd">
-              <Label id="lblItemCategory" text="Item Category:" />
-              <Text id="txtItemCategory" text="{path: 'Pstyp', formatter: '.getItemCategoryText'}" />
-              <Label id="lblRequestedBy" text="Requested By:" />
-              <Text id="txtRequestedBy" text="{Ernam}" />
-              <Label id="lblCreatedBy" text="Created By (Name):" />
-              <Text id="txtCreatedBy" text="{Ernam}" />
-              <Label id="lblMaterial" text="Material:" />
-              <Link id="lnkMaterial" text="{Txz01}" press=".onMaterialPress" />
-              <Label id="lblShortText" text="Short Text:" />
-              <Text id="txtShortText" text="{Txz01}" />
-              <Label id="lblMaterialGroup" text="Material Group:" />
-              <Text id="txtMaterialGroup" text="{Matkl}" />
+              <Label text="Item Category:" />
+              <Text text="{path: 'Pstyp', formatter: '.getItemCategoryText'}" />
+              <Label text="Requested By:" />
+              <Text text="{Ernam}" />
+              <Label text="Material:" />
+              <Link text="{Matnr}" press=".onMaterialPress" />
+              <Label text="Short Text:" />
+              <Text text="{Txz01}" />
+              <Label text="Material Group:" />
+              <Text text="{Matkl}" />
             </VBox>
             <!-- RIGHT BOX -->
             <VBox id="vboxBasicRight" width="48%">
-              <Label id="lblValuationPrice" text="Valuation Price:" />
-              <Text id="txtValuationPrice" text="{Preis} {Waers}" />
-              <Label id="lblPriceUnit" text="Price Unit:" />
-              <Text id="txtPriceUnit" text="{Peinh} EA" />
-              <Label id="lblQuantity" text="Quantity Requested:" />
-              <Text id="txtQuantity" text="{Menge} {Meins}" />
-              <Label id="lblNetValue" text="Net Value:" />
-              <Text id="txtNetValue" text="{Netwr} {Waers}" />
-              <Label id="lblReleaseStatus" text="Release Status:" />
-              <Text id="txtReleaseStatus" text="{path: 'Frgkz', formatter: '.getReleaseStatus'}" />
+              <Label text="Valuation Price:" />
+              <Text text="{Preis} {Waers}" />
+              <Label text="Price Unit:" />
+              <Text text="{Peinh} EA" />
+              <Label text="Quantity Requested:" />
+              <Text text="{path:'Menge', formatter:'.formatter.quantityFormat'} {Meins}" />
+              <Label text="Release Status:" />
+              <ObjectStatus
+                text="{path: 'Frgkz', formatter: '.getReleaseStatus'}"
+                state="{= ${Frgkz} === 'R' ? 'Success' : ${Frgkz} === 'X' ? 'Error' : 'None' }" />
             </VBox>
           </HBox>
         </Panel>
@@ -90,10 +88,14 @@
           labelSpanM="6"
           columnsL="1"
           columnsM="1">
-          <Label id="lblDeliveryDate" text="Delivery Date" />
-          <Text id="txtDeliveryDate" text="{path: 'Lfdat', type: 'sap.ui.model.type.Date', formatOptions: {pattern: 'dd/MM/yyyy'}}" />
-          <Label id="lblDeliveryAddress" text="Delivery Address" />
-          <Text id="txtDeliveryAddress" text="Viet Nam" />
+          <Label text="Delivery Date" />
+          <Text text="{path: 'Lfdat', formatter: '.formatter.dateFormat'}" />
+          <Label text="Delivery Address" />
+          <Text text="Viet Nam" />
+          <Label text="Purchase Organization" />
+          <Text text="{Ekorg}" />
+          <Label text="Purchasing Group" />
+          <Text text="{Ekgrp}" />
         </form:SimpleForm>
       </l:Grid>
     </content>
