@@ -145,7 +145,6 @@
                     <Text id="_IDGenText23" text="Status:"/>
                     <ObjectStatus id="_IDGenObjectStatus1" text="{path:'detailPO>Frgke', formatter:'.formatter.formatReleaseStatusText'}" state="{path:'detailPO>Frgke', formatter:'.formatter.formatReleaseStatusState'}" icon="{path:'detailPO>Frgke', formatter:'.formatter.formatReleaseStatusIcon'}" class="sapUiTinyMarginBegin"/>
                   </HBox>
-<<<<<<< HEAD
                   <HBox id="_IDGenHBox6" class="sapUiTinyMarginTop" justifyContent="End">
                       <Button id="btnApprovePO" 
                               text="Approve PO" 
@@ -160,22 +159,6 @@
                               press=".onRejectPO"
                               class="sapUiTinyMarginEnd"/>
                   </HBox>
-                    
-=======
-                  <HBox class="sapUiTinyMarginTop" justifyContent="End">
-                    <Button id="btnApprovePO" 
-            text="Approve PO" 
-            icon="sap-icon://accept" 
-            type="Emphasized"
-            press=".onApprovePO"/>
-                    <Button id="btnRejectPO"
-            text="Reject PO"
-            icon="sap-icon://decline"
-            type="Reject"
-            press=".onRejectPO"
-            class="sapUiTinyMarginEnd"/>
-                  </HBox>
->>>>>>> e28cf27b11d21e8a708780c042c17841a18f3fdf
                 </VBox>
               </Panel>
               <!-- ===== ITEMS TABLE ===== -->
