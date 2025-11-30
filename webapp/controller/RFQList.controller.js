@@ -325,7 +325,15 @@ sap.ui.define(
 
         const pHeader = new Promise((resolve, reject) => {
           this.oODataModel.read("/ProcurementHeaderSet", {
-            filters: [new Filter("Bstyp", FilterOperator.EQ, "A")],
+            filters: [
+              new Filter({
+                filters: [
+                  new Filter("Bstyp", FilterOperator.EQ, "A"),
+                  new Filter("Bstyp", FilterOperator.EQ, "R"),
+                ],
+                and: false, // OR condition
+              }),
+            ],
             success: (d) => resolve(d.results),
             error: reject,
           });
@@ -340,6 +348,7 @@ sap.ui.define(
 
         Promise.all([pHeader, pItem])
           .then(([aHeader, aItems]) => {
+            aHeader = aHeader.filter((h) => h.Bstyp === "A" || h.Bstyp === "R");
             const mapItems = {};
             aItems.forEach((it) => {
               if (!mapItems[it.Ebeln]) mapItems[it.Ebeln] = [];

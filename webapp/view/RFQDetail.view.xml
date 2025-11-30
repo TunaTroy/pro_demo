@@ -82,81 +82,67 @@
                 vSpacing="1"
                 class="sapUiMediumMarginBottom"
             >
-<!-- ================================= -->
-<!-- 2) BASIC DATA PANEL -->
-<!-- ================================= -->
-<Panel
+                <!-- ================================= -->
+                <!-- 2) BASIC DATA PANEL -->
+                <!-- ================================= -->
+                <Panel
     headerText="Basic Data"
     expandable="false"
     class="sapUiNoContentPadding sapUiSmallMarginBottom fioriSectionBox"
 >
-    <HBox justifyContent="SpaceBetween" class="sapUiSmallMargin">
-
-        <!-- LEFT COLUMN -->
-        <VBox width="48%">
-
-            <Label text="Created By:" />
-            <Text text="{rfq>/Ernam}" />
-
-            <Label text="Created On:" />
-            <Text
+                    <HBox justifyContent="SpaceBetween" class="sapUiSmallMargin">
+                        <!-- LEFT COLUMN -->
+                        <VBox width="48%">
+                            <Label text="Created By:" />
+                            <Text text="{rfq>/Ernam}" />
+                            <Label text="Created On:" />
+                            <Text
                 text="{ path:'rfq>/Aedat', formatter:'.formatter.dateFormat' }"
             />
-
-            <Label text="Purchasing Group:" />
-            <Text
+                            <Label text="Purchasing Group:" />
+                            <Text
                 text="{ path:'rfq>/Ekgrp', formatter:'.formatter.purchGroupText' }"
             />
-
-            <!-- RFQ Type (BSART) -->
-            <Label text="RFQ Type:" />
-            <Text 
+                            <!-- RFQ Type (BSART) -->
+                            <Label text="RFQ Type:" />
+                            <Text 
                 text="{ path:'rfq>/Bsart', formatter:'.formatter.rfqTypeText' }"
             />
-        </VBox>
-
-        <!-- RIGHT COLUMN -->
-        <VBox width="48%">
-
-            <Label text="Purchasing Org:" />
-            <Text 
+                        </VBox>
+                        <!-- RIGHT COLUMN -->
+                        <VBox width="48%">
+                            <Label text="Purchasing Org:" />
+                            <Text 
                 text="{ path:'rfq>/Ekorg', formatter:'.formatter.purchOrgText' }"
             />
-
-            <Label text="Company Code:" />
-            <Text 
+                            <Label text="Company Code:" />
+                            <Text 
                 text="{ path:'rfq>/Bukrs', formatter:'.formatter.companyCodeText' }"
             />
-
-            <Label text="Language:" />
-            <Text text="{rfq>/Spras}" />
-
-            <!-- Quotation Deadline -->
-            <Label text="Quotation Deadline:" />
-            <Text
+                            <Label text="Language:" />
+                            <Text text="{rfq>/Spras}" />
+                            <!-- Quotation Deadline -->
+                            <Label text="Quotation Deadline:" />
+                            <Text
                 text="{ path:'rfq>/Angdt', formatter:'.formatter.dateFormat' }"
             />
-
-            <Label text="Target Value:" />
-            <ObjectNumber
+                            <Label text="Target Value:" />
+                            <ObjectNumber
                 number="{ path:'rfq>/Ktwrt', formatter:'.formatter.numberFormat' }"
                 unit="{rfq>/Waers}"
                 emphasized="false"
             />
-        </VBox>
-
-    </HBox>
-</Panel>
-
-
+                        </VBox>
+                    </HBox>
+                </Panel>
                 <!-- ================================= -->
                 <!-- 3) ITEMS SECTION -->
                 <!-- ================================= -->
                 <Panel
-                    headerText="Items"
-                    expandable="false"
-                    class="sapUiNoContentPadding sapUiSmallMarginBottom fioriSectionBox"
-                >
+    headerText="Items"
+    expandable="false"
+    class="sapUiNoContentPadding sapUiSmallMarginBottom fioriSectionBox"
+>
                     <Table items="{rfq>/Items}">
                         <columns>
                             <Column>
@@ -166,13 +152,26 @@
                                 <Text text="Material" />
                             </Column>
                             <Column>
+                                <Text text="Material Group" />
+                            </Column>
+                            <Column>
+                                <Text text="Plant" />
+                            </Column>
+                            <Column>
                                 <Text text="Quantity" />
                             </Column>
                         </columns>
                         <ColumnListItem>
                             <cells>
+                                <!-- Item number -->
                                 <Text text="{rfq>Ebelp}" />
+                                <!-- Material number -->
                                 <Text text="{rfq>Matnr}" />
+                                <!-- Material Group -->
+                                <Text text="{rfq>Matkl}" />
+                                <!-- Plant -->
+                                <Text text="{rfq>Werks}" />
+                                <!-- Quantity -->
                                 <Text text="{rfq>Menge}" />
                             </cells>
                         </ColumnListItem>

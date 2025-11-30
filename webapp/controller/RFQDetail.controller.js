@@ -17,7 +17,7 @@ sap.ui.define(
             }
 
             if (isNaN(timestamp)) return "";
-            const d = new Date(timestamp);
+            const d = new   Date(timestamp);
             const dd = ("0" + d.getDate()).slice(-2);
             const mm = ("0" + (d.getMonth() + 1)).slice(-2);
             const yy = d.getFullYear();
