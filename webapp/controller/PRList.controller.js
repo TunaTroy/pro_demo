@@ -99,18 +99,68 @@ sap.ui.define(
       // INIT
       // =========================================================
       onInit: function () {
-        const sServiceUrl = "/sap/opu/odata/sap/ZGW_PRO_G18_SRV/";
-        const oModel = new ODataModel(sServiceUrl, {
-          useBatch: false,
-          json: true,
-          defaultUpdateMethod: sap.ui.model.odata.UpdateMethod.PUT,
-        });
+    const sServiceUrl = "/sap/opu/odata/sap/ZGW_PRO_G18_SRV/";
+    const oModel = new ODataModel(sServiceUrl, {
+      useBatch: false,
+      json: true,
+      defaultUpdateMethod: sap.ui.model.odata.UpdateMethod.PUT,
+    });
 
-        this.getView().setModel(oModel);
-        this.byId("detailPanel").setVisible(false);
-        this.onGoFilter();
-        this._loadCaches();
-      },
+    this.getView().setModel(oModel);
+    this.byId("detailPanel").setVisible(false);
+    this._loadCaches();
+
+
+    const oRouter = sap.ui.core.UIComponent.getRouterFor(this);
+    oRouter.getRoute("PRList").attachPatternMatched(this._onRouteMatched, this);
+    this.onGoFilter();
+},
+
+_onRouteMatched: function () {
+
+    // ⭐ 1. Kiểm tra nếu quay lại từ màn PR Item Detail
+    if (sessionStorage.getItem("PR_BACK_FROM_DETAIL") === "1") {
+        console.log("⏳ Back from PR Item Detail → SKIP reload");
+
+        // Xóa flag sau khi sử dụng
+        sessionStorage.removeItem("PR_BACK_FROM_DETAIL");
+
+        // Chỉ reset UI (đóng panel detail)
+        const oDetail = this.byId("detailPanel");
+        if (oDetail) oDetail.setVisible(false);
+
+        const oLayout = this.byId("layoutMaster");
+        if (oLayout) oLayout.setSize("100%");
+
+        const oTable = this.byId("tblPRList");
+        if (oTable) oTable.removeSelections();
+
+        return; // ⭐ STOP — tránh reload PR List
+    }
+
+    // ⭐ 2. Các trường hợp khác (Dashboard → PR List) → Reload
+    console.log("🔄 From Dashboard → Reload PR List");
+    this.onGoFilter();
+
+    // Reset UI
+    const oDetail = this.byId("detailPanel");
+    if (oDetail) oDetail.setVisible(false);
+
+    const oLayout = this.byId("layoutMaster");
+    if (oLayout) oLayout.setSize("100%");
+
+    const oTable = this.byId("tblPRList");
+    if (oTable) oTable.removeSelections();
+
+    const oNoteModel = this.getView().getModel("noteModel");
+    if (oNoteModel) {
+        oNoteModel.setProperty("/Note", "");
+        oNoteModel.setProperty("/Banfn", "");
+        oNoteModel.setProperty("/Editable", false);
+    }
+},
+
+
 
       // ⭐ Sử dụng giống RFQList: sap.ui.table.Table + sap.ui.table.Column
 

@@ -79,17 +79,21 @@ sap.ui.define(
         });
       },
 
-      onNavBack: function () {
-        const oHistory = History.getInstance();
-        const sPreviousHash = oHistory.getPreviousHash();
+     onNavBack: function () {
+    // ⭐ Đánh dấu bước Back từ PR Item Detail
+    sessionStorage.setItem("PR_BACK_FROM_DETAIL", "1");
 
-        if (sPreviousHash !== undefined) {
-          window.history.go(-1);
-        } else {
-          const oRouter = sap.ui.core.UIComponent.getRouterFor(this);
-          oRouter.navTo("PRList", {}, true);
-        }
-      },
+    const oHistory = History.getInstance();
+    const sPreviousHash = oHistory.getPreviousHash();
+
+    if (sPreviousHash !== undefined) {
+      window.history.go(-1);
+    } else {
+      const oRouter = sap.ui.core.UIComponent.getRouterFor(this);
+      oRouter.navTo("PRList", {}, true);
+    }
+},
+
 
       getItemCategoryText: function (sPstyp) {
         if (!sPstyp) return "";

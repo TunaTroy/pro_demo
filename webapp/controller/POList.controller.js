@@ -97,29 +97,73 @@ sap.ui.define(
       // INIT
       // ============================
       onInit: function () {
-        // 🔥 Model riêng dùng cho PO, không dùng model global từ Component nữa
-        this.oODataModel = new sap.ui.model.odata.v2.ODataModel(
-          "/sap/opu/odata/sap/ZGW_PRO_G18_SRV/",
-          {
-            useBatch: false,
-            defaultUpdateMethod: sap.ui.model.odata.UpdateMethod.PUT,
-            json: true,
-          }
-        );
+    this.oODataModel = new sap.ui.model.odata.v2.ODataModel(
+      "/sap/opu/odata/sap/ZGW_PRO_G18_SRV/",
+      {
+        useBatch: false,
+        defaultUpdateMethod: sap.ui.model.odata.UpdateMethod.PUT,
+        json: true,
+      }
+    );
 
-        // Gán model cho view để binding UI
-        this.getView().setModel(this.oODataModel);
+    this.getView().setModel(this.oODataModel);
 
-        // Models cho UI
-        this.getView().setModel(new JSONModel(), "detailPO");
-        this.getView().setModel(new JSONModel(), "po");
-        this.getView().setModel(new JSONModel({ busy: false }), "view");
+    this.getView().setModel(new JSONModel(), "detailPO");
+    this.getView().setModel(new JSONModel(), "po");
+    this.getView().setModel(new JSONModel({ busy: false }), "view");
 
-        this._createdDateSortState = 0;
+    this._createdDateSortState = 0;
 
-        // 🔥 Load PO List
-        this._loadPOList();
-      },
+    // ⭐ Khi vào lại route POList -> Reload + reset UI
+    const oRouter = sap.ui.core.UIComponent.getRouterFor(this);
+    oRouter.getRoute("POList").attachPatternMatched(this._onRouteMatched, this);
+
+    // Load PO List lần đầu
+    this._loadPOList();
+},
+
+
+      _onRouteMatched: function () {
+    console.log("🔄 Route POList matched → reload + reset UI");
+
+    // 1. Reload PO List
+    this._loadPOList();
+
+    // 2. Close PO detail panel
+    const oDetail = this.byId("poDetailPanel");
+    if (oDetail) {
+        oDetail.setVisible(false);
+    }
+
+    // 3. Reset layout (full width)
+    const oPane = this.byId("poTablePane");
+    if (oPane) {
+        const oLD = oPane.getLayoutData();
+        if (oLD) oLD.setSize("100%");
+    }
+
+    // 4. Clear table selection
+    const oTable = this.byId("poTable");
+    if (oTable) {
+        oTable.removeSelections(true);
+    }
+
+    // 5. Reset detailPO model
+    const oDetailPO = this.getView().getModel("detailPO");
+    if (oDetailPO) {
+        oDetailPO.setData({});
+    }
+
+    // 6. Clear PO Note
+    const oNoteModel = this.getView().getModel("poNoteModel");
+    if (oNoteModel) {
+        oNoteModel.setProperty("/Ebeln", "");
+        oNoteModel.setProperty("/Note", "");
+        oNoteModel.setProperty("/Editable", false);
+        oNoteModel.setProperty("/CanEdit", true);
+    }
+},
+
 
       // ============================
       // SELECT PO HEADER
