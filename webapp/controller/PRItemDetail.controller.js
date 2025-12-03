@@ -43,7 +43,7 @@ sap.ui.define(
         const oModel = this.getOwnerComponent().getModel();
         this.getView().setModel(oModel);
 
-        const sPath = `/PRsSet(Banfn='${sBanfn}',Bnfpo='${sBnfpo}')`;
+        const sPath = `/PRSet(Banfn='${sBanfn}',Bnfpo='${sBnfpo}')`;
         console.log(" Binding path:", sPath);
 
         this.getView().bindElement({
