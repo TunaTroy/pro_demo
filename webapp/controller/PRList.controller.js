@@ -237,7 +237,7 @@ sap.ui.define(
 
         sap.ui.core.BusyIndicator.show(0);
 
-        oModel.read("/PRsSet", {
+        oModel.read("/PRSet", {
           filters: aFilters,
           urlParameters: { $top: 10000 },
           success: (data) => {
@@ -347,7 +347,7 @@ sap.ui.define(
 
         sap.ui.core.BusyIndicator.show(0);
 
-        oModel.read("/PRsSet", {
+        oModel.read("/PRSet", {
           filters: [
             new sap.ui.model.Filter(
               "Banfn",
@@ -511,7 +511,7 @@ sap.ui.define(
                 const sBanfnPadded = String(item.Banfn).padStart(10, "0");
                 const sBnfpoPadded = String(item.Bnfpo).padStart(5, "0");
                 const sPath =
-                  "/PRsSet(Banfn='" +
+                  "/PRSet(Banfn='" +
                   sBanfnPadded +
                   "',Bnfpo='" +
                   sBnfpoPadded +
@@ -612,7 +612,7 @@ sap.ui.define(
                 const sBnfpoPadded = String(item.Bnfpo).padStart(5, "0");
 
                 const sPath =
-                  "/PRsSet(Banfn='" +
+                  "/PRSet(Banfn='" +
                   sBanfnPadded +
                   "',Bnfpo='" +
                   sBnfpoPadded +
@@ -659,7 +659,7 @@ sap.ui.define(
 
         // Reload detail panel
         sap.ui.core.BusyIndicator.show(0);
-        oModel.read("/PRsSet", {
+        oModel.read("/PRSet", {
           filters: [new Filter("Banfn", FilterOperator.EQ, sBanfn)],
           success: function (oData) {
             sap.ui.core.BusyIndicator.hide();
@@ -756,7 +756,7 @@ sap.ui.define(
         const oModel = this.getView().getModel();
         sap.ui.core.BusyIndicator.show(0);
 
-        oModel.read("/PRsSet", {
+        oModel.read("/PRSet", {
           urlParameters: { $top: 5000 },
           success: (d) => {
             sap.ui.core.BusyIndicator.hide();
@@ -779,7 +779,7 @@ sap.ui.define(
         const oModel = this.getView().getModel();
         sap.ui.core.BusyIndicator.show(0);
 
-        oModel.read("/PRsSet", {
+        oModel.read("/PRSet", {
           urlParameters: { $top: 5000 },
           success: (d) => {
             sap.ui.core.BusyIndicator.hide();
@@ -793,7 +793,7 @@ sap.ui.define(
         const oModel = this.getView().getModel();
         sap.ui.core.BusyIndicator.show(0);
 
-        oModel.read("/PRsSet", {
+        oModel.read("/PRSet", {
           urlParameters: { $top: 5000 },
           success: (d) => {
             sap.ui.core.BusyIndicator.hide();
@@ -807,7 +807,7 @@ sap.ui.define(
         const oModel = this.getView().getModel();
         sap.ui.core.BusyIndicator.show(0);
 
-        oModel.read("/PRsSet", {
+        oModel.read("/PRSet", {
           urlParameters: { $top: 5000 },
           success: (d) => {
             sap.ui.core.BusyIndicator.hide();

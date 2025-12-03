@@ -217,7 +217,7 @@ sap.ui.define(
         const oCurrRange = this._getDateRange(sPeriodKey);
         const oPrevRange = this._getPreviousRange(sPeriodKey);
 
-        this.oOData.read("/PRsSet", {
+        this.oOData.read("/PRSet", {
           urlParameters: {
             $select: "Banfn,Badat",
             $top: "500",
@@ -396,7 +396,7 @@ sap.ui.define(
         BusyIndicator.show(0);
         var oCurrRange = this._getDateRange(sPeriodKey);
 
-        this.oOData.read("/PRsSet", {
+        this.oOData.read("/PRSet", {
           urlParameters: {
             $select: "Banfn,Badat,Frgkz",
             $top: "5000",
@@ -533,7 +533,7 @@ sap.ui.define(
         BusyIndicator.show(0);
         var oCurrRange = this._getDateRange(sPeriodKey);
 
-        this.oOData.read("/PRsSet", {
+        this.oOData.read("/PRSet", {
           urlParameters: {
             $select: "Banfn,Badat,Txz01",
             $top: "5000",
@@ -603,8 +603,8 @@ sap.ui.define(
               oVendorMap[v.Lifnr] = v.Name1;
             });
 
-            // 🔹 Gọi PRsSet sau khi đã có map vendor
-            this.oOData.read("/PRsSet", {
+            // 🔹 Gọi PRSet sau khi đã có map vendor
+            this.oOData.read("/PRSet", {
               urlParameters: {
                 $select: "Banfn,Badat,Lifnr",
                 $top: "5000",
@@ -654,7 +654,7 @@ sap.ui.define(
 
               error: function (e) {
                 BusyIndicator.hide();
-                MessageToast.show("Lỗi khi đọc PRsSet");
+                MessageToast.show("Lỗi khi đọc PRSet");
               }.bind(this),
             });
           }.bind(this),
@@ -669,7 +669,7 @@ sap.ui.define(
         return new Promise((resolve, reject) => {
           BusyIndicator.show(0);
 
-          this.oOData.read("/PRsSet", {
+          this.oOData.read("/PRSet", {
             urlParameters: { $select: "Banfn,Badat", $top: "2000" },
             success: (oData) => {
               BusyIndicator.hide();
@@ -775,7 +775,7 @@ sap.ui.define(
       _loadTopRequesterTable: function () {
         BusyIndicator.show(0);
 
-        this.oOData.read("/PRsSet", {
+        this.oOData.read("/PRSet", {
           urlParameters: {
             $select: "Banfn,Ernam,Badat,Frgkz,Frgdt",
             $top: "2000",
@@ -1024,7 +1024,7 @@ sap.ui.define(
         BusyIndicator.show(0);
 
         const oPRPromise = new Promise((resolve, reject) => {
-          this.oOData.read("/PRsSet", {
+          this.oOData.read("/PRSet", {
             urlParameters: {
               $select: "Banfn,Bnfpo,Preis,Peinh,Menge,Badat,Matnr",
               $top: "5000",

@@ -319,36 +319,59 @@ sap.ui.define(
         return oDefaults;
       },
 
-      // ========= Load RFQ data =========
+
+      // Load RFQ From ZTB_OPT_PR
       _loadRFQList: function () {
         sap.ui.core.BusyIndicator.show(0);
 
-        const pHeader = new Promise((resolve, reject) => {
-          this.oODataModel.read("/ProcurementHeaderSet", {
-            filters: [
-              new Filter({
-                filters: [
-                  new Filter("Bstyp", FilterOperator.EQ, "A"),
-                  new Filter("Bstyp", FilterOperator.EQ, "R"),
-                ],
-                and: false, // OR condition
-              }),
-            ],
+        const oModel = this.oODataModel;
+
+        // STEP 1 — gọi EKET001Set (176 dòng)
+        const pEket = new Promise((resolve, reject) => {
+          oModel.read("/EKET001Set", {
             success: (d) => resolve(d.results),
             error: reject,
           });
         });
 
-        const pItem = new Promise((resolve, reject) => {
-          this.oODataModel.read("/ProcurementItemSet", {
-            success: (d) => resolve(d.results),
-            error: reject,
-          });
-        });
+        // STEP 2 — lấy list RFQ duy nhất từ EKET
+        pEket
+          .then((aEket) => {
+            if (!aEket || aEket.length === 0) {
+              this.getView().setModel(new JSONModel([]), "rfq");
+              sap.ui.core.BusyIndicator.hide();
+              MessageToast.show("No RFQ found for selected PR list.");
+              return;
+            }
 
-        Promise.all([pHeader, pItem])
+            const aRFQ = [...new Set(aEket.map((e) => e.Ebeln))];
+
+            // Tạo filter để gọi HeaderSet theo RFQ
+            const aFilters = aRFQ.map(
+              (r) => new Filter("Ebeln", FilterOperator.EQ, r)
+            );
+
+            // STEP 3 — load ProcurementHeaderSet theo RFQ
+            const pHeader = new Promise((resolve, reject) => {
+              oModel.read("/ProcurementHeaderSet", {
+                filters: aFilters,
+                success: (d) => resolve(d.results),
+                error: reject,
+              });
+            });
+
+            // STEP 4 — load ItemSet để lấy Txz01
+            const pItem = new Promise((resolve, reject) => {
+              oModel.read("/ProcurementItemSet", {
+                success: (d) => resolve(d.results),
+                error: reject,
+              });
+            });
+
+            return Promise.all([pHeader, pItem]);
+          })
           .then(([aHeader, aItems]) => {
-            aHeader = aHeader.filter((h) => h.Bstyp === "A" || h.Bstyp === "R");
+            // Merge description, data enrichment
             const mapItems = {};
             aItems.forEach((it) => {
               if (!mapItems[it.Ebeln]) mapItems[it.Ebeln] = [];
@@ -362,22 +385,17 @@ sap.ui.define(
               h.Aedat = h.Aedat || null;
               h.Ktwrt = h.Ktwrt || 0;
               h.Waers = h.Waers || "VND";
-              h.Statu = h.Statu || "";
-              h.Ernam = h.Ernam || "";
-              h.Bukrs = h.Bukrs || "";
-              h.Ekorg = h.Ekorg || "";
-              h.Ekgrp = h.Ekgrp || "";
             });
 
             this.getView().setModel(new JSONModel(aHeader), "rfq");
 
             sap.ui.core.BusyIndicator.hide();
-            MessageToast.show(`${aHeader.length} RFQs loaded successfully`);
+            MessageToast.show(`${aHeader.length} RFQs loaded (mapped to PR)`);
           })
           .catch((err) => {
             sap.ui.core.BusyIndicator.hide();
-            MessageBox.error("Failed to load RFQ data. Please try again.");
-            console.error("RFQ Load Error:", err);
+            MessageBox.error("Failed to load RFQ list.");
+            console.error("Error loading RFQ:", err);
           });
       },
 
