@@ -153,7 +153,7 @@
             </Table>
           </l:SplitPane>
           <!-- RIGHT DETAIL PANEL -->
-          <l:SplitPane id="paneDetail">
+<l:SplitPane id="paneDetail">
             <VBox
               id="detailPanel"
               visible="false"
@@ -283,6 +283,7 @@
               </Panel>
             </VBox>
           </l:SplitPane>
+
         </l:PaneContainer>
       </l:ResponsiveSplitter>
     </content>

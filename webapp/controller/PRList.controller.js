@@ -347,14 +347,26 @@ _onRouteMatched: function () {
     const oItem = oEvent.getParameter("listItem");
     if (!oItem) return;
 
-    const group = oItem.getBindingContext().getObject();
-    const sBanfn = group.Banfn.padStart(10, "0");
-
+    const oCtx = oItem.getBindingContext();
+    const group = oCtx.getObject();
     const oDetail = this.byId("detailPanel");
     const oLayout = this.byId("layoutMaster");
     const oModel = this.getView().getModel();
 
-    // ⭐ Tạo model detail
+    // ⭐ XÓA MODEL CŨ TRÊN DETAIL PANEL (bắt buộc để fix null)
+    oDetail.setModel(null);
+
+    const sBanfn = group.Banfn;
+    const sKeyBanfn = String(sBanfn).padStart(10, "0");
+
+    // NOTE MODEL
+    const oNoteModel = new sap.ui.model.json.JSONModel({
+        Banfn: sKeyBanfn,
+        Note: "Loading..."
+    });
+    this.getView().setModel(oNoteModel, "noteModel");
+
+    // DETAIL MODEL
     const oDetailModel = new sap.ui.model.json.JSONModel({
         Banfn: group.Banfn,
         Bsart: group.Bsart,
@@ -365,34 +377,47 @@ _onRouteMatched: function () {
         Items: []
     });
 
-    // ⭐ GÁN MODEL VỚI NAME “detail”
-    this.getView().setModel(oDetailModel, "detail");
-
-    oDetail.setVisible(true);
-    oLayout.setSize("65%");
-
     sap.ui.core.BusyIndicator.show(0);
 
-    // 🟢 Load items
     oModel.read("/PRSet", {
         filters: [
-            new sap.ui.model.Filter("Banfn", sap.ui.model.FilterOperator.EQ, sBanfn)
+            new sap.ui.model.Filter("Banfn", sap.ui.model.FilterOperator.EQ, sKeyBanfn)
         ],
-        success: (d) => {
+
+        success: (oData) => {
             sap.ui.core.BusyIndicator.hide();
 
-            const aItems = d.results || [];
-            aItems.sort((a, b) => Number(a.Bnfpo) - Number(b.Bnfpo));
+            const aItems = oData.results || [];
 
             oDetailModel.setProperty("/Items", aItems);
-            this._loadPRNote(sBanfn);
+
+            // ⭐ SET MODEL + BIND ELEMENT
+            oDetail.setModel(oDetailModel);
+            oDetail.bindElement("/");   // <<< CỰC KỲ QUAN TRỌNG
+
+            oDetail.setVisible(true);
+            oLayout.setSize("65%");
+
+            const oItemTable = this.byId("tblPRItems");
+            if (oItemTable) oItemTable.setModel(oDetailModel);
+
+            this._loadPRNote(sKeyBanfn);
         },
+
         error: () => {
             sap.ui.core.BusyIndicator.hide();
-            MessageToast.show("Failed to load PR items.");
+
+            oDetail.setModel(oDetailModel);
+            oDetail.bindElement("/");
+
+            oDetail.setVisible(true);
+            oLayout.setSize("60%");
+
+            this._loadPRNote(sKeyBanfn);
         }
     });
 },
+
 
 
       onCloseDetail: function () {
@@ -440,7 +465,7 @@ _onRouteMatched: function () {
       // =========================================================
       onApprovePR: function () {
         const oDetail = this.byId("detailPanel");
-        const oDetailModel = this.getView().getModel("detail");
+        const oDetailModel = oDetail.getModel();
         const aItems = oDetailModel ? oDetailModel.getProperty("/Items") : [];
         const sBanfn = oDetailModel ? oDetailModel.getProperty("/Banfn") : "";
 
@@ -636,9 +661,8 @@ _onRouteMatched: function () {
       // REFRESH AFTER ACTION
       // =========================================================
       _refreshAfterAction: function (sBanfn) {
-
     const oModel = this.getView().getModel();
-    const oDetailModel = new sap.ui.model.json.JSONModel();
+    const oDetail = this.byId("detailPanel");
 
     sap.ui.core.BusyIndicator.show(0);
 
@@ -649,15 +673,16 @@ _onRouteMatched: function () {
         success: (oData) => {
             sap.ui.core.BusyIndicator.hide();
 
-            const aItems = oData.results || [];
+            // 🔥 CLEAR OLD MODEL FIRST
+            oDetail.setModel(null);
 
-            oDetailModel.setData({
+            const oDetailModel = new sap.ui.model.json.JSONModel({
                 Banfn: sBanfn,
-                Items: aItems
+                Items: oData.results || []
             });
 
-            // ⭐ GÁN LẠI MODEL “detail”
-            this.getView().setModel(oDetailModel, "detail");
+            oDetail.setModel(oDetailModel);
+            oDetail.bindElement("/");
 
             MessageToast.show("🔄 PR refreshed");
         },
@@ -667,8 +692,6 @@ _onRouteMatched: function () {
         }
     });
 },
-
-
 
 
       // =========================================================

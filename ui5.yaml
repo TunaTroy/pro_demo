@@ -43,10 +43,6 @@ server:
       afterMiddleware: fiori-tools-appreload
       configuration:
         flp:
-<<<<<<< HEAD
-          theme: sap_horizons
-=======
           theme: sap_horizon
 
 
->>>>>>> c291ce41831faee7d97ef288b01b43edabbe2705
