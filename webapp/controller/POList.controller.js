@@ -98,29 +98,74 @@ sap.ui.define(
       // ============================
       onInit: function () {
         // 🔥 Model riêng dùng cho PO, không dùng model global từ Component nữa
-
-        // test
         this.oODataModel = new sap.ui.model.odata.v2.ODataModel(
           "/sap/opu/odata/sap/ZGW_PRO_G18_SRV/",
-          // {
-          //   useBatch: false,
-          //   defaultUpdateMethod: sap.ui.model.odata.UpdateMethod.PUT,
-          //   json: true,
-          // }
+          {
+            useBatch: false,
+            defaultUpdateMethod: sap.ui.model.odata.UpdateMethod.PUT,
+            json: true,
+          }
         );
 
-        // // Gán model cho view để binding UI
+        // Gán model cho view để binding UI
+        this.getView().setModel(this.oODataModel);
 
-        // Models cho UI
-        this.getView().setModel(new JSONModel(), "detailPO");
-        this.getView().setModel(new JSONModel(), "po");
-        this.getView().setModel(new JSONModel({ busy: false }), "view");
+    this.getView().setModel(new JSONModel(), "detailPO");
+    this.getView().setModel(new JSONModel(), "po");
+    this.getView().setModel(new JSONModel({ busy: false }), "view");
 
-        this._createdDateSortState = 0;
+    this._createdDateSortState = 0;
 
-        // 🔥 Load PO List
-        this._loadPOList();
-      },
+    // ⭐ Khi vào lại route POList -> Reload + reset UI
+    const oRouter = sap.ui.core.UIComponent.getRouterFor(this);
+    oRouter.getRoute("POList").attachPatternMatched(this._onRouteMatched, this);
+
+    // Load PO List lần đầu
+    this._loadPOList();
+},
+
+
+      _onRouteMatched: function () {
+    console.log("🔄 Route POList matched → reload + reset UI");
+
+    // 1. Reload PO List
+    this._loadPOList();
+
+    // 2. Close PO detail panel
+    const oDetail = this.byId("poDetailPanel");
+    if (oDetail) {
+        oDetail.setVisible(false);
+    }
+
+    // 3. Reset layout (full width)
+    const oPane = this.byId("poTablePane");
+    if (oPane) {
+        const oLD = oPane.getLayoutData();
+        if (oLD) oLD.setSize("100%");
+    }
+
+    // 4. Clear table selection
+    const oTable = this.byId("poTable");
+    if (oTable) {
+        oTable.removeSelections(true);
+    }
+
+    // 5. Reset detailPO model
+    const oDetailPO = this.getView().getModel("detailPO");
+    if (oDetailPO) {
+        oDetailPO.setData({});
+    }
+
+    // 6. Clear PO Note
+    const oNoteModel = this.getView().getModel("poNoteModel");
+    if (oNoteModel) {
+        oNoteModel.setProperty("/Ebeln", "");
+        oNoteModel.setProperty("/Note", "");
+        oNoteModel.setProperty("/Editable", false);
+        oNoteModel.setProperty("/CanEdit", true);
+    }
+},
+
 
       // ============================
       // SELECT PO HEADER
@@ -154,7 +199,7 @@ sap.ui.define(
       // ITEM CLICK (to detail screen)
       // ============================
       onItemPress: function (oEvent) {
-        // 🔥 Hide PO detail panel so that the list returns to 100%
+    
         this.byId("poDetailPanel").setVisible(false);
         this.byId("poTablePane").getLayoutData().setSize("100%");
 
@@ -195,7 +240,6 @@ sap.ui.define(
           aFilters.push(new sap.ui.model.Filter(aPOFilters, false)); // OR
         }
 
-        // ====== ⛔ 2. AUTO TOKEN FOR ORDER TYPE (Bsart) ======
         const oBsart = this.byId("orderTypeFilter");
         const sBsartTyped = oBsart.getValue().trim();
         if (sBsartTyped) {
@@ -218,8 +262,7 @@ sap.ui.define(
           aFilters.push(new sap.ui.model.Filter(aBsartFilters, false));
         }
 
-        // ====== ⛔ 3. AUTO TOKEN FOR PURCH. GROUP (Ekgrp) ======
-        const oEkgrp = this.byId("ekgrpFilter");
+        const oEkgrp = this.byId("ekgrpFilterd");
         const sEkgrpTyped = oEkgrp.getValue().trim();
         if (sEkgrpTyped) {
           oEkgrp.addToken(
@@ -241,7 +284,6 @@ sap.ui.define(
           aFilters.push(new sap.ui.model.Filter(aEkgrpFilters, false));
         }
 
-        // ====== ⛔ 4. AUTO TOKEN FOR CREATED BY (Ernam) ======
         const oErnam = this.byId("humanFilter");
         const sErnamTyped = oErnam.getValue().trim();
         if (sErnamTyped) {

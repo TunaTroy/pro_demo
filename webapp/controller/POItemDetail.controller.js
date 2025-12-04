@@ -31,8 +31,7 @@ sap.ui.define(
         this.getView().setModel(oModel);
 
         const sPath = `/ProcurementItemSet(Ebeln='${sEbeln}',Ebelp='${sEbelp}')`;
-        console.log(" Binding path:", sPath); // ✅ dùng sau khi đã khai báo
-
+        console.log(" Binding path:", sPath); 
         this.getView().bindElement({
           path: sPath,
 

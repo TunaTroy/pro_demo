@@ -98,7 +98,7 @@ sap.ui.define(
           });
       },
 
-      _loadItems: function (sEbeln) {
+      _loadItems: function (sEbeln) {      
         this.getOwnerComponent()
           .getModel()
           .read("/ProcurementHeaderSet('" + sEbeln + "')/NP_RFQDetails", {

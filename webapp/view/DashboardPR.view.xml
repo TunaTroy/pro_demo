@@ -72,16 +72,17 @@
             <viz:VizFrame id="idVendorBarChart" vizType="bar" width="100%" height="280px"/>
           </VBox>
         </HBox>
+        
 
         <!--  Biểu đồ PR theo tháng -->
         <VBox class="sapUiSmallMargin">
           <HBox alignItems="Center" justifyContent="SpaceBetween">
             <Text text="Biểu đồ PR theo tháng" class="sapUiTinyMarginBegin sapUiBold sapUiSmallMarginTop"/>
-            <Select
+            <!-- <Select
               id="prYearFilter"
               width="120px"
               selectedKey="{viewModel>/selectedPRYear}"
-              change=".onPRYearChange"/>
+              change=".onPRYearChange"/> -->
           </HBox>
           <viz:VizFrame
             id="idMonthlyBarChartPR"
@@ -89,6 +90,26 @@
             height="500px"
             width="100%"/>
         </VBox>
+
+
+                <!-- 🔵 Biểu đồ PO hoặc RFQ theo tháng -->
+        <VBox id="monthlyPOChartSection" width="100%" class="chartFullRow sapUiSmallMarginTop">
+          <HBox alignItems="Center" justifyContent="End" class="sapUiSmallMarginBottom">
+            <Label text="Select Type:" class="sapUiSmallMarginEnd"/>
+            <Select
+              id="poTypeFilter"
+              selectedKey="F"
+              change=".onPoTypeChange"
+              width="180px">
+              <core:Item key="F" text="Purchase Order (PO)"/>
+              <core:Item key="A" text="Request for Quotation (RFQ)"/>
+            </Select>
+          </HBox>
+          <viz:VizFrame id="idMonthlyBarChartPO" vizType="column" width="100%" height="500px"/>
+        </VBox>
+
+
+
 
         <!--  Top Requester Table -->
         <VBox id="topRequesterSection" class="topRequesterCard" width="100%">
@@ -141,21 +162,7 @@
           </Table>
         </VBox>
 
-        <!-- 🔵 Biểu đồ PO hoặc RFQ theo tháng -->
-        <VBox id="monthlyPOChartSection" width="100%" class="chartFullRow sapUiSmallMarginTop">
-          <HBox alignItems="Center" justifyContent="End" class="sapUiSmallMarginBottom">
-            <Label text="Select Type:" class="sapUiSmallMarginEnd"/>
-            <Select
-              id="poTypeFilter"
-              selectedKey="F"
-              change=".onPoTypeChange"
-              width="180px">
-              <core:Item key="F" text="Purchase Order (PO)"/>
-              <core:Item key="A" text="Request for Quotation (RFQ)"/>
-            </Select>
-          </HBox>
-          <viz:VizFrame id="idMonthlyBarChartPO" vizType="column" width="100%" height="500px"/>
-        </VBox>
+
 
         <!-- 🔻 Biểu đồ PR - PO - RFQ Connected -->
         <VBox id="connectedChartContainer" class="sapUiSmallMarginTop">
