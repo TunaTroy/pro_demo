@@ -347,51 +347,112 @@ sap.ui.define(
 
       // ============================
       // LOAD PO LIST
-      // ============================
       _loadPOList: function () {
         sap.ui.core.BusyIndicator.show(0);
-        const pHeader = new Promise((resolve, reject) => {
-          this.oODataModel.read("/ProcurementHeaderSet", {
-            filters: [new Filter("Bstyp", FilterOperator.EQ, "F")],
+
+        const oModel = this.oODataModel;
+
+        // STEP 1 — lấy EKET001Set giống RFQ (giới hạn theo company / PR... từ backend)
+        const pEket = new Promise((resolve, reject) => {
+          oModel.read("/EKET001Set", {
             success: (d) => resolve(d.results),
             error: reject,
           });
         });
 
-        const pItems = new Promise((resolve, reject) => {
-          this.oODataModel.read("/ProcurementItemSet", {
-            success: (d) => resolve(d.results),
-            error: reject,
-          });
-        });
+        pEket
+          .then((aEket) => {
+            // Không có EKET → không có PO tương ứng
+            if (!aEket || aEket.length === 0) {
+              this.getView().setModel(new JSONModel([]), "po");
+              this._originalPOData = [];
+              sap.ui.core.BusyIndicator.hide();
+              sap.m.MessageToast.show("No PO found for selected PR list.");
+              return null; // để skip bước Promise.all phía dưới
+            }
 
-        Promise.all([pHeader, pItems])
-          .then(([aHeader, aItems]) => {
+            // STEP 2 — lấy list PO (Ebeln) duy nhất từ EKET
+            const aPO = [...new Set(aEket.map((e) => e.Ebeln))];
+
+            if (aPO.length === 0) {
+              this.getView().setModel(new JSONModel([]), "po");
+              this._originalPOData = [];
+              sap.ui.core.BusyIndicator.hide();
+              sap.m.MessageToast.show("No PO found for selected PR list.");
+              return null;
+            }
+
+            // STEP 3 — tạo filter OR cho Ebeln
+            const oPOFilter = new Filter({
+              filters: aPO.map(
+                (p) => new Filter("Ebeln", FilterOperator.EQ, p)
+              ),
+              and: false, // OR
+            });
+
+            // STEP 4 — đọc ProcurementHeaderSet theo Ebeln + Bstyp = "F" (PO)
+            const pHeader = new Promise((resolve, reject) => {
+              oModel.read("/ProcurementHeaderSet", {
+                filters: [
+                  oPOFilter, // list Ebeln
+                  new Filter("Bstyp", FilterOperator.EQ, "F"), // 🔥 chỉ PO
+                ],
+                success: (d) => resolve(d.results),
+                error: reject,
+              });
+            });
+
+            // STEP 5 — đọc ProcurementItemSet để merge Items
+            const pItems = new Promise((resolve, reject) => {
+              oModel.read("/ProcurementItemSet", {
+                success: (d) => resolve(d.results),
+                error: reject,
+              });
+            });
+
+            return Promise.all([pHeader, pItems]);
+          })
+          .then((result) => {
+            // Nếu ở trên đã return null thì bỏ qua
+            if (!result) return;
+
+            const [aHeader, aItems] = result;
+
+            // Map Items theo Ebeln
             const mapItems = {};
             aItems.forEach((it) => {
-              if (!mapItems[it.Ebeln]) mapItems[it.Ebeln] = [];
+              if (!mapItems[it.Ebeln]) {
+                mapItems[it.Ebeln] = [];
+              }
               mapItems[it.Ebeln].push(it);
             });
 
+            // Enrich header: Items, ItemCount, TotalNetValue
             aHeader.forEach((h) => {
-              h.Items = mapItems[h.Ebeln] || [];
-              h.ItemCount = h.Items.length;
-              h.TotalNetValue = h.Items.reduce(
-                (s, it) => s + (parseFloat(it.Netwr) || 0),
-                0
-              ).toFixed(2);
+              const aIt = mapItems[h.Ebeln] || [];
+              h.Items = aIt;
+              h.ItemCount = aIt.length;
+              h.TotalNetValue = aIt
+                .reduce((s, it) => s + (parseFloat(it.Netwr) || 0), 0)
+                .toFixed(2);
             });
 
-            this.getView().setModel(new JSONModel(aHeader), "po");
+            // Gán model cho view "po" (binding hiện tại của bạn)
+            const oPOModel = new JSONModel(aHeader);
+            this.getView().setModel(oPOModel, "po");
 
-            // 🔥 Lưu lại bản gốc để reset sort
+            // Lưu lại bản gốc để reset sort
             this._originalPOData = JSON.parse(JSON.stringify(aHeader));
 
             sap.ui.core.BusyIndicator.hide();
+            sap.m.MessageToast.show(
+              `${aHeader.length} POs loaded (mapped from EKET)`
+            );
           })
-          .catch(() => {
+          .catch((err) => {
+            console.error("Error loading PO list from EKET:", err);
             sap.ui.core.BusyIndicator.hide();
-            MessageBox.error("Cannot load PO data.");
+            sap.m.MessageBox.error("Failed to load PO list (EKET-based).");
           });
       },
 

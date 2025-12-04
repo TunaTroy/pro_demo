@@ -84,6 +84,38 @@ sap.ui.define(
         this._currentRequesterSort = "totalPR";
       },
 
+      // ================== RFQ helper (dùng chung cho Dashboard) ==================
+      _getRFQSetFromEket: function () {
+        // cache để không gọi EKET nhiều lần
+        if (this._rfqFromEket) {
+          return Promise.resolve(this._rfqFromEket);
+        }
+
+        return new Promise(
+          function (resolve, reject) {
+            this.oOData.read("/EKET001Set", {
+              success: function (oData) {
+                // lấy list Ebeln duy nhất
+                const set = new Set();
+                (oData.results || []).forEach(function (r) {
+                  if (r.Ebeln) {
+                    set.add(r.Ebeln);
+                  }
+                });
+
+                this._rfqFromEket = set; // cache
+                resolve(set);
+              }.bind(this),
+              error: function (e) {
+                console.error("❌ Lỗi đọc EKET001Set:", e);
+                // nếu lỗi thì trả set rỗng, để dashboard vẫn chạy được
+                resolve(new Set());
+              },
+            });
+          }.bind(this)
+        );
+      },
+
       _applyRoleVisibility: function () {
         const role = this._userRole;
 
@@ -270,65 +302,74 @@ sap.ui.define(
         });
       },
 
-
-        /* ===== Load KPI cho RFQ ===== */
+      /* ===== Load KPI cho RFQ (chuẩn logic RFQList) ===== */
       _loadKpiRFQ: function (sPeriodKey) {
         BusyIndicator.show(0);
         const oCurrRange = this._getDateRange(sPeriodKey);
         const oPrevRange = this._getPreviousRange(sPeriodKey);
 
-        this.oOData.read("/ProcurementHeaderSet", {
-          urlParameters: { $select: "Ebeln,Aedat,Bstyp", $top: "5000" },
-          success: function (oData) {
-            BusyIndicator.hide();
-            const aResults = (oData.results || []).filter(
-              (r) => r.Bstyp === "A"
-            ); // RFQ
-
-            if (aResults.length === 0) {
-              this._addKpiCard({
-                title: "Request for Quotation (RFQ)",
-                period: this._getPeriodLabel(sPeriodKey),
-                value: "0",
-                percentage: "0%",
-                progress: 0,
-                state: "Error",
+        // 1. Lấy danh sách RFQ EBELN từ EKET (chuẩn SAP GUI)
+        const pEket = new Promise((resolve) => {
+          this.oOData.read("/EKET001Set", {
+            success: (d) => {
+              const set = new Set();
+              (d.results || []).forEach((r) => {
+                if (r.Ebeln) set.add(r.Ebeln);
               });
-              return;
-            }
+              resolve(set);
+            },
+            error: () => resolve(new Set()),
+          });
+        });
 
-            // Parse ngày
-            aResults.forEach((r) => {
+        // 2. Lấy tất cả header từ ProcurementHeaderSet
+        const pHeader = new Promise((resolve, reject) => {
+          this.oOData.read("/ProcurementHeaderSet", {
+            urlParameters: { $select: "Ebeln,Aedat,Bstyp", $top: "10000" },
+            success: resolve,
+            error: reject,
+          });
+        });
+
+        Promise.all([pEket, pHeader])
+          .then(([eketSet, headerData]) => {
+            BusyIndicator.hide();
+
+            // 3. RFQ hợp lệ = những EBELN tồn tại trong EKET
+            let aRFQ = headerData.results.filter(
+              (h) => h.Bstyp === "A" && eketSet.has(h.Ebeln)
+            );
+
+            // 4. Chuẩn hóa ngày
+            aRFQ.forEach((r) => {
               if (typeof r.Aedat === "string") {
-                const match = /Date\((\d+)\)/.exec(r.Aedat);
-                if (match) r.Aedat = new Date(parseInt(match[1], 10));
+                const m = /Date\((\d+)\)/.exec(r.Aedat);
+                if (m) r.Aedat = new Date(parseInt(m[1], 10));
               }
             });
 
-            // Lọc theo range hiện tại và trước đó
-            const aCurr = aResults.filter(
+            // 5. RFQ của kỳ hiện tại + kỳ trước
+            const curr = aRFQ.filter(
               (r) => r.Aedat >= oCurrRange.start && r.Aedat <= oCurrRange.end
             );
-            const aPrev = aResults.filter(
+            const prev = aRFQ.filter(
               (r) => r.Aedat >= oPrevRange.start && r.Aedat <= oPrevRange.end
             );
 
-            const iCurrCount = new Set(aCurr.map((r) => r.Ebeln)).size;
-            const iPrevCount = new Set(aPrev.map((r) => r.Ebeln)).size;
+            const currCount = new Set(curr.map((r) => r.Ebeln)).size;
+            const prevCount = new Set(prev.map((r) => r.Ebeln)).size;
 
             this._displayKpiCardGeneric(
               "RFQ",
               sPeriodKey,
-              iCurrCount,
-              iPrevCount
+              currCount,
+              prevCount
             );
-          }.bind(this),
-
-          error: function (e) {
+          })
+          .catch(() => {
             BusyIndicator.hide();
-            console.error("❌ Lỗi load RFQ KPI:", e);
-          },
-        });
+            this._displayKpiCardGeneric("RFQ", sPeriodKey, 0, 0);
+          });
       },
 
       /* ===== Load KPI cho PO ===== */
@@ -337,58 +378,68 @@ sap.ui.define(
         const oCurrRange = this._getDateRange(sPeriodKey);
         const oPrevRange = this._getPreviousRange(sPeriodKey);
 
-        this.oOData.read("/ProcurementHeaderSet", {
-          urlParameters: { $select: "Ebeln,Aedat,Bstyp", $top: "5000" },
-          success: function (oData) {
-            BusyIndicator.hide();
-            const aResults = (oData.results || []).filter(
-              (r) => r.Bstyp === "F"
-            ); // PO
-
-            if (aResults.length === 0) {
-              this._addKpiCard({
-                title: "Purchase Order (PO)",
-                period: this._getPeriodLabel(sPeriodKey),
-                value: "0",
-                percentage: "0%",
-                progress: 0,
-                state: "Error",
+        // 🔥 STEP 1: Lấy danh sách PO hợp lệ từ EKET001Set
+        const pEket = new Promise((resolve) => {
+          this.oOData.read("/EKET001Set", {
+            success: (d) => {
+              const set = new Set();
+              (d.results || []).forEach((r) => {
+                if (r.Ebeln) set.add(r.Ebeln);
               });
+              resolve(set);
+            },
+            error: () => resolve(new Set()),
+          });
+        });
+
+        // 🔥 STEP 2: Lấy tất cả header
+        const pHeader = new Promise((resolve, reject) => {
+          this.oOData.read("/ProcurementHeaderSet", {
+            urlParameters: { $select: "Ebeln,Aedat,Bstyp", $top: "10000" },
+            success: resolve,
+            error: reject,
+          });
+        });
+
+        Promise.all([pEket, pHeader])
+          .then(([eketSet, headerData]) => {
+            BusyIndicator.hide();
+
+            // 🔥 STEP 3: Chỉ lấy PO có trong EKET (Bstyp = "F")
+            let aPO = headerData.results.filter(
+              (h) => h.Bstyp === "F" && eketSet.has(h.Ebeln)
+            );
+
+            if (aPO.length === 0) {
+              this._displayKpiCardGeneric("PO", sPeriodKey, 0, 0);
               return;
             }
 
             // Parse ngày
-            aResults.forEach((r) => {
+            aPO.forEach((r) => {
               if (typeof r.Aedat === "string") {
-                const match = /Date\((\d+)\)/.exec(r.Aedat);
-                if (match) r.Aedat = new Date(parseInt(match[1], 10));
+                const m = /Date\((\d+)\)/.exec(r.Aedat);
+                if (m) r.Aedat = new Date(parseInt(m[1], 10));
               }
             });
 
-            // Lọc dữ liệu theo khoảng thời gian
-            const aCurr = aResults.filter(
+            // Lọc theo thời gian
+            const curr = aPO.filter(
               (r) => r.Aedat >= oCurrRange.start && r.Aedat <= oCurrRange.end
             );
-            const aPrev = aResults.filter(
+            const prev = aPO.filter(
               (r) => r.Aedat >= oPrevRange.start && r.Aedat <= oPrevRange.end
             );
 
-            const iCurrCount = new Set(aCurr.map((r) => r.Ebeln)).size;
-            const iPrevCount = new Set(aPrev.map((r) => r.Ebeln)).size;
+            const currCount = new Set(curr.map((r) => r.Ebeln)).size;
+            const prevCount = new Set(prev.map((r) => r.Ebeln)).size;
 
-            this._displayKpiCardGeneric(
-              "PO",
-              sPeriodKey,
-              iCurrCount,
-              iPrevCount
-            );
-          }.bind(this),
-
-          error: function (e) {
+            this._displayKpiCardGeneric("PO", sPeriodKey, currCount, prevCount);
+          })
+          .catch(() => {
             BusyIndicator.hide();
-            console.error("❌ Lỗi load PO KPI:", e);
-          },
-        });
+            this._displayKpiCardGeneric("PO", sPeriodKey, 0, 0);
+          });
       },
 
       /* ===== Load Status Donut Chart ===== */
@@ -909,124 +960,235 @@ sap.ui.define(
         });
       },
 
+      /* ===== Load Monthly Chart cho RFQ hoặc PO ===== */
       _loadMonthlyPoBarChart: function (sPeriodKey) {
-        return new Promise((resolve, reject) => {
+        const sDocType = this._currentPoType; // "F" = PO, "A" = RFQ
+
+        if (sDocType === "A") {
+          // 🔵 RFQ Chart
+          return this._loadMonthlyRFQChart(sPeriodKey);
+        } else {
+          // 🟢 PO Chart
+          return this._loadMonthlyPOChart(sPeriodKey);
+        }
+      },
+
+      _loadMonthlyRFQChart: function (sPeriodKey) {
+        return new Promise((resolve) => {
           BusyIndicator.show(0);
+          const range = this._getDateRange(sPeriodKey);
+          const year = range.start.getFullYear();
 
-          if (!sPeriodKey) sPeriodKey = "thisYear";
+          // 🔥 STEP 1: Lấy danh sách RFQ hợp lệ từ EKET001Set
+          const pEket = new Promise((res) => {
+            this.oOData.read("/EKET001Set", {
+              success: (d) => {
+                const set = new Set();
+                (d.results || []).forEach((r) => {
+                  if (r.Ebeln) set.add(r.Ebeln);
+                });
+                console.log("✅ EKET loaded:", set.size, "unique Ebeln");
+                res(set);
+              },
+              error: (err) => {
+                console.error("❌ Error loading EKET:", err);
+                res(new Set());
+              },
+            });
+          });
 
-          const sDocType = this._currentPoType || "F"; // ✅ lấy từ Select hiện tại
+          // 🔥 STEP 2: Lấy tất cả header từ ProcurementHeaderSet
+          const pHeader = new Promise((res, rej) => {
+            this.oOData.read("/ProcurementHeaderSet", {
+              urlParameters: {
+                $select: "Ebeln,Aedat,Bstyp",
+                $top: "10000",
+              },
+              success: res,
+              error: rej,
+            });
+          });
 
-          this.oOData.read("/ProcurementHeaderSet", {
-            urlParameters: {
-              $select: "Ebeln,Aedat,Bstyp",
-              $top: "2000",
-            },
-            success: (oData) => {
+          Promise.all([pEket, pHeader])
+            .then(([eketSet, headerData]) => {
               BusyIndicator.hide();
 
-              // ✅ Lọc theo loại chứng từ đã chọn (PO hoặc RFQ)
-              const aResults = oData.results.filter(
-                (r) => r.Bstyp === sDocType
-              );
-              console.log(
-                `📦 Raw Data (Bstyp=${sDocType}):`,
-                aResults.slice(0, 5)
+              // 🔥 STEP 3: Lọc chỉ lấy RFQ có trong EKET (Bstyp = "A")
+              let aRFQ = headerData.results.filter(
+                (h) => h.Bstyp === "A" && eketSet.has(h.Ebeln)
               );
 
-              if (aResults.length === 0) {
-                MessageToast.show(
-                  `Không có dữ liệu cho loại ${sDocType === "F" ? "PO" : "RFQ"}`
-                );
+              console.log("📊 Total RFQ after EKET filter:", aRFQ.length);
+
+              if (aRFQ.length === 0) {
+                console.warn("⚠️ No RFQ found in EKET");
                 this._displayMonthlyPOBarChart([]);
                 return resolve();
               }
 
-              // Parse ngày
-              aResults.forEach((r) => {
+              // 🔥 STEP 4: Parse ngày Aedat
+              aRFQ.forEach((r) => {
                 if (typeof r.Aedat === "string") {
-                  const match = /Date\((\d+)\)/.exec(r.Aedat);
-                  if (match) r.Aedat = new Date(parseInt(match[1], 10));
+                  const m = /Date\((\d+)\)/.exec(r.Aedat);
+                  if (m) r.Aedat = new Date(parseInt(m[1], 10));
                 }
               });
 
-              const aValidRecords = aResults.filter(
-                (r) => r.Aedat instanceof Date && !isNaN(r.Aedat)
-              );
+              // 🔥 STEP 5: Đếm RFQ theo tháng (loại bỏ trùng lặp)
+              const monthly = Array(12).fill(0);
+              const uniqueKeys = new Set();
 
-              const range = this._getDateRange(sPeriodKey);
-              const uniqueSet = new Set();
-              let aChartData = [];
+              aRFQ.forEach((r) => {
+                if (r.Aedat instanceof Date && r.Aedat.getFullYear() === year) {
+                  const month = r.Aedat.getMonth(); // 0-11
+                  const key = `${r.Ebeln}-${month}`;
 
-              if (sPeriodKey === "thisAll") {
-                const yearCountMap = {};
-                aValidRecords.forEach((r) => {
-                  if (r.Aedat >= range.start && r.Aedat <= range.end) {
-                    const year = r.Aedat.getFullYear();
-                    const key = `${r.Ebeln}-${year}`;
-                    if (!uniqueSet.has(key)) {
-                      uniqueSet.add(key);
-                      yearCountMap[year] = (yearCountMap[year] || 0) + 1;
-                    }
+                  if (!uniqueKeys.has(key)) {
+                    uniqueKeys.add(key);
+                    monthly[month]++;
                   }
-                });
-                const minYear = Math.min(
-                  ...aValidRecords.map((r) => r.Aedat.getFullYear())
-                );
-                const maxYear = new Date().getFullYear();
-                for (let year = minYear; year <= maxYear; year++) {
-                  aChartData.push({
-                    Month: `Năm ${year}`,
-                    Count: yearCountMap[year] || 0,
-                  });
                 }
-              } else {
-                const year = range.start.getFullYear();
-                const monthlyCount = Array(12).fill(0);
-                aValidRecords.forEach((r) => {
-                  if (
-                    r.Aedat.getFullYear() === year &&
-                    r.Aedat >= range.start &&
-                    r.Aedat <= range.end
-                  ) {
-                    const month = r.Aedat.getMonth();
-                    const key = `${r.Ebeln}-${month}`;
-                    if (!uniqueSet.has(key)) {
-                      uniqueSet.add(key);
-                      monthlyCount[month]++;
-                    }
-                  }
-                });
-                aChartData = monthlyCount.map((count, i) => ({
-                  Month: `Tháng ${i + 1}`,
-                  Count: count,
-                }));
-              }
+              });
+
+              console.log("📈 Monthly RFQ counts:", monthly);
+
+              // 🔥 STEP 6: Tạo dữ liệu chart
+              const aChartData = monthly.map((count, i) => ({
+                Month: `Tháng ${i + 1}`,
+                Count: count,
+              }));
 
               this._displayMonthlyPOBarChart(aChartData);
               resolve();
-            },
-
-            error: (e) => {
+            })
+            .catch((err) => {
               BusyIndicator.hide();
-              console.error("❌ Lỗi load Monthly PO:", e);
-              MessageToast.show("Không thể tải dữ liệu PO/RFQ");
+              console.error("❌ Error loading RFQ chart:", err);
               this._displayMonthlyPOBarChart([]);
-              reject(e);
-            },
-          });
+              resolve();
+            });
         });
       },
 
-    
+      _loadMonthlyPOChart: function (sPeriodKey) {
+        return new Promise((resolve) => {
+          BusyIndicator.show(0);
+          const range = this._getDateRange(sPeriodKey);
+          const year = range.start.getFullYear();
+
+          // 🔥 STEP 1: Lấy danh sách PO hợp lệ từ EKET001Set
+          const pEket = new Promise((res) => {
+            this.oOData.read("/EKET001Set", {
+              success: (d) => {
+                const set = new Set();
+                (d.results || []).forEach((r) => {
+                  if (r.Ebeln) set.add(r.Ebeln);
+                });
+                console.log("✅ EKET loaded:", set.size, "unique Ebeln");
+                res(set);
+              },
+              error: (err) => {
+                console.error("❌ Error loading EKET:", err);
+                res(new Set());
+              },
+            });
+          });
+
+          // 🔥 STEP 2: Lấy tất cả header
+          const pHeader = new Promise((res, rej) => {
+            this.oOData.read("/ProcurementHeaderSet", {
+              urlParameters: {
+                $select: "Ebeln,Aedat,Bstyp",
+                $top: "10000",
+              },
+              success: res,
+              error: rej,
+            });
+          });
+
+          Promise.all([pEket, pHeader])
+            .then(([eketSet, headerData]) => {
+              BusyIndicator.hide();
+
+              // 🔥 STEP 3: Lọc chỉ lấy PO có trong EKET (Bstyp = "F")
+              let aPO = headerData.results.filter(
+                (h) => h.Bstyp === "F" && eketSet.has(h.Ebeln)
+              );
+
+              console.log("📊 Total PO after EKET filter:", aPO.length);
+
+              if (aPO.length === 0) {
+                console.warn("⚠️ No PO found in EKET");
+                this._displayMonthlyPOBarChart([]);
+                return resolve();
+              }
+
+              // 🔥 STEP 4: Parse ngày
+              aPO.forEach((r) => {
+                if (typeof r.Aedat === "string") {
+                  const m = /Date\((\d+)\)/.exec(r.Aedat);
+                  if (m) r.Aedat = new Date(parseInt(m[1], 10));
+                }
+              });
+
+              // 🔥 STEP 5: Đếm PO theo tháng (loại bỏ trùng lặp)
+              const monthly = Array(12).fill(0);
+              const uniqueKeys = new Set();
+
+              aPO.forEach((r) => {
+                if (r.Aedat instanceof Date && r.Aedat.getFullYear() === year) {
+                  const month = r.Aedat.getMonth();
+                  const key = `${r.Ebeln}-${month}`;
+
+                  if (!uniqueKeys.has(key)) {
+                    uniqueKeys.add(key);
+                    monthly[month]++;
+                  }
+                }
+              });
+
+              console.log("📈 Monthly PO counts:", monthly);
+
+              // 🔥 STEP 6: Tạo dữ liệu chart
+              const aChartData = monthly.map((count, i) => ({
+                Month: `Tháng ${i + 1}`,
+                Count: count,
+              }));
+
+              this._displayMonthlyPOBarChart(aChartData);
+              resolve();
+            })
+            .catch((err) => {
+              BusyIndicator.hide();
+              console.error("❌ Error loading PO chart:", err);
+              this._displayMonthlyPOBarChart([]);
+              resolve();
+            });
+        });
+      },
+
       /* ===== Load Connected Scatter Chart (Ổn định, không thay đổi dữ liệu lịch sử) ===== */
       _loadConnectedScatterChart: function () {
         BusyIndicator.show(0);
 
+        // 🔥 STEP 1: Lấy EKET trước
+        const pEket = new Promise((resolve) => {
+          this.oOData.read("/EKET001Set", {
+            success: (d) => {
+              const set = new Set();
+              (d.results || []).forEach((r) => {
+                if (r.Ebeln) set.add(r.Ebeln);
+              });
+              resolve(set);
+            },
+            error: () => resolve(new Set()),
+          });
+        });
+
         const oPRPromise = new Promise((resolve, reject) => {
           this.oOData.read("/PRSet", {
             urlParameters: {
-              $select: "Banfn,Bnfpo,Preis,Peinh,Menge,Badat,Matnr",
+              $select: "Banfn,Bnfpo,Preis,Peinh,Menge,Badat",
               $top: "5000",
             },
             success: resolve,
@@ -1037,7 +1199,7 @@ sap.ui.define(
         const oPOPromise = new Promise((resolve, reject) => {
           this.oOData.read("/ProcurementItemSet", {
             urlParameters: {
-              $select: "Ebeln,Ebelp,Netpr,Peinh,Menge,Aedat,Matnr",
+              $select: "Ebeln,Ebelp,Netpr,Peinh,Menge,Aedat",
               $top: "5000",
             },
             success: resolve,
@@ -1047,37 +1209,29 @@ sap.ui.define(
 
         const oHeaderPromise = new Promise((resolve, reject) => {
           this.oOData.read("/ProcurementHeaderSet", {
-            urlParameters: {
-              $select: "Ebeln,Bsart,Aedat",
-              $top: "5000",
-            },
+            urlParameters: { $select: "Ebeln,Bsart,Bstyp", $top: "5000" },
             success: resolve,
             error: reject,
           });
         });
 
-        Promise.all([oPRPromise, oPOPromise, oHeaderPromise])
-          .then(([prData, poItemData, headerData]) => {
+        Promise.all([pEket, oPRPromise, oPOPromise, oHeaderPromise])
+          .then(([eketSet, prData, poItemData, headerData]) => {
             BusyIndicator.hide();
 
             const aPRs = prData.results || [];
             const aPOItems = poItemData.results || [];
             const aHeaders = headerData.results || [];
 
-            // Map header Ebeln -> Header info
+            // Map header
             const mHeaderMap = {};
             aHeaders.forEach((h) => {
               mHeaderMap[h.Ebeln] = h;
             });
 
-            // ✅ Gom dữ liệu ổn định
-            const mAgg = {
-              PR: {},
-              PO: {},
-              RFQ: {},
-            };
+            const mAgg = { PR: {}, PO: {}, RFQ: {} };
 
-            // --- Gom PR ---
+            // --- Gom PR (giữ nguyên) ---
             aPRs.forEach((pr) => {
               const date = this._parseDate(pr.Badat);
               if (!date || isNaN(date)) return;
@@ -1092,8 +1246,11 @@ sap.ui.define(
               mAgg.PR[monthKey] = (mAgg.PR[monthKey] || 0) + val;
             });
 
-            // --- Gom PO / RFQ ---
+            // 🔥 --- Gom PO / RFQ (CHỈ LẤY TRONG EKET) ---
             aPOItems.forEach((po) => {
+              // 🔥 Bỏ qua nếu không có trong EKET
+              if (!eketSet.has(po.Ebeln)) return;
+
               const date = this._parseDate(po.Aedat);
               if (!date || isNaN(date)) return;
               const monthKey = `${date.getFullYear()}-${(
@@ -1104,34 +1261,33 @@ sap.ui.define(
               const header = mHeaderMap[po.Ebeln];
               if (!header) return;
 
-              const phase = header.Bsart === "AN" ? "RFQ" : "PO";
+              // Phân loại: Bstyp = "F" → PO, Bstyp = "A" → RFQ
+              let phase;
+              if (header.Bstyp === "F") phase = "PO";
+              else if (header.Bstyp === "A") phase = "RFQ";
+              else return; // bỏ qua các loại khác
+
               const val =
                 ((parseFloat(po.Netpr) || 0) * (parseFloat(po.Menge) || 0)) /
                 (parseFloat(po.Peinh) || 1);
               mAgg[phase][monthKey] = (mAgg[phase][monthKey] || 0) + val;
             });
 
-            // --- Merge 3 loại dữ liệu thành một mảng hiển thị ---
+            // Merge data
             const aChartData = [];
             ["PR", "PO", "RFQ"].forEach((phase) => {
               Object.entries(mAgg[phase]).forEach(([monthKey, val]) => {
-                aChartData.push({
-                  Phase: phase,
-                  Amount: val,
-                  Date: monthKey,
-                });
+                aChartData.push({ Phase: phase, Amount: val, Date: monthKey });
               });
             });
 
-            // --- Sắp xếp thời gian tăng dần ---
             aChartData.sort((a, b) => a.Date.localeCompare(b.Date));
 
-            // --- Gọi hàm hiển thị chart ---
             this._displayConnectedScatterChart(aChartData);
           })
           .catch((e) => {
             BusyIndicator.hide();
-            console.error("❌ Lỗi khi tải dữ liệu ConnectedChart:", e);
+            console.error("❌ Lỗi Connected Chart:", e);
           });
       },
 
@@ -1307,7 +1463,6 @@ sap.ui.define(
           })
         );
 
-        
         oVizFrame.setVizProperties({
           title: {
             text: "PO Status Overview",
@@ -2014,7 +2169,7 @@ sap.ui.define(
       onGoToRFQList: function () {
         sap.ui.core.UIComponent.getRouterFor(this).navTo("RFQList");
       },
-       onGoToPOList: function () {
+      onGoToPOList: function () {
         sap.ui.core.UIComponent.getRouterFor(this).navTo("POList");
       },
     });
