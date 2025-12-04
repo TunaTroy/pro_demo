@@ -98,17 +98,18 @@ sap.ui.define(
       // ============================
       onInit: function () {
         // 🔥 Model riêng dùng cho PO, không dùng model global từ Component nữa
+
+        // test
         this.oODataModel = new sap.ui.model.odata.v2.ODataModel(
           "/sap/opu/odata/sap/ZGW_PRO_G18_SRV/",
-          {
-            useBatch: false,
-            defaultUpdateMethod: sap.ui.model.odata.UpdateMethod.PUT,
-            json: true,
-          }
+          // {
+          //   useBatch: false,
+          //   defaultUpdateMethod: sap.ui.model.odata.UpdateMethod.PUT,
+          //   json: true,
+          // }
         );
 
-        // Gán model cho view để binding UI
-        this.getView().setModel(this.oODataModel);
+        // // Gán model cho view để binding UI
 
         // Models cho UI
         this.getView().setModel(new JSONModel(), "detailPO");
@@ -389,6 +390,8 @@ sap.ui.define(
               ),
               and: false, // OR
             });
+
+            console.log("opo: ", new Filter("Bstyp", FilterOperator.EQ, "F"));
 
             // STEP 4 — đọc ProcurementHeaderSet theo Ebeln + Bstyp = "F" (PO)
             const pHeader = new Promise((resolve, reject) => {
