@@ -162,81 +162,75 @@ _onRouteMatched: function () {
 
 
 
-      // ⭐ Sử dụng giống RFQList: sap.ui.table.Table + sap.ui.table.Column
+      _createSimpleValueHelp: function (oMI, sTitle, sKey, aValues) {
+    const aRows = aValues.map((v) => {
+        let obj = {};
+        obj[sKey] = v;
+        return obj;
+    });
 
-      _createSimpleValueHelp: function (oEvent, sTitle, sKey, aValues) {
-        const aRows = aValues.map((v) => {
-          const o = {};
-          o[sKey] = v;
-          return o;
-        });
+    const oRowsModel = new sap.ui.model.json.JSONModel({ rows: aRows });
 
-        const oRowsModel = new sap.ui.model.json.JSONModel({ rows: aRows });
-
-        const oTable = new sap.ui.table.Table({
-          visibleRowCount: 12,
-          selectionMode: "MultiToggle",
-          columns: [
+    const oTable = new sap.ui.table.Table({
+        visibleRowCount: 12,
+        selectionMode: "MultiToggle",
+        columns: [
             new sap.ui.table.Column({
-              width: "180px",
-              label: new sap.m.Label({ text: sTitle }),
-              template: new sap.m.Text({ text: `{${sKey}}` }),
+                width: "180px",
+                label: new sap.m.Label({ text: sTitle }),
+                template: new sap.m.Text({ text: `{${sKey}}` }),
             }),
-          ],
-        });
+        ],
+    });
 
-        oTable.setModel(oRowsModel);
-        oTable.bindRows("/rows");
+    oTable.setModel(oRowsModel);
+    oTable.bindRows("/rows");
 
-        const oSearch = new sap.m.SearchField({
-          width: "100%",
-          placeholder: "Search...",
-          liveChange: function (e) {
+    const oSearch = new sap.m.SearchField({
+        width: "100%",
+        placeholder: "Search...",
+        liveChange: (e) => {
             const q = (e.getParameter("newValue") || "").toUpperCase();
             const filtered = aRows.filter((r) =>
-              String(r[sKey]).toUpperCase().includes(q)
+                String(r[sKey]).toUpperCase().includes(q)
             );
             oRowsModel.setData({ rows: filtered });
-          },
-        });
+        },
+    });
 
-        const oFilterBar = new sap.ui.comp.filterbar.FilterBar({
-          advancedMode: false,
-          filterGroupItems: [],
-          basicSearch: oSearch,
-        });
+    const oFilterBar = new sap.ui.comp.filterbar.FilterBar({
+        advancedMode: false,
+        filterGroupItems: [],
+        basicSearch: oSearch,
+    });
 
-        const oMI = oEvent.getSource();
+    const oVH = new sap.ui.comp.valuehelpdialog.ValueHelpDialog({
+        title: sTitle,
+        key: sKey,
+        supportMultiselect: true,
+        supportRanges: false,
 
-        const oVH = new sap.ui.comp.valuehelpdialog.ValueHelpDialog({
-          title: sTitle,
-          key: sKey,
-          supportMultiselect: true,
-          supportRanges: false,
-          supportRangesOnly: false,
-
-          ok: function () {
+        ok: () => {
             const aIdx = oTable.getSelectedIndices();
             const aSelected = aIdx.map(
-              (i) => oTable.getContextByIndex(i).getObject()[sKey]
+                (i) => oTable.getContextByIndex(i).getObject()[sKey]
             );
 
             oMI.removeAllTokens();
             aSelected.forEach((v) =>
-              oMI.addToken(new sap.m.Token({ key: v, text: v }))
+                oMI.addToken(new sap.m.Token({ key: v, text: v }))
             );
 
             oVH.close();
-          },
-          cancel: function () {
-            oVH.close();
-          },
-        });
+        },
+        cancel: () => oVH.close(),
+    });
 
-        oVH.setFilterBar(oFilterBar);
-        oVH.setTable(oTable);
-        oVH.open();
-      },
+    oVH.setFilterBar(oFilterBar);
+    oVH.setTable(oTable);
+    oVH.open();
+},
+
 
       // =========================================================
       // FILTER + GROUP
@@ -350,110 +344,56 @@ _onRouteMatched: function () {
       // DETAIL PANEL
       // =========================================================
       onSelectPR: function (oEvent) {
-        const oItem = oEvent.getParameter("listItem");
-        const oCtx = oItem.getBindingContext();
-        const oDetail = this.byId("detailPanel");
-        const oLayout = this.byId("layoutMaster");
-        const oModel = this.getView().getModel();
+    const oItem = oEvent.getParameter("listItem");
+    if (!oItem) return;
 
-        if (!oCtx) return;
+    const oCtx = oItem.getBindingContext();
+    const group = oCtx.getObject();
+    const sBanfn = group.Banfn.padStart(10, "0");
 
-        const group = oCtx.getObject();
-        const sBanfn = group.Banfn;
+    const oDetail = this.byId("detailPanel");
+    const oLayout = this.byId("layoutMaster");
+    const oModel = this.getView().getModel();
 
-        const sKeyBanfn = String(sBanfn || "")
-          .trim()
-          .padStart(10, "0");
+    const oDetailModel = new sap.ui.model.json.JSONModel({
+        Banfn: group.Banfn,
+        Bsart: group.Bsart,
+        Ekgrp: group.Ekgrp,
+        Ernam: group.Ernam,
+        Badat: group.Badat,
+        Frgkz: group.Frgkz,
+        Items: []
+    });
 
-        const oNoteModel = new sap.ui.model.json.JSONModel({
-          Banfn: sKeyBanfn,
-          Note: "Loading...",
-        });
-        this.getView().setModel(oNoteModel, "noteModel");
+    oDetail.setModel(oDetailModel);
+    oDetail.setVisible(true);
+    oLayout.setSize("65%");
 
-        const pad5 = (v) =>
-          String(v || "")
-            .trim()
-            .padStart(5, "0");
-        const aLeftItems = Array.isArray(group.Items) ? group.Items : [];
+    sap.ui.core.BusyIndicator.show(0);
 
-        const hasMatnrOrTxz = aLeftItems.some((it) => it.Matnr || it.Txz01);
-        const leftKey = (it) => {
-          const k1 = pad5(it.Bnfpo);
-          const k2 = (it.Matnr || it.Txz01 || "").trim();
-          return hasMatnrOrTxz ? `${k1}|${k2}` : k1;
-        };
-        const leftKeySet = new Set(aLeftItems.map(leftKey));
-
-        const oDetailModel = new sap.ui.model.json.JSONModel({
-          Banfn: group.Banfn,
-          Bsart: group.Bsart,
-          Ekgrp: group.Ekgrp,
-          Ernam: group.Ernam,
-          Badat: group.Badat,
-          Frgkz: group.Frgkz,
-          Items: [],
-        });
-
-        sap.ui.core.BusyIndicator.show(0);
-
-        oModel.read("/PRSet", {
-          filters: [
-            new sap.ui.model.Filter(
-              "Banfn",
-              sap.ui.model.FilterOperator.EQ,
-              sKeyBanfn
-            ),
-          ],
-          success: (oData) => {
-            sap.ui.core.BusyIndicator.hide();
-            let aEban = oData?.results || [];
-
-            const ebanKey = (it) => {
-              const k1 = pad5(it.Bnfpo);
-              const k2 = (it.Matnr || it.Txz01 || "").trim();
-              return hasMatnrOrTxz ? `${k1}|${k2}` : k1;
-            };
-
-            let aIntersect = aEban.filter((it) => leftKeySet.has(ebanKey(it)));
-
-            if (!aIntersect.length) {
-              const leftBnfpoSet = new Set(
-                aLeftItems.map((it) => pad5(it.Bnfpo))
-              );
-              aIntersect = aEban.filter((it) =>
-                leftBnfpoSet.has(pad5(it.Bnfpo))
-              );
-            }
-
-            aIntersect.sort((a, b) =>
-              pad5(a.Bnfpo).localeCompare(pad5(b.Bnfpo))
-            );
-
-            oDetailModel.setProperty("/Items", aIntersect);
-            oDetail.setModel(oDetailModel);
-            oDetail.setVisible(true);
-            oLayout.setSize("65%");
-
-            const oItemTable = this.byId("tblPRItems");
-            if (oItemTable) oItemTable.setModel(oDetailModel);
-
-            this._loadPRNote(sKeyBanfn);
-          },
-
-          error: () => {
+    // 🟢 LOAD ITEMS ĐÚNG - KHÔNG MERGE
+    oModel.read("/PRSet", {
+        filters: [
+            new sap.ui.model.Filter("Banfn", sap.ui.model.FilterOperator.EQ, sBanfn)
+        ],
+        success: (d) => {
             sap.ui.core.BusyIndicator.hide();
 
-            oDetailModel.setProperty("/Items", aLeftItems);
-            oDetail.setModel(oDetailModel);
+            const aItems = d.results || [];
 
-            oDetail.setVisible(true);
-            oLayout.setSize("60%");
+            // sort by Bnfpo
+            aItems.sort((a, b) => Number(a.Bnfpo) - Number(b.Bnfpo));
 
-            this._loadPRNote(sKeyBanfn);
-          },
-        });
-      },
+            oDetailModel.setProperty("/Items", aItems);
+            this._loadPRNote(sBanfn);
+        },
+        error: () => {
+            sap.ui.core.BusyIndicator.hide();
+            MessageToast.show("Failed to load PR items.");
+        }
+    });
+},
+
 
       onCloseDetail: function () {
         const oDetail = this.byId("detailPanel");
@@ -696,38 +636,38 @@ _onRouteMatched: function () {
       // REFRESH AFTER ACTION
       // =========================================================
       _refreshAfterAction: function (sBanfn) {
-        const oModel = this.getView().getModel();
-        const oDetail = this.byId("detailPanel");
+    const oModel = this.getView().getModel();
+    const oDetail = this.byId("detailPanel");
 
-        // Reload list
-        setTimeout(
-          function () {
-            this.onGoFilter();
-          }.bind(this),
-          500
-        );
+    sap.ui.core.BusyIndicator.show(0);
 
-        // Reload detail panel
-        sap.ui.core.BusyIndicator.show(0);
-        oModel.read("/PRSet", {
-          filters: [new Filter("Banfn", FilterOperator.EQ, sBanfn)],
-          success: function (oData) {
+    oModel.read("/PRSet", {
+        filters: [
+            new sap.ui.model.Filter("Banfn", sap.ui.model.FilterOperator.EQ, sBanfn)
+        ],
+        success: (oData) => {
             sap.ui.core.BusyIndicator.hide();
-            const aItems = oData && oData.results ? oData.results : [];
-            const oDetailModel = oDetail.getModel();
-            oDetailModel.setProperty("/Items", aItems);
+
+            // 🔥 CLEAR OLD MODEL FIRST
+            oDetail.setModel(null);
+
+            const oDetailModel = new sap.ui.model.json.JSONModel({
+                Banfn: sBanfn,
+                Items: oData.results || []
+            });
+
             oDetail.setModel(oDetailModel);
             oDetail.bindElement("/");
-            oDetail.invalidate();
-            MessageToast.show("🔄 Refreshed PR details.");
-            MessageToast.show("✅ PR " + sBanfn + " refreshed successfully");
-          },
-          error: function () {
+
+            MessageToast.show("🔄 PR refreshed");
+        },
+        error: () => {
             sap.ui.core.BusyIndicator.hide();
-            MessageToast.show("⚠️ Could not refresh EBAN items.");
-          },
-        });
-      },
+            MessageToast.show("⚠ Failed to refresh PR.");
+        }
+    });
+},
+
 
       // =========================================================
       // EXPORT TO EXCEL
@@ -803,29 +743,24 @@ _onRouteMatched: function () {
       // VALUE HELP DIALOGS
       // =========================================================
       onValueHelpBanfn: function (oEvent) {
-        const oModel = this.getView().getModel();
-        sap.ui.core.BusyIndicator.show(0);
+    const oMI = oEvent.getSource(); // chính xác MultiInput
 
-        oModel.read("/PRSet", {
-          urlParameters: { $top: 5000 },
-          success: (d) => {
+    const oModel = this.getView().getModel();
+    sap.ui.core.BusyIndicator.show(0);
+
+    oModel.read("/PRSet", {
+        urlParameters: { $top: 5000 },
+        success: (d) => {
             sap.ui.core.BusyIndicator.hide();
-            const a = [
-              ...new Set(
-                d.results.map((o) => String(o.Banfn).padStart(10, "0"))
-              ),
-            ];
-            this._createSimpleValueHelp(
-              oEvent,
-              "Purchase Requisition",
-              "Banfn",
-              a
-            );
-          },
-        });
-      },
+            const a = [...new Set(d.results.map(o => o.Banfn.padStart(10, "0")))];
+            this._createSimpleValueHelp(oMI, "Purchase Requisition", "Banfn", a);
+        }
+    });
+},
+
 
       onValueHelpBsart: function (oEvent) {
+        const oMI = oEvent.getSource();
         const oModel = this.getView().getModel();
         sap.ui.core.BusyIndicator.show(0);
 
@@ -834,12 +769,13 @@ _onRouteMatched: function () {
           success: (d) => {
             sap.ui.core.BusyIndicator.hide();
             const a = [...new Set(d.results.map((o) => o.Bsart))];
-            this._createSimpleValueHelp(oEvent, "Document Type", "Bsart", a);
+            this._createSimpleValueHelp(oMI, "Document Type", "Bsart", a);
           },
         });
       },
 
       onValueHelpEkgrp: function (oEvent) {
+        const oMI = oEvent.getSource();
         const oModel = this.getView().getModel();
         sap.ui.core.BusyIndicator.show(0);
 
@@ -848,12 +784,13 @@ _onRouteMatched: function () {
           success: (d) => {
             sap.ui.core.BusyIndicator.hide();
             const a = [...new Set(d.results.map((o) => o.Ekgrp))];
-            this._createSimpleValueHelp(oEvent, "Purchasing Group", "Ekgrp", a);
+            this._createSimpleValueHelp(oMI, "Purchasing Group", "Ekgrp", a);
           },
         });
       },
 
       onValueHelpErnam: function (oEvent) {
+        const oMI = oEvent.getSource();
         const oModel = this.getView().getModel();
         sap.ui.core.BusyIndicator.show(0);
 
@@ -862,7 +799,7 @@ _onRouteMatched: function () {
           success: (d) => {
             sap.ui.core.BusyIndicator.hide();
             const a = [...new Set(d.results.map((o) => o.Ernam))];
-            this._createSimpleValueHelp(oEvent, "Created By", "Ernam", a);
+            this._createSimpleValueHelp(oMI, "Created By", "Ernam", a);
           },
         });
       },

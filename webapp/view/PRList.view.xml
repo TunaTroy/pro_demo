@@ -104,7 +104,6 @@
               class="sapUiSizeCompact stickyTable"
               growing="true"
               growingThreshold="100"
-              growingScrollToLoad="true"
               width="100%">
               <noData>
                 <IllustratedMessage

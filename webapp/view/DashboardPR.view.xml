@@ -78,11 +78,11 @@
         <VBox class="sapUiSmallMargin">
           <HBox alignItems="Center" justifyContent="SpaceBetween">
             <Text text="Biểu đồ PR theo tháng" class="sapUiTinyMarginBegin sapUiBold sapUiSmallMarginTop"/>
-            <Select
+            <!-- <Select
               id="prYearFilter"
               width="120px"
               selectedKey="{viewModel>/selectedPRYear}"
-              change=".onPRYearChange"/>
+              change=".onPRYearChange"/> -->
           </HBox>
           <viz:VizFrame
             id="idMonthlyBarChartPR"
