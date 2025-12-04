@@ -347,14 +347,14 @@ _onRouteMatched: function () {
     const oItem = oEvent.getParameter("listItem");
     if (!oItem) return;
 
-    const oCtx = oItem.getBindingContext();
-    const group = oCtx.getObject();
+    const group = oItem.getBindingContext().getObject();
     const sBanfn = group.Banfn.padStart(10, "0");
 
     const oDetail = this.byId("detailPanel");
     const oLayout = this.byId("layoutMaster");
     const oModel = this.getView().getModel();
 
+    // ⭐ Tạo model detail
     const oDetailModel = new sap.ui.model.json.JSONModel({
         Banfn: group.Banfn,
         Bsart: group.Bsart,
@@ -365,13 +365,15 @@ _onRouteMatched: function () {
         Items: []
     });
 
-    oDetail.setModel(oDetailModel);
+    // ⭐ GÁN MODEL VỚI NAME “detail”
+    this.getView().setModel(oDetailModel, "detail");
+
     oDetail.setVisible(true);
     oLayout.setSize("65%");
 
     sap.ui.core.BusyIndicator.show(0);
 
-    // 🟢 LOAD ITEMS ĐÚNG - KHÔNG MERGE
+    // 🟢 Load items
     oModel.read("/PRSet", {
         filters: [
             new sap.ui.model.Filter("Banfn", sap.ui.model.FilterOperator.EQ, sBanfn)
@@ -380,8 +382,6 @@ _onRouteMatched: function () {
             sap.ui.core.BusyIndicator.hide();
 
             const aItems = d.results || [];
-
-            // sort by Bnfpo
             aItems.sort((a, b) => Number(a.Bnfpo) - Number(b.Bnfpo));
 
             oDetailModel.setProperty("/Items", aItems);
@@ -440,7 +440,7 @@ _onRouteMatched: function () {
       // =========================================================
       onApprovePR: function () {
         const oDetail = this.byId("detailPanel");
-        const oDetailModel = oDetail.getModel();
+        const oDetailModel = this.getView().getModel("detail");
         const aItems = oDetailModel ? oDetailModel.getProperty("/Items") : [];
         const sBanfn = oDetailModel ? oDetailModel.getProperty("/Banfn") : "";
 
@@ -636,8 +636,9 @@ _onRouteMatched: function () {
       // REFRESH AFTER ACTION
       // =========================================================
       _refreshAfterAction: function (sBanfn) {
+
     const oModel = this.getView().getModel();
-    const oDetail = this.byId("detailPanel");
+    const oDetailModel = new sap.ui.model.json.JSONModel();
 
     sap.ui.core.BusyIndicator.show(0);
 
@@ -648,16 +649,15 @@ _onRouteMatched: function () {
         success: (oData) => {
             sap.ui.core.BusyIndicator.hide();
 
-            // 🔥 CLEAR OLD MODEL FIRST
-            oDetail.setModel(null);
+            const aItems = oData.results || [];
 
-            const oDetailModel = new sap.ui.model.json.JSONModel({
+            oDetailModel.setData({
                 Banfn: sBanfn,
-                Items: oData.results || []
+                Items: aItems
             });
 
-            oDetail.setModel(oDetailModel);
-            oDetail.bindElement("/");
+            // ⭐ GÁN LẠI MODEL “detail”
+            this.getView().setModel(oDetailModel, "detail");
 
             MessageToast.show("🔄 PR refreshed");
         },
@@ -667,6 +667,8 @@ _onRouteMatched: function () {
         }
     });
 },
+
+
 
 
       // =========================================================
