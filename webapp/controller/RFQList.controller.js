@@ -319,7 +319,6 @@ sap.ui.define(
         return oDefaults;
       },
 
-
       // Load RFQ From ZTB_OPT_PR
       _loadRFQList: function () {
         sap.ui.core.BusyIndicator.show(0);
@@ -346,15 +345,29 @@ sap.ui.define(
 
             const aRFQ = [...new Set(aEket.map((e) => e.Ebeln))];
 
-            // Tạo filter để gọi HeaderSet theo RFQ
-            const aFilters = aRFQ.map(
-              (r) => new Filter("Ebeln", FilterOperator.EQ, r)
-            );
+            // ⚠ Nếu không có RFQ thì thoát luôn
+            if (aRFQ.length === 0) {
+              this.getView().setModel(new JSONModel([]), "rfq");
+              sap.ui.core.BusyIndicator.hide();
+              MessageToast.show("No RFQ found for selected PR list.");
+              return;
+            }
+
+            // ✅ Tạo 1 filter group OR cho tất cả EBELN
+            const oRFQFilter = new Filter({
+              filters: aRFQ.map(
+                (r) => new Filter("Ebeln", FilterOperator.EQ, r)
+              ),
+              and: false, // OR giữa các Ebeln
+            });
 
             // STEP 3 — load ProcurementHeaderSet theo RFQ
             const pHeader = new Promise((resolve, reject) => {
               oModel.read("/ProcurementHeaderSet", {
-                filters: aFilters,
+                filters: [
+                  oRFQFilter, // list Ebeln
+                  new Filter("Bstyp", FilterOperator.EQ, "A"), // 🔥 Only RFQ
+                ],
                 success: (d) => resolve(d.results),
                 error: reject,
               });
