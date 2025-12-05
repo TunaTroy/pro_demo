@@ -16,12 +16,21 @@
 
         <content>
             <!-- HEADER: giống phần trên screenshot -->
-            <ObjectHeader
-                title="{item>/Txz01}"
-                number="{item>/Menge}"
-                numberUnit="{item>/Meins}"
-                intro="{= 'Item ' + ${item>/Ebelp} }"
-            />
+           <ObjectHeader
+    title="{item>/Txz01}"
+    intro="{= 'Item ' + ${item>/Ebelp} }">
+
+    <attributes>
+        <ObjectAttribute
+            title="Requested Quantity"
+            text="{item>/Menge}" />
+
+        <ObjectAttribute
+            title="Unit"
+            text="{item>/Meins}" />
+    </attributes>
+</ObjectHeader>
+
 
             <!-- ICON TAB BAR -->
             <IconTabBar expandable="false">
@@ -46,6 +55,9 @@
 
                                 <Text text="Net Price:" class="sapUiSmallMarginTop"/>
                                 <Text text="{item>/Netpr}"/>
+
+                                <Text text="Unit:" class="sapUiSmallMarginTop"/>
+                                <Text text="{item>/Meins}"/>
                             </VBox>
 
                             <!-- Cột phải -->
@@ -57,7 +69,7 @@
                                 <Text text="{item>/Menge}"/>
 
                                 <Text text="Storage Location:" class="sapUiSmallMarginTop"/>
-                                <Text text="{item>/LGORT}"/>
+                                <Text text="{item>/Lgort}"/>
 
                                 <Text text="Deadline Date:" class="sapUiSmallMarginTop"/>
                                 <Text text="{ path:'item>/Agdat', formatter:'.formatter.dateFormat'}"/>
