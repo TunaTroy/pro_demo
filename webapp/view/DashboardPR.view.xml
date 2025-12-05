@@ -68,9 +68,9 @@
           </VBox>
 
           <!-- Top Vendor -->
-          <VBox id="vendorChartSection" width="30%" class="dashboardCard">
+          <!-- <VBox id="vendorChartSection" width="30%" class="dashboardCard">
             <viz:VizFrame id="idVendorBarChart" vizType="bar" width="100%" height="280px"/>
-          </VBox>
+          </VBox> -->
         </HBox>
         
 

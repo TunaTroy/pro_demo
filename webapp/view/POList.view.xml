@@ -171,7 +171,12 @@
               </Panel>
               <!-- ===== ITEMS TABLE ===== -->
               <Panel id="panelPOItems" headerText="📦 Items" class="sapUiNoContentPadding sapUiResponsiveContentPadding sapUiSizeCompact" width="100%">
-                <Table id="tblPOItems" mode="SingleSelectMaster" selectionChange="onItemPress" items="{detailPO>/Items}" class="sapUiSizeCompact" width="100%">
+                <Table id="tblPOItems" 
+                       mode="SingleSelectMaster" 
+                       selectionChange="onItemPress" 
+                       items="{detailPO>/Items}" 
+                       class="sapUiSizeCompact" 
+                       width="100%">
                   <columns>
                     <Column id="_IDGenColumn6">
                       <Text id="_IDGenText18" text="Item"/>

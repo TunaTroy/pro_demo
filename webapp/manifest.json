@@ -141,6 +141,14 @@
           ]
         },
         {
+          "name": "RFQItemDetail",
+          "pattern": "RFQItemDetail/{Ebeln}/Item/{Ebelp}",
+          "target": [
+            "TargetRFQItemDetail"
+          ]
+        },
+
+        {
           "name": "POList",
           "pattern": "POList",
           "target": [
@@ -190,6 +198,13 @@
           "clearControlAggregation": false,
           "viewId": "RFQDetail",
           "viewName": "RFQDetail"
+        },
+        "TargetRFQItemDetail": {
+          "viewType": "XML",
+          "transition": "slide",
+          "clearControlAggregation": false,
+          "viewId": "RFQItemDetail",
+          "viewName": "RFQItemDetail"
         },
         "TargetPOList": {
           "viewType": "XML",

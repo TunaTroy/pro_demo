@@ -143,7 +143,9 @@
     expandable="false"
     class="sapUiNoContentPadding sapUiSmallMarginBottom fioriSectionBox"
 >
-                    <Table items="{rfq>/Items}">
+                    <Table items="{rfq>/Items}"
+                            mode="SingleSelectMaster" 
+                            selectionChange="onItemDetailPress" >
                         <columns>
                             <Column>
                                 <Text text="Item" />

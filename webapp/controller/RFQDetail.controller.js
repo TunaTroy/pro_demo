@@ -78,6 +78,26 @@ sap.ui.define(
           .attachPatternMatched(this._onObjectMatched, this);
       },
 
+      onItemDetailPress: function (oEvent) {
+    const oItem = oEvent.getParameter("listItem");
+    if (!oItem) return;
+
+    // Lấy đúng Binding Context của model "rfq"
+    const oCtx = oItem.getBindingContext("rfq");
+    if (!oCtx) return;
+
+    const oData = oCtx.getObject(); // <-- đây chứa Matnr, Ebelp, Werks,...
+
+    const oRouter = sap.ui.core.UIComponent.getRouterFor(this);
+
+    oRouter.navTo("RFQItemDetail", {
+        Ebeln: oData.Ebeln,
+        Ebelp: oData.Ebelp,
+    });
+},
+
+
+
       _onObjectMatched: function (oEvent) {
         const sEbeln = oEvent.getParameter("arguments").Ebeln;
 

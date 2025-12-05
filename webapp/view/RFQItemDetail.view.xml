@@ -1,0 +1,92 @@
+<mvc:View
+    controllerName="demodashboard.controller.RFQItemDetail"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:l="sap.ui.layout"
+    displayBlock="true">
+
+    <Page title="RFQ Item Detail">
+        <headerContent>
+            <Button icon="sap-icon://nav-back" type="Transparent" press=".onNavBack"/>
+        </headerContent>
+
+        <content>
+            <!-- HEADER: giống phần trên screenshot -->
+            <ObjectHeader
+                title="{item>/Txz01}"
+                number="{item>/Menge}"
+                numberUnit="{item>/Meins}"
+                intro="{= 'Item ' + ${item>/Ebelp} }"
+            />
+
+            <!-- ICON TAB BAR -->
+            <IconTabBar expandable="false">
+                <!-- 🟢 QUAN TRỌNG: dùng aggregation <items> -->
+                <items>
+
+                    <!-- TAB 1: GENERAL INFORMATION -->
+                    <IconTabFilter text="General Information" key="general">
+                        <l:Grid
+                            defaultSpan="L6 M12 S12"
+                            hSpacing="2"
+                            vSpacing="1"
+                            class="sapUiSmallMargin">
+
+                            <!-- Cột trái -->
+                            <VBox>
+                                <Text text="Material:"/>
+                                <Text text="{item>/Matnr}"/>
+
+                                <Text text="Short Text:" class="sapUiSmallMarginTop"/>
+                                <Text text="{item>/Txz01}"/>
+
+                                <Text text="Net Price:" class="sapUiSmallMarginTop"/>
+                                <Text text="{item>/Netpr}"/>
+                            </VBox>
+
+                            <!-- Cột phải -->
+                            <VBox>
+                                <Text text="Plant:"/>
+                                <Text text="{item>/Werks}"/>
+
+                                <Text text="Requested Quantity:" class="sapUiSmallMarginTop"/>
+                                <Text text="{item>/Menge}"/>
+
+                                <Text text="Storage Location:" class="sapUiSmallMarginTop"/>
+                                <Text text="{item>/LGORT}"/>
+
+                                <Text text="Deadline Date:" class="sapUiSmallMarginTop"/>
+                                <Text text="{ path:'item>/Agdat', formatter:'.formatter.dateFormat'}"/>
+                            </VBox>
+
+                        </l:Grid>
+                    </IconTabFilter>
+
+                    <!-- TAB 2: DELIVERY ADDRESS -->
+                    <IconTabFilter text="Delivery Address" key="address">
+                        <VBox class="sapUiSmallMargin">
+                            <Text text="Name:"/>
+                            <Text text="{item>/Name1}"/>
+
+                            <Text text="Street:" class="sapUiSmallMarginTop"/>
+                            <Text text="{item>/Stras}"/>
+
+                            <Text text="City:" class="sapUiSmallMarginTop"/>
+                            <Text text="{item>/Ort01}"/>
+
+                            <Text text="Postal Code:" class="sapUiSmallMarginTop"/>
+                            <Text text="{item>/Pstlz}"/>
+
+                            <Text text="Country:" class="sapUiSmallMarginTop"/>
+                            <Text text="{item>/Land1}"/>
+                        </VBox>
+                    </IconTabFilter>
+
+                
+
+                </items>
+            </IconTabBar>
+        </content>
+    </Page>
+
+</mvc:View>
