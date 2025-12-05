@@ -37,7 +37,7 @@
                     class="headerImageContainer"
                 >
                     <Image
-                        src="images/user.png"
+                        src="/images/tuanthanden.jpg"
                         width="140px"
                         height="140px"
                         decorative="false"
@@ -139,9 +139,9 @@
                 <!-- 3) ITEMS SECTION -->
                 <!-- ================================= -->
                 <Panel
-    headerText="Items"
-    expandable="false"
-    class="sapUiNoContentPadding sapUiSmallMarginBottom fioriSectionBox"
+                    headerText="Items"
+                    expandable="false"
+                    class="sapUiNoContentPadding sapUiSmallMarginBottom fioriSectionBox"
 >
                     <Table items="{rfq>/Items}"
                             mode="SingleSelectMaster" 
@@ -196,7 +196,7 @@
             <!-- ================================= -->
             <!-- 5) NOTES SECTION (FULL WIDTH + ALIGN LEFT/RIGHT LIKE GRID) -->
             <!-- ================================= -->
-            <l:Grid
+            <!-- <l:Grid
                 defaultSpan="L12 M12 S12"
                 class="sapUiSmallMarginTop sapUiMediumMarginBottom sapUiMediumMarginBegin sapUiMediumMarginEnd"
             >
@@ -214,7 +214,7 @@
                         />
                     </VBox>
                 </Panel>
-            </l:Grid>
+            </l:Grid> -->
         </content>
     </Page>
 </mvc:View>

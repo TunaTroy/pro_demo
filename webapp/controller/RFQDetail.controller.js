@@ -97,6 +97,13 @@ sap.ui.define(
 },
 
 
+      onNavBack: function () {
+    const oRouter = sap.ui.core.UIComponent.getRouterFor(this);
+    oRouter.navTo("RFQList", {}, true);
+  },
+
+
+
 
       _onObjectMatched: function (oEvent) {
         const sEbeln = oEvent.getParameter("arguments").Ebeln;

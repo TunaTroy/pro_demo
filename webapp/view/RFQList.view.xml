@@ -228,7 +228,7 @@
                   }" />
                 </HBox>
                 <!-- Status -->
-                <HBox class="sapUiTinyMarginTop" visible="{view>/fieldSettings/status}">
+                <!-- <HBox class="sapUiTinyMarginTop" visible="{view>/fieldSettings/status}">
                   <Label text="Status: " class="sapUiTinyMarginEnd" />
                   <ObjectStatus
                     text="{
@@ -239,7 +239,7 @@
                       path: 'rfq>Statu',
                       formatter: '.formatter.statusState'
                     }" />
-                </HBox>
+                </HBox> -->
                 <!-- Created On -->
                 <HBox class="sapUiTinyMarginTop" visible="{view>/fieldSettings/createdOn}">
                   <Label text="Created On: " class="sapUiTinyMarginEnd" />
