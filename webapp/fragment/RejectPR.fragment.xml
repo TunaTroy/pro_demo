@@ -1,0 +1,98 @@
+<mvc:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns:core="sap.ui.core">
+
+    <Dialog
+        id="dlgRejectPR"
+        title="Reject Selected Items"
+        contentWidth="600px"
+        horizontalScrolling="false"
+        verticalScrolling="true"
+        type="Message"
+        stretchOnPhone="true">
+
+        <!-- TABLE WITH CHECKBOX + ITEM INFO + REASON DROPDOWN -->
+        <VBox class="sapUiSmallMargin">
+
+            <Text text="Select one or more items to reject and choose a reason for each." class="sapUiTinyMargin"/>
+
+            <Table
+                id="tblRejectItems"
+                inset="false"
+                mode="None"
+                items="{rejectModel>/Items}"
+                class="sapUiSizeCompact">
+
+                <columns>
+                    <Column width="3rem">
+                        <Text text="Sel"/>
+                    </Column>
+                    <Column width="4rem">
+                        <Text text="Item"/>
+                    </Column>
+                    <Column minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" width="10rem">
+                        <Text text="Material"/>
+                    </Column>
+                    <Column width="12rem">
+                        <Text text="Reason"/>
+                    </Column>
+                </columns>
+
+                <items>
+                    <ColumnListItem>
+
+                        <cells>
+
+                            <!-- Checkbox chọn item -->
+                            <CheckBox
+                                selected="{rejectModel>Selected}"
+                                select=".onRejectItemSelect"/>
+
+                            <!-- Item number -->
+                            <Text text="{rejectModel>Bnfpo}"/>
+
+                            <!-- Material text -->
+                            <Text text="{rejectModel>Txz01}"/>
+
+                            <!-- Reason Select -->
+                            <Select 
+                                width="100%"
+                                selectedKey="{rejectModel>ReasonId}">
+                                <items>
+                                    <core:Item key="" text="Select reason..."/>
+                                    <core:Item key="01" text="01 - Wrong quantity"/>
+                                    <core:Item key="02" text="02 - Wrong material"/>
+                                    <core:Item key="03" text="03 - Budget exceeded"/>
+                                    <core:Item key="04" text="04 - Duplicate request"/>
+                                    <core:Item key="05" text="05 - Not needed anymore"/>
+                                    <core:Item key="06" text="06 - Other"/>
+                                </items>
+                            </Select>
+
+                        </cells>
+
+                    </ColumnListItem>
+                </items>
+
+            </Table>
+        </VBox>
+
+        <!-- BUTTONS -->
+        <beginButton>
+            <Button
+                id="btnRejectConfirm"
+                text="Reject"
+                type="Reject"
+                press=".onConfirmRejectItems"/>
+        </beginButton>
+
+        <endButton>
+            <Button
+                text="Cancel"
+                press=".onCancelReject"/>
+        </endButton>
+
+    </Dialog>
+
+</mvc:FragmentDefinition>

@@ -30,8 +30,11 @@ sap.ui.define(
       // FORMATTERS
       // =========================================================
       formatter: {
-        statusText: function (s) {
-          switch (s) {
+        statusText: function (sFrgkz, sReason) {
+          // ⭐ Reject logic: C + có ReasonId => Rejected
+          if (sFrgkz === "C" && sReason) return "Rejected";
+
+          switch (sFrgkz) {
             case "R":
               return "Approved";
             case "C":
@@ -43,8 +46,11 @@ sap.ui.define(
           }
         },
 
-        statusState: function (s) {
-          switch (s) {
+        statusState: function (sFrgkz, sReason) {
+          // ⭐ C + ReasonId => Error (đỏ)
+          if (sFrgkz === "C" && sReason) return "Error";
+
+          switch (sFrgkz) {
             case "R":
               return "Success";
             case "C":
@@ -54,6 +60,14 @@ sap.ui.define(
             default:
               return "None";
           }
+        },
+
+        // Tooltip cho status (C)
+        statusTooltip: function (sFrgkz, sReason) {
+          if (sFrgkz === "C" && sReason) {
+            return "Rejected. Reason ID: " + sReason;
+          }
+          return "";
         },
 
         dateFormat: function (sDate) {
@@ -95,37 +109,68 @@ sap.ui.define(
         },
       },
 
+      // ⭐ Danh sách lý do reject (demo – bạn chỉnh theo master data của bạn)
+      _aRejectReasons: [
+        { key: "00", text: "Incorrect quantity requested" },
+        { key: "01", text: "Budget not approved" },
+        { key: "02", text: "Material not required anymore" },
+        { key: "03", text: "Duplicate purchase requisition" },
+        { key: "04", text: "Incorrect material number" },
+        { key: "05", text: "Wrong plant or storage location" },
+        { key: "06", text: "Pricing information is incorrect" },
+        { key: "07", text: "Missing technical specification" },
+        { key: "08", text: "Vendor issue or restriction" },
+        { key: "09", text: "Request requires further review" },
+      ],
+
       // =========================================================
       // INIT
       // =========================================================
       onInit: function () {
-    const sServiceUrl = "/sap/opu/odata/sap/ZGW_PRO_G18_SRV/";
-    const oModel = new ODataModel(sServiceUrl, {
-      useBatch: false,
-      json: true,
-      defaultUpdateMethod: sap.ui.model.odata.UpdateMethod.PUT,
-    });
+        const sServiceUrl = "/sap/opu/odata/sap/ZGW_PRO_G18_SRV/";
+        const oModel = new ODataModel(sServiceUrl, {
+          useBatch: false,
+          json: true,
+          defaultUpdateMethod: sap.ui.model.odata.UpdateMethod.PUT,
+        });
 
-    this.getView().setModel(oModel);
-    this.byId("detailPanel").setVisible(false);
-    this._loadCaches();
+        this.getView().setModel(oModel);
+        this.byId("detailPanel").setVisible(false);
+        this._loadCaches();
 
+        const oRouter = sap.ui.core.UIComponent.getRouterFor(this);
+        oRouter
+          .getRoute("PRList")
+          .attachPatternMatched(this._onRouteMatched, this);
+        this.onGoFilter();
+      },
 
-    const oRouter = sap.ui.core.UIComponent.getRouterFor(this);
-    oRouter.getRoute("PRList").attachPatternMatched(this._onRouteMatched, this);
-    this.onGoFilter();
-},
+      _onRouteMatched: function () {
+        // ⭐ 1. Kiểm tra nếu quay lại từ màn PR Item Detail
+        if (sessionStorage.getItem("PR_BACK_FROM_DETAIL") === "1") {
+          console.log("⏳ Back from PR Item Detail → SKIP reload");
 
-_onRouteMatched: function () {
+          // Xóa flag sau khi sử dụng
+          sessionStorage.removeItem("PR_BACK_FROM_DETAIL");
 
-    // ⭐ 1. Kiểm tra nếu quay lại từ màn PR Item Detail
-    if (sessionStorage.getItem("PR_BACK_FROM_DETAIL") === "1") {
-        console.log("⏳ Back from PR Item Detail → SKIP reload");
+          // Chỉ reset UI (đóng panel detail)
+          const oDetail = this.byId("detailPanel");
+          if (oDetail) oDetail.setVisible(false);
 
-        // Xóa flag sau khi sử dụng
-        sessionStorage.removeItem("PR_BACK_FROM_DETAIL");
+          const oLayout = this.byId("layoutMaster");
+          if (oLayout) oLayout.setSize("100%");
 
-        // Chỉ reset UI (đóng panel detail)
+          const oTable = this.byId("tblPRList");
+          if (oTable) oTable.removeSelections();
+
+          return; // ⭐ STOP — tránh reload PR List
+        }
+
+        // ⭐ 2. Các trường hợp khác (Dashboard → PR List) → Reload
+        console.log("🔄 From Dashboard → Reload PR List");
+        this.onGoFilter();
+
+        // Reset UI
         const oDetail = this.byId("detailPanel");
         if (oDetail) oDetail.setVisible(false);
 
@@ -135,106 +180,83 @@ _onRouteMatched: function () {
         const oTable = this.byId("tblPRList");
         if (oTable) oTable.removeSelections();
 
-        return; // ⭐ STOP — tránh reload PR List
-    }
-
-    // ⭐ 2. Các trường hợp khác (Dashboard → PR List) → Reload
-    console.log("🔄 From Dashboard → Reload PR List");
-    this.onGoFilter();
-
-    // Reset UI
-    const oDetail = this.byId("detailPanel");
-    if (oDetail) oDetail.setVisible(false);
-
-    const oLayout = this.byId("layoutMaster");
-    if (oLayout) oLayout.setSize("100%");
-
-    const oTable = this.byId("tblPRList");
-    if (oTable) oTable.removeSelections();
-
-    const oNoteModel = this.getView().getModel("noteModel");
-    if (oNoteModel) {
-        oNoteModel.setProperty("/Note", "");
-        oNoteModel.setProperty("/Banfn", "");
-        oNoteModel.setProperty("/Editable", false);
-    }
-},
-
-
+        const oNoteModel = this.getView().getModel("noteModel");
+        if (oNoteModel) {
+          oNoteModel.setProperty("/Note", "");
+          oNoteModel.setProperty("/Banfn", "");
+          oNoteModel.setProperty("/Editable", false);
+        }
+      },
 
       _createSimpleValueHelp: function (oMI, sTitle, sKey, aValues) {
-    const aRows = aValues.map((v) => {
-        let obj = {};
-        obj[sKey] = v;
-        return obj;
-    });
+        const aRows = aValues.map((v) => {
+          let obj = {};
+          obj[sKey] = v;
+          return obj;
+        });
 
-    const oRowsModel = new sap.ui.model.json.JSONModel({ rows: aRows });
+        const oRowsModel = new sap.ui.model.json.JSONModel({ rows: aRows });
 
-    const oTable = new sap.ui.table.Table({
-        visibleRowCount: 12,
-        selectionMode: "MultiToggle",
-        columns: [
+        const oTable = new sap.ui.table.Table({
+          visibleRowCount: 12,
+          selectionMode: "MultiToggle",
+          columns: [
             new sap.ui.table.Column({
-                width: "180px",
-                label: new sap.m.Label({ text: sTitle }),
-                template: new sap.m.Text({ text: `{${sKey}}` }),
+              width: "180px",
+              label: new sap.m.Label({ text: sTitle }),
+              template: new sap.m.Text({ text: `{${sKey}}` }),
             }),
-        ],
-    });
+          ],
+        });
 
-    oTable.setModel(oRowsModel);
-    oTable.bindRows("/rows");
+        oTable.setModel(oRowsModel);
+        oTable.bindRows("/rows");
 
-    const oSearch = new sap.m.SearchField({
-        width: "100%",
-        placeholder: "Search...",
-        liveChange: (e) => {
+        const oSearch = new sap.m.SearchField({
+          width: "100%",
+          placeholder: "Search...",
+          liveChange: (e) => {
             const q = (e.getParameter("newValue") || "").toUpperCase();
             const filtered = aRows.filter((r) =>
-                String(r[sKey]).toUpperCase().includes(q)
+              String(r[sKey]).toUpperCase().includes(q)
             );
             oRowsModel.setData({ rows: filtered });
-        },
-    });
+          },
+        });
 
-    const oFilterBar = new sap.ui.comp.filterbar.FilterBar({
-        advancedMode: false,
-        filterGroupItems: [],
-        basicSearch: oSearch,
-    });
+        const oFilterBar = new sap.ui.comp.filterbar.FilterBar({
+          advancedMode: false,
+          filterGroupItems: [],
+          basicSearch: oSearch,
+        });
 
-    const oVH = new sap.ui.comp.valuehelpdialog.ValueHelpDialog({
-        title: sTitle,
-        key: sKey,
-        supportMultiselect: true,
-        supportRanges: false,
+        const oVH = new sap.ui.comp.valuehelpdialog.ValueHelpDialog({
+          title: sTitle,
+          key: sKey,
+          supportMultiselect: true,
+          supportRanges: false,
 
-        ok: () => {
+          ok: () => {
             const aIdx = oTable.getSelectedIndices();
             const aSelected = aIdx.map(
-                (i) => oTable.getContextByIndex(i).getObject()[sKey]
+              (i) => oTable.getContextByIndex(i).getObject()[sKey]
             );
 
             oMI.removeAllTokens();
             aSelected.forEach((v) =>
-                oMI.addToken(new sap.m.Token({ key: v, text: v }))
+              oMI.addToken(new sap.m.Token({ key: v, text: v }))
             );
 
             oVH.close();
-        },
-        cancel: () => oVH.close(),
-    });
+          },
+          cancel: () => oVH.close(),
+        });
 
-    oVH.setFilterBar(oFilterBar);
-    oVH.setTable(oTable);
-    oVH.open();
-},
+        oVH.setFilterBar(oFilterBar);
+        oVH.setTable(oTable);
+        oVH.open();
+      },
 
-
-      // =========================================================
-      // FILTER + GROUP
-      // =========================================================
       // =========================================================
       // FILTER + GROUP
       // =========================================================
@@ -270,12 +292,8 @@ _onRouteMatched: function () {
           aFilters.push(new Filter("Badat", FilterOperator.BT, dFrom, dTo));
         }
 
-        // ✅ SỬA LẠI LOGIC STATUS CHO ĐÚNG VỚI EBAN
         const sStatus = this.byId("inpStatus").getSelectedKey();
-
         if (sStatus && sStatus !== "") {
-          // ⚠️ CHỈ GỬI ĐÚNG 1 GIÁ TRỊ, KHÔNG DÙNG ARRAY
-          // Vì EBAN chỉ có R, C, X - không có mapping phức tạp
           aFilters.push(new Filter("Frgkz", FilterOperator.EQ, sStatus));
         }
 
@@ -288,7 +306,15 @@ _onRouteMatched: function () {
             sap.ui.core.BusyIndicator.hide();
 
             const groups = [];
+
+            // ⭐ Map REASON_ID → ReasonId để view dùng
             data.results.forEach((r) => {
+              if (r.REASON_ID !== undefined && r.REASON_ID !== null) {
+                r.ReasonId = r.REASON_ID;
+              } else {
+                r.ReasonId = "";
+              }
+
               let g = groups.find((e) => e.Banfn === r.Banfn);
               if (!g) {
                 g = {
@@ -298,6 +324,7 @@ _onRouteMatched: function () {
                   Ernam: r.Ernam,
                   Badat: r.Badat,
                   Frgkz: r.Frgkz,
+                  ReasonId: "", // sẽ tính sau theo items
                   Items: [],
                 };
                 groups.push(g);
@@ -305,7 +332,26 @@ _onRouteMatched: function () {
               g.Items.push(r);
             });
 
-            groups.forEach((g) => (g.ItemCount = g.Items.length));
+            // ⭐ Tính trạng thái group theo Items:
+            groups.forEach((g) => {
+              g.ItemCount = g.Items.length;
+
+              const oRejected = g.Items.find(
+                (it) => it.Frgkz === "C" && it.ReasonId
+              );
+              const oApproved = g.Items.find((it) => it.Frgkz === "R");
+
+              if (oRejected) {
+                g.Frgkz = "C";
+                g.ReasonId = oRejected.ReasonId;
+              } else if (oApproved) {
+                g.Frgkz = "R";
+                g.ReasonId = "";
+              } else {
+                g.Frgkz = "C";
+                g.ReasonId = "";
+              }
+            });
 
             oTable.setModel(new JSONModel({ groups }));
             MessageToast.show(`${groups.length} PR found`);
@@ -328,6 +374,7 @@ _onRouteMatched: function () {
           if (oInp) {
             oInp.setValue("");
             oInp.data("selectedKey", "");
+            oInp.removeAllTokens && oInp.removeAllTokens();
           }
         });
 
@@ -344,56 +391,93 @@ _onRouteMatched: function () {
       // DETAIL PANEL
       // =========================================================
       onSelectPR: function (oEvent) {
-    const oItem = oEvent.getParameter("listItem");
-    if (!oItem) return;
+        const oItem = oEvent.getParameter("listItem");
+        if (!oItem) return;
 
-    const oCtx = oItem.getBindingContext();
-    const group = oCtx.getObject();
-    const oDetail = this.byId("detailPanel");
-    const oLayout = this.byId("layoutMaster");
-    const oModel = this.getView().getModel();
+        const oCtx = oItem.getBindingContext();
+        const group = oCtx.getObject();
+        const oDetail = this.byId("detailPanel");
+        const oLayout = this.byId("layoutMaster");
+        const oModel = this.getView().getModel();
 
-    // ⭐ XÓA MODEL CŨ TRÊN DETAIL PANEL (bắt buộc để fix null)
-    oDetail.setModel(null);
+        // ⭐ XÓA MODEL CŨ TRÊN DETAIL PANEL
+        oDetail.setModel(null);
 
-    const sBanfn = group.Banfn;
-    const sKeyBanfn = String(sBanfn).padStart(10, "0");
+        const sBanfn = group.Banfn;
+        const sKeyBanfn = String(sBanfn).padStart(10, "0");
 
-    // NOTE MODEL
-    const oNoteModel = new sap.ui.model.json.JSONModel({
-        Banfn: sKeyBanfn,
-        Note: "Loading..."
-    });
-    this.getView().setModel(oNoteModel, "noteModel");
+        // NOTE MODEL
+        const oNoteModel = new sap.ui.model.json.JSONModel({
+          Banfn: sKeyBanfn,
+          Note: "Loading...",
+          Editable: false,
+        });
+        this.getView().setModel(oNoteModel, "noteModel");
 
-    // DETAIL MODEL
-    const oDetailModel = new sap.ui.model.json.JSONModel({
-        Banfn: group.Banfn,
-        Bsart: group.Bsart,
-        Ekgrp: group.Ekgrp,
-        Ernam: group.Ernam,
-        Badat: group.Badat,
-        Frgkz: group.Frgkz,
-        Items: []
-    });
+        // DETAIL MODEL
+        const oDetailModel = new sap.ui.model.json.JSONModel({
+          Banfn: group.Banfn,
+          Bsart: group.Bsart,
+          Ekgrp: group.Ekgrp,
+          Ernam: group.Ernam,
+          Badat: group.Badat,
+          Frgkz: group.Frgkz,
+          ReasonId: group.ReasonId || "",
+          Items: [],
+        });
 
-    sap.ui.core.BusyIndicator.show(0);
+        sap.ui.core.BusyIndicator.show(0);
 
-    oModel.read("/PRSet", {
-        filters: [
-            new sap.ui.model.Filter("Banfn", sap.ui.model.FilterOperator.EQ, sKeyBanfn)
-        ],
-
-        success: (oData) => {
+        oModel.read("/PRSet", {
+          filters: [
+            new sap.ui.model.Filter(
+              "Banfn",
+              sap.ui.model.FilterOperator.EQ,
+              sKeyBanfn
+            ),
+          ],
+          success: (oData) => {
             sap.ui.core.BusyIndicator.hide();
 
             const aItems = oData.results || [];
 
+            // ⭐ Map REASON_ID → ReasonId cho Items
+            aItems.forEach((it) => {
+              if (it.REASON_ID !== undefined && it.REASON_ID !== null) {
+                it.ReasonId = it.REASON_ID;
+              } else {
+                it.ReasonId = "";
+              }
+            });
+
             oDetailModel.setProperty("/Items", aItems);
+
+            // ⭐ Tính header Frgkz + ReasonId từ items
+            let sHeaderFrgkz = group.Frgkz;
+            let sHeaderReason = group.ReasonId || "";
+
+            const oRejected = aItems.find(
+              (it) => it.Frgkz === "C" && it.ReasonId
+            );
+            const oApproved = aItems.find((it) => it.Frgkz === "R");
+
+            if (oRejected) {
+              sHeaderFrgkz = "C";
+              sHeaderReason = oRejected.ReasonId;
+            } else if (oApproved) {
+              sHeaderFrgkz = "R";
+              sHeaderReason = "";
+            } else {
+              sHeaderFrgkz = "C";
+              sHeaderReason = "";
+            }
+
+            oDetailModel.setProperty("/Frgkz", sHeaderFrgkz);
+            oDetailModel.setProperty("/ReasonId", sHeaderReason);
 
             // ⭐ SET MODEL + BIND ELEMENT
             oDetail.setModel(oDetailModel);
-            oDetail.bindElement("/");   // <<< CỰC KỲ QUAN TRỌNG
+            oDetail.bindElement("/");
 
             oDetail.setVisible(true);
             oLayout.setSize("65%");
@@ -402,9 +486,9 @@ _onRouteMatched: function () {
             if (oItemTable) oItemTable.setModel(oDetailModel);
 
             this._loadPRNote(sKeyBanfn);
-        },
+          },
 
-        error: () => {
+          error: () => {
             sap.ui.core.BusyIndicator.hide();
 
             oDetail.setModel(oDetailModel);
@@ -414,11 +498,9 @@ _onRouteMatched: function () {
             oLayout.setSize("60%");
 
             this._loadPRNote(sKeyBanfn);
-        }
-    });
-},
-
-
+          },
+        });
+      },
 
       onCloseDetail: function () {
         const oDetail = this.byId("detailPanel");
@@ -473,12 +555,10 @@ _onRouteMatched: function () {
           return MessageToast.show("⚠️ No items to approve.");
         }
 
-        const aPendingItems = aItems.filter(function (it) {
-          return it.Frgkz === "C";
-        });
-        const aLockedItems = aItems.filter(function (it) {
-          return it.Frgkz === "R" || it.Frgkz === "X";
-        });
+        // chỉ approve được trạng thái C (dù có ReasonId hay không)
+        const aPendingItems = aItems.filter((it) => it.Frgkz === "C");
+
+        const aLockedItems = aItems.filter((it) => it.Frgkz !== "C");
 
         if (aPendingItems.length === 0) {
           return MessageToast.show("ℹ️ All items already processed.");
@@ -518,7 +598,9 @@ _onRouteMatched: function () {
                     sMsg += " Skipped " + aLockedItems.length + " locked.";
                   }
                   MessageBox.success(sMsg);
-                  this._refreshAfterAction(sBanfn);
+                  this._refreshAfterAction(
+                    String(sBanfn).toString().padStart(10, "0")
+                  );
                   return;
                 }
 
@@ -556,11 +638,7 @@ _onRouteMatched: function () {
       },
 
       // =========================================================
-      // REJECT ALL PENDING ITEMS
-      // =========================================================
-
-      // =========================================================
-      // REJECT ALL PENDING ITEMS
+      // REJECT ALL APPROVED ITEMS (R → C) + chọn Reason
       // =========================================================
       onRejectPR: function () {
         const oDetail = this.byId("detailPanel");
@@ -572,127 +650,218 @@ _onRouteMatched: function () {
           return sap.m.MessageToast.show("⚠️ No items to reject.");
         }
 
-        const aPendingItems = aItems.filter((it) => it.Frgkz === "C");
-        const aLockedItems = aItems.filter(
-          (it) => it.Frgkz === "R" || it.Frgkz === "X"
-        );
+        // chỉ reject được trạng thái R
+        const aPendingItems = aItems.filter((it) => it.Frgkz === "R");
+        const aLockedItems = aItems.filter((it) => it.Frgkz !== "R");
 
         if (aPendingItems.length === 0) {
           return sap.m.MessageToast.show("ℹ️ All items already processed.");
         }
 
-        sap.m.MessageBox.confirm(
-          "Reject " +
-            aPendingItems.length +
-            " pending item(s) for PR " +
-            sBanfn +
-            "?",
-          {
-            onClose: function (sAction) {
-              if (sAction !== sap.m.MessageBox.Action.OK) return;
+        // ⭐ Popup chọn Reason
+        const oSelect = new sap.m.Select({
+          width: "100%",
+        });
 
-              const oModel = this.getView().getModel();
-              sap.ui.core.BusyIndicator.show(0);
+        this._aRejectReasons.forEach(function (r) {
+          oSelect.addItem(
+            new sap.ui.core.Item({
+              key: r.key,
+              text: r.key + " - " + r.text,
+            })
+          );
+        });
 
-              oModel.setHeaders({
-                "Content-Type": "application/json",
-                Accept: "application/json",
-                "X-Requested-With": "XMLHttpRequest",
-              });
-              oModel.refreshSecurityToken();
+        const oDialog = new sap.m.Dialog({
+          title: "Reject items for PR " + sBanfn,
+          contentWidth: "400px",
+          type: "Message",
+          content: [
+            new sap.m.VBox({
+              items: [
+                new sap.m.Text({
+                  text:
+                    "Select reject reason for " +
+                    aPendingItems.length +
+                    " item(s):",
+                }),
+                oSelect,
+              ],
+            }),
+          ],
+          beginButton: new sap.m.Button({
+            text: "Reject",
+            type: "Reject",
+            press: function () {
+              const sReason = oSelect.getSelectedKey();
+              if (!sReason) {
+                sap.m.MessageToast.show("⚠️ Please select a reason.");
+                return;
+              }
 
-              let iSuccess = 0;
-              let iFail = 0;
-
-              const processItems = function (items, index) {
-                if (index >= items.length) {
-                  sap.ui.core.BusyIndicator.hide();
-
-                  let sMsg = "Rejected " + iSuccess + " item(s).";
-                  if (iFail > 0) {
-                    sMsg += " " + iFail + " failed.";
-                  }
-                  if (aLockedItems.length > 0) {
-                    sMsg += " Skipped " + aLockedItems.length + " locked.";
-                  }
-
-                  sap.m.MessageBox.success(sMsg);
-                  this._refreshAfterAction(sBanfn);
-                  return;
-                }
-
-                const item = items[index];
-
-                const sBanfnPadded = String(item.Banfn).padStart(10, "0");
-                const sBnfpoPadded = String(item.Bnfpo).padStart(5, "0");
-
-                const sPath =
-                  "/PRSet(Banfn='" +
-                  sBanfnPadded +
-                  "',Bnfpo='" +
-                  sBnfpoPadded +
-                  "')";
-
-                const oPayload = {
-                  Banfn: sBanfnPadded,
-                  Bnfpo: sBnfpoPadded,
-                  Frgkz: "X", // ❗ REJECT FLAG
-                };
-
-                oModel.update(sPath, oPayload, {
-                  success: function () {
-                    iSuccess++;
-                    processItems.call(this, items, index + 1);
-                  }.bind(this),
-                  error: function () {
-                    iFail++;
-                    processItems.call(this, items, index + 1);
-                  }.bind(this),
-                });
-              }.bind(this);
-
-              processItems(aPendingItems, 0);
+              oDialog.close();
+              this._executeRejectItems(
+                aPendingItems,
+                aLockedItems,
+                sBanfn,
+                sReason
+              );
             }.bind(this),
+          }),
+          endButton: new sap.m.Button({
+            text: "Cancel",
+            press: function () {
+              oDialog.close();
+            },
+          }),
+          afterClose: function () {
+            oDialog.destroy();
+          },
+        });
+
+        this.getView().addDependent(oDialog);
+        oDialog.open();
+      },
+
+      // ⭐ Hàm thực thi reject sau khi đã chọn reason
+      _executeRejectItems: function (
+        aPendingItems,
+        aLockedItems,
+        sBanfn,
+        sReason
+      ) {
+        const oModel = this.getView().getModel();
+        sap.ui.core.BusyIndicator.show(0);
+
+        oModel.setHeaders({
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          "X-Requested-With": "XMLHttpRequest",
+        });
+        oModel.refreshSecurityToken();
+
+        let iSuccess = 0;
+        let iFail = 0;
+
+        const processItems = function (items, index) {
+          if (index >= items.length) {
+            sap.ui.core.BusyIndicator.hide();
+
+            let sMsg = "Rejected " + iSuccess + " item(s).";
+            if (iFail > 0) {
+              sMsg += " " + iFail + " failed.";
+            }
+            if (aLockedItems.length > 0) {
+              sMsg += " Skipped " + aLockedItems.length + " locked.";
+            }
+
+            sap.m.MessageBox.success(sMsg);
+            this._refreshAfterAction(String(sBanfn).padStart(10, "0"));
+            return;
           }
-        );
+
+          const item = items[index];
+
+          const sBanfnPadded = String(item.Banfn).padStart(10, "0");
+          const sBnfpoPadded = String(item.Bnfpo).padStart(5, "0");
+
+          const sPath =
+            "/PRSet(Banfn='" + sBanfnPadded + "',Bnfpo='" + sBnfpoPadded + "')";
+
+          const oPayload = {
+            Banfn: sBanfnPadded,
+            Bnfpo: sBnfpoPadded,
+            Frgkz: "C", // ❗ REJECT FLAG
+            REASON_ID: sReason, // gửi Reason_ID cho backend
+          };
+
+          oModel.update(sPath, oPayload, {
+            success: function () {
+              iSuccess++;
+              processItems.call(this, items, index + 1);
+            }.bind(this),
+            error: function () {
+              iFail++;
+              processItems.call(this, items, index + 1);
+            }.bind(this),
+          });
+        }.bind(this);
+
+        processItems(aPendingItems, 0);
       },
 
       // =========================================================
       // REFRESH AFTER ACTION
       // =========================================================
       _refreshAfterAction: function (sBanfn) {
-    const oModel = this.getView().getModel();
-    const oDetail = this.byId("detailPanel");
+        const oModel = this.getView().getModel();
+        const oDetail = this.byId("detailPanel");
 
-    sap.ui.core.BusyIndicator.show(0);
+        sap.ui.core.BusyIndicator.show(0);
 
-    oModel.read("/PRSet", {
-        filters: [
-            new sap.ui.model.Filter("Banfn", sap.ui.model.FilterOperator.EQ, sBanfn)
-        ],
-        success: (oData) => {
+        oModel.read("/PRSet", {
+          filters: [
+            new sap.ui.model.Filter(
+              "Banfn",
+              sap.ui.model.FilterOperator.EQ,
+              sBanfn
+            ),
+          ],
+          success: (oData) => {
             sap.ui.core.BusyIndicator.hide();
 
-            // 🔥 CLEAR OLD MODEL FIRST
-            oDetail.setModel(null);
+            const aItems = oData.results || [];
+
+            // Map REASON_ID -> ReasonId trong Items
+            aItems.forEach((it) => {
+              it.ReasonId =
+                it.REASON_ID !== undefined && it.REASON_ID !== null
+                  ? it.REASON_ID
+                  : "";
+            });
+
+            // Tính header từ item đầu + logic reject
+            const first = aItems[0] || {};
+            let sHeaderFrgkz = first.Frgkz || "C";
+            let sHeaderReason = first.ReasonId || "";
+
+            const oRejected = aItems.find(
+              (it) => it.Frgkz === "C" && it.ReasonId
+            );
+            const oApproved = aItems.find((it) => it.Frgkz === "R");
+
+            if (oRejected) {
+              sHeaderFrgkz = "C";
+              sHeaderReason = oRejected.ReasonId;
+            } else if (oApproved) {
+              sHeaderFrgkz = "R";
+              sHeaderReason = "";
+            } else {
+              sHeaderFrgkz = "C";
+              sHeaderReason = "";
+            }
 
             const oDetailModel = new sap.ui.model.json.JSONModel({
-                Banfn: sBanfn,
-                Items: oData.results || []
+              Banfn: sBanfn,
+              Bsart: first.Bsart || "",
+              Ekgrp: first.Ekgrp || "",
+              Ernam: first.Ernam || "",
+              Badat: first.Badat || null,
+              Frgkz: sHeaderFrgkz,
+              ReasonId: sHeaderReason,
+              Items: aItems,
             });
 
             oDetail.setModel(oDetailModel);
             oDetail.bindElement("/");
-
             MessageToast.show("🔄 PR refreshed");
-        },
-        error: () => {
+          },
+          error: () => {
             sap.ui.core.BusyIndicator.hide();
             MessageToast.show("⚠ Failed to refresh PR.");
-        }
-    });
-},
-
+          },
+        });
+      },
 
       // =========================================================
       // EXPORT TO EXCEL
@@ -768,21 +937,27 @@ _onRouteMatched: function () {
       // VALUE HELP DIALOGS
       // =========================================================
       onValueHelpBanfn: function (oEvent) {
-    const oMI = oEvent.getSource(); // chính xác MultiInput
+        const oMI = oEvent.getSource(); // chính xác MultiInput
 
-    const oModel = this.getView().getModel();
-    sap.ui.core.BusyIndicator.show(0);
+        const oModel = this.getView().getModel();
+        sap.ui.core.BusyIndicator.show(0);
 
-    oModel.read("/PRSet", {
-        urlParameters: { $top: 5000 },
-        success: (d) => {
+        oModel.read("/PRSet", {
+          urlParameters: { $top: 5000 },
+          success: (d) => {
             sap.ui.core.BusyIndicator.hide();
-            const a = [...new Set(d.results.map(o => o.Banfn.padStart(10, "0")))];
-            this._createSimpleValueHelp(oMI, "Purchase Requisition", "Banfn", a);
-        }
-    });
-},
-
+            const a = [
+              ...new Set(d.results.map((o) => o.Banfn.padStart(10, "0"))),
+            ];
+            this._createSimpleValueHelp(
+              oMI,
+              "Purchase Requisition",
+              "Banfn",
+              a
+            );
+          },
+        });
+      },
 
       onValueHelpBsart: function (oEvent) {
         const oMI = oEvent.getSource();
