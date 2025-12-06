@@ -442,21 +442,22 @@ sap.ui.define(
           });
       },
 
-      /* ===== Load Status Donut Chart ===== */
+      // ====== Load Status Donut Chart (PR) ======
+      // ====== Load Status Donut Chart (PR) - FIX CHUẨN NHẤT ======
       _loadStatusDonutChart: function (sPeriodKey) {
         BusyIndicator.show(0);
-        var oCurrRange = this._getDateRange(sPeriodKey);
+        const oCurrRange = this._getDateRange(sPeriodKey);
 
         this.oOData.read("/PRSet", {
           urlParameters: {
-            $select: "Banfn,Badat,Frgkz",
+            $select: "Banfn,Badat,Frgkz,REASON_ID",
             $top: "5000",
           },
+
           success: function (oData) {
             BusyIndicator.hide();
 
             if (!oData.results || oData.results.length === 0) {
-              MessageToast.show("Không có dữ liệu Status");
               this._displayStatusDonutChart([
                 { Status: "Approved", Count: 0 },
                 { Status: "Pending", Count: 0 },
@@ -465,51 +466,86 @@ sap.ui.define(
               return;
             }
 
-            // Parse BADAT
+            // --- Parse date BADAT ---
             oData.results.forEach(function (r) {
-              if (r.Badat && typeof r.Badat === "string") {
-                var match = /Date\((\d+)\)/.exec(r.Badat);
-                if (match) r.Badat = new Date(parseInt(match[1], 10));
+              if (typeof r.Badat === "string") {
+                const m = /Date\((\d+)\)/.exec(r.Badat);
+                if (m) r.Badat = new Date(parseInt(m[1], 10));
               }
             });
 
-            // Lọc theo khoảng thời gian
-            var aCurr = oData.results.filter(function (r) {
-              return (
+            // --- Lọc theo khoảng thời gian ---
+            const aCurr = oData.results.filter(
+              (r) =>
                 r.Badat &&
                 r.Badat >= oCurrRange.start &&
                 r.Badat <= oCurrRange.end
-              );
+            );
+
+            // =====================================================
+            //   ⭐⭐ 1. GROUP THEO BANFN (PR HEADER) NHƯ PRLIST ⭐⭐
+            // =====================================================
+            const mGroup = {};
+
+            aCurr.forEach(function (r) {
+              const key = r.Banfn;
+
+              if (!mGroup[key]) {
+                mGroup[key] = { Banfn: r.Banfn, Items: [] };
+              }
+
+              mGroup[key].Items.push({
+                Frgkz: r.Frgkz,
+                ReasonId: r.REASON_ID || "",
+              });
             });
 
-            // Đếm trạng thái: R=Approved, C=Pending, X=Rejected
-            var iApproved = 0,
+            // =====================================================
+            //   ⭐⭐ 2. TÍNH STATUS CHO TỪNG PR (HEADER) ⭐⭐
+            // =====================================================
+            let iApproved = 0,
               iPending = 0,
               iRejected = 0;
-            aCurr.forEach(function (r) {
-              if (r.Frgkz === "R") iApproved++;
-              else if (r.Frgkz === "C") iPending++;
-              else if (r.Frgkz === "X") iRejected++;
+
+            Object.values(mGroup).forEach(function (g) {
+              const aItems = g.Items;
+
+              const oRejected = aItems.find(
+                (it) => it.Frgkz === "C" && it.ReasonId
+              );
+              const oApproved = aItems.find((it) => it.Frgkz === "R");
+
+              if (oRejected) {
+                // ❗ Chỉ cần 1 item reject => PR reject
+                iRejected++;
+              } else if (oApproved) {
+                // ✔ Có item R ⇒ Approved
+                iApproved++;
+              } else {
+                // ✔ Còn lại ⇒ Pending (C và không có reason)
+                iPending++;
+              }
             });
 
-            var aChartData = [
+            // =====================================================
+            //   ⭐⭐ 3. DATA CHO DONUT CHART ⭐⭐
+            // =====================================================
+            let aChartData = [
               { Status: "Approved", Count: iApproved },
               { Status: "Pending", Count: iPending },
               { Status: "Rejected", Count: iRejected },
-            ].filter(function (item) {
-              return item.Count > 0;
-            });
+            ].filter((item) => item.Count > 0);
 
             if (aChartData.length === 0) {
               aChartData = [{ Status: "No Data", Count: 1 }];
             }
 
+            // Render Donut Chart
             this._displayStatusDonutChart(aChartData);
           }.bind(this),
 
-          error: function (e) {
+          error: function () {
             BusyIndicator.hide();
-            MessageToast.show("Lỗi khi tải dữ liệu Status");
             this._displayStatusDonutChart([{ Status: "No Data", Count: 1 }]);
           }.bind(this),
         });
