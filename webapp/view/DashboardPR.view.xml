@@ -1,186 +1,150 @@
-<mvc:View
-  xmlns:mvc="sap.ui.core.mvc"
+<mvc:View xmlns:mvc="sap.ui.core.mvc"
   xmlns="sap.m"
   xmlns:core="sap.ui.core"
   xmlns:viz="sap.viz.ui5.controls"
   xmlns:viz.data="sap.viz.ui5.data"
-  xmlns:viz.feeds="sap.viz.ui5.controls.common.feeds"
-  controllerName="demodashboard.controller.DashboardPR">
-
+  xmlns:viz.feeds="sap.viz.ui5.controls.common.feeds" controllerName="demodashboard.controller.DashboardPR">
   <Page id="dashboard" title="Dashboard" enableScrolling="true">
     <content>
       <VBox id="vbox2" width="100%" class="dashboardContainer">
-
         <!-- 🔹 Bộ lọc thời gian -->
         <HBox alignItems="Center" justifyContent="End" width="100%" class="filterBar">
-          <Label text="Time Filter:" class="sapUiSmallMarginEnd"/>
-          <Select
-            id="timeFilter"
-            change="onTimeFilterChange"
-            selectedKey="thisYear"
-            class="sapUiSmallMarginEnd">
+          <Label text="Time Filter:" class="sapUiSmallMarginEnd" />
+          <Select id="timeFilter" change="onTimeFilterChange" selectedKey="thisYear" class="sapUiSmallMarginEnd">
             <items>
-              <core:Item key="today" text="Today"/>
-              <core:Item key="thisWeek" text="This Week"/>
-              <core:Item key="thisMonth" text="This Month"/>
-              <core:Item key="thisQuarter" text="This Quarter"/>
-              <core:Item key="thisYear" text="This Year"/>
-              <core:Item key="thisAll" text="All"/>
+              <core:Item key="today" text="Today" />
+              <core:Item key="thisWeek" text="This Week" />
+              <core:Item key="thisMonth" text="This Month" />
+              <core:Item key="thisQuarter" text="This Quarter" />
+              <core:Item key="thisYear" text="This Year" />
+              <core:Item key="thisAll" text="All" />
             </items>
           </Select>
         </HBox>
-
         <!-- 🔸 HÀNG 1: KPI Cards -->
-        <HBox
-          id="kpiRow"
-          alignItems="Start"
-          justifyContent="SpaceAround"
-          wrap="Wrap"
-          class="sapUiMediumMarginBottom sapUiSmallMarginTop">
-          <HBox
-            id="kpiContainer"
-            justifyContent="SpaceAround"
-            width="100%"
-            class="sapUiSmallMargin"/>
+        <HBox id="kpiRow" alignItems="Start" justifyContent="SpaceAround" wrap="Wrap" class="sapUiMediumMarginBottom sapUiSmallMarginTop">
+          <HBox id="kpiContainer" justifyContent="SpaceAround" width="100%" class="sapUiSmallMargin" />
         </HBox>
-
         <!-- 🔸 HÀNG 2: Donut Chart + Top Material/Vendor -->
-        <HBox
-          id="chartRow"
-          alignItems="Start"
-          justifyContent="SpaceAround"
-          wrap="Wrap"
-          class="chartRow">
-
+        <HBox id="chartRow" alignItems="Start" justifyContent="SpaceAround" wrap="Wrap" class="chartRow">
           <!-- Donut Chart -->
           <VBox id="donutChartSection" width="27%" class="dashboardCard">
-            <viz:VizFrame id="idDonutChart" vizType="donut" width="100%" height="280px"/>
+            <viz:VizFrame id="idDonutChart" vizType="donut" width="100%" height="280px" />
           </VBox>
-
           <!-- Donut Chart PO -->
           <VBox id="donutChartSectionPO" width="27%" class="dashboardCard">
-            <viz:VizFrame id="idDonutChartPO" vizType="donut" width="100%" height="280px"/>
+            <viz:VizFrame id="idDonutChartPO" vizType="donut" width="100%" height="280px" />
           </VBox>
-
           <!-- Top Material -->
           <VBox id="barChartSection" width="30%" class="dashboardCard">
-            <viz:VizFrame id="idBarChart" vizType="bar" width="100%" height="280px"/>
+            <viz:VizFrame id="idBarChart" vizType="bar" width="100%" height="280px" />
           </VBox>
-
           <!-- Top Vendor -->
           <!-- <VBox id="vendorChartSection" width="30%" class="dashboardCard">
             <viz:VizFrame id="idVendorBarChart" vizType="bar" width="100%" height="280px"/>
           </VBox> -->
         </HBox>
-        
-
         <!--  Biểu đồ PR theo tháng -->
         <VBox class="sapUiSmallMargin">
           <HBox alignItems="Center" justifyContent="SpaceBetween">
-            <Text text="Biểu đồ PR theo tháng" class="sapUiTinyMarginBegin sapUiBold sapUiSmallMarginTop"/>
-            <!-- <Select
-              id="prYearFilter"
-              width="120px"
-              selectedKey="{viewModel>/selectedPRYear}"
-              change=".onPRYearChange"/> -->
+            <Text text="Biểu đồ PR theo tháng" class="sapUiTinyMarginBegin sapUiBold sapUiSmallMarginTop" />
+            <!-- <Select id="prYearFilter" width="120px" selectedKey="{viewModel>/selectedPRYear}" change=".onPRYearChange"/> -->
           </HBox>
-          <viz:VizFrame
-            id="idMonthlyBarChartPR"
-            uiConfig="{applicationSet:'fiori'}"
-            height="500px"
-            width="100%"/>
+          <viz:VizFrame id="idMonthlyBarChartPR" uiConfig="{applicationSet:'fiori'}" height="500px" width="100%" />
         </VBox>
-
-
-                <!-- 🔵 Biểu đồ PO hoặc RFQ theo tháng -->
+        <!-- 🔵 Biểu đồ PO hoặc RFQ theo tháng -->
         <VBox id="monthlyPOChartSection" width="100%" class="chartFullRow sapUiSmallMarginTop">
           <HBox alignItems="Center" justifyContent="End" class="sapUiSmallMarginBottom">
-            <Label text="Select Type:" class="sapUiSmallMarginEnd"/>
-            <Select
-              id="poTypeFilter"
-              selectedKey="F"
-              change=".onPoTypeChange"
-              width="180px">
-              <core:Item key="F" text="Purchase Order (PO)"/>
-              <core:Item key="A" text="Request for Quotation (RFQ)"/>
+            <Label text="Select Type:" class="sapUiSmallMarginEnd" />
+            <Select id="poTypeFilter" selectedKey="F" change=".onPoTypeChange" width="180px">
+              <core:Item key="F" text="Purchase Order (PO)" />
+              <core:Item key="A" text="Request for Quotation (RFQ)" />
             </Select>
           </HBox>
-          <viz:VizFrame id="idMonthlyBarChartPO" vizType="column" width="100%" height="500px"/>
+          <viz:VizFrame id="idMonthlyBarChartPO" vizType="column" width="100%" height="500px" />
         </VBox>
-
-
-
-
         <!--  Top Requester Table -->
         <VBox id="topRequesterSection" class="topRequesterCard" width="100%">
           <HBox alignItems="Center" justifyContent="SpaceBetween" class="topRequesterHeader">
-            <Title text="Top Request Purchase Requisition by Employee"/>
+            <Title text="Top Request Purchase Requisition by Employee" />
             <HBox alignItems="Center" class="sortFilterGroup">
-              <Label text="Sort by:" class="sortLabel"/>
-              <Select
-                id="requesterSortFilter"
-                selectedKey="totalPR"
-                change=".onRequesterSortChange"
-                width="180px">
-                <core:Item key="totalPR" text="Total PR Created"/>
-                <core:Item key="approvalRate" text="Approval Rate (%)"/>
+              <Label text="Sort by:" class="sortLabel" />
+              <Select id="requesterSortFilter" selectedKey="totalPR" change=".onRequesterSortChange" width="180px">
+                <core:Item key="totalPR" text="Total PR Created" />
+                <core:Item key="approvalRate" text="Approval Rate (%)" />
               </Select>
             </HBox>
           </HBox>
-
-          <Table
-            id="topRequesterTable"
-            items="{topRequesterModel>/items}"
-            fixedLayout="true"
-            width="100%"
-            growing="false"
-            class="topRequesterTableScrollable">
+          <Table id="topRequesterTable" items="{topRequesterModel>/items}" fixedLayout="true" width="100%" growing="false" class="topRequesterTableScrollable">
             <columns>
-              <Column><Text text="STT"/></Column>
-              <Column><Text text="User ID"/></Column>
-              <Column><Text text="Total PR"/></Column>
-              <Column><Text text="Approved PR"/></Column>
-              <Column><Text text="Approval Rate"/></Column>
-              <Column><Text text="Pending PR"/></Column>
-              <Column><Text text="Last Created Date"/></Column>
-              <Column><Text text="Avg Time Approval"/></Column>
+              <Column>
+                <Text text="STT" />
+              </Column>
+              <Column>
+                <Text text="User ID" />
+              </Column>
+              <Column>
+                <Text text="Total PR" />
+              </Column>
+              <Column>
+                <Text text="Approved PR" />
+              </Column>
+              <Column>
+                <Text text="Approval Rate" />
+              </Column>
+              <Column>
+                <Text text="Pending PR" />
+              </Column>
+              <Column>
+                <Text text="Last Created Date" />
+              </Column>
+              <Column>
+                <Text text="Avg Time Approval" />
+              </Column>
             </columns>
             <items>
               <ColumnListItem>
                 <cells>
-                  <Text text="{topRequesterModel>index}"/>
-                  <Text text="{topRequesterModel>UserID}"/>
-                  <Text text="{topRequesterModel>TotalPR}"/>
-                  <Text text="{topRequesterModel>ApprovedPR}"/>
-                  <Text text="{topRequesterModel>ApprovalRate}"/>
-                  <Text text="{topRequesterModel>PendingPR}"/>
-                  <Text text="{topRequesterModel>LastCreatedDate}"/>
-                  <ObjectNumber number="{topRequesterModel>AvgApprovalDays}" unit="days"/>
+                  <Text text="{topRequesterModel>index}" />
+                  <Text text="{topRequesterModel>UserID}" />
+                  <Text text="{topRequesterModel>TotalPR}" />
+                  <Text text="{topRequesterModel>ApprovedPR}" />
+                  <Text text="{topRequesterModel>ApprovalRate}" />
+                  <Text text="{topRequesterModel>PendingPR}" />
+                  <Text text="{topRequesterModel>LastCreatedDate}" />
+                  <ObjectNumber number="{topRequesterModel>AvgApprovalDays}" unit="days" />
                 </cells>
               </ColumnListItem>
             </items>
           </Table>
         </VBox>
-
-
-
         <!-- 🔻 Biểu đồ PR - PO - RFQ Connected -->
         <VBox id="connectedChartContainer" class="sapUiSmallMarginTop">
-          <core:Fragment fragmentName="demodashboard.fragment.ConnectedChart" type="XML"/>
+          <core:Fragment fragmentName="demodashboard.fragment.ConnectedChart" type="XML" />
         </VBox>
-
         <!-- 🔘 Toggle checkbox cho Phase -->
         <HBox alignItems="Center" class="sapUiSmallMarginBottom">
-          <CheckBox text="PR" selected="true" select=".onTogglePhase"/>
-          <CheckBox text="PO" selected="true" select=".onTogglePhase"/>
-          <CheckBox text="RFQ" selected="true" select=".onTogglePhase"/>
+          <CheckBox text="PR" selected="true" select=".onTogglePhase" />
+          <CheckBox text="PO" selected="true" select=".onTogglePhase" />
+          <CheckBox text="RFQ" selected="true" select=".onTogglePhase" />
         </HBox>
-
         <!-- 🔚 Nút điều hướng -->
-        <Button text="Go to PR List" press="onGoToPRList" class="sapUiSmallMarginTop"/>
-        <Button text="Go to RFQ List" press="onGoToRFQList" class="sapUiSmallMarginTop"/>
-        <Button text="Go to PO List" press="onGoToPOList" class="sapUiSmallMarginTop"/>
-        
+        <!-- PR List: Mọi role đều xem được -->
+        <Button text="Go to PR List" press="onGoToPRList" visible="{=
+        ${userRole>/feRole} === 'INVENTORY_STAFF' ||
+        ${userRole>/feRole} === 'INVENTORY_MANAGER' ||
+        ${userRole>/feRole} === 'ADMIN'
+    }" />
+        <Button text="Go to RFQ List" press="onGoToRFQList" class="sapUiSmallMarginTop" visible="{=
+        ${userRole>/feRole} === 'PROCUREMENT_STAFF' ||
+        ${userRole>/feRole} === 'PROCUREMENT_MANAGER' ||
+        ${userRole>/feRole} === 'ADMIN'
+    }" />
+        <Button text="Go to PO List" press="onGoToPOList" class="sapUiSmallMarginTop" visible="{=
+        ${userRole>/feRole} === 'PROCUREMENT_STAFF' ||
+        ${userRole>/feRole} === 'PROCUREMENT_MANAGER' ||
+        ${userRole>/feRole} === 'ADMIN'
+    }" />
       </VBox>
     </content>
   </Page>
