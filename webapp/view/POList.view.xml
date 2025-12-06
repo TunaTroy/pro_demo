@@ -21,12 +21,27 @@
 
     <!-- Menu -->
     <HBox class="navMenu" alignItems="Center" justifyContent="Center">
-        <Link  text="Purchase Requisiton"  class="navItem" press="onGoToPRList" />
-        <Link  text="Requistion for Quotation" class="navItem" press="onGoToRFQList" />
-        <Link  text="Purchase Order" class="navItem" press="onGoToPOList" />
-    </HBox>
+              <Link  text="Purchase Requisiton"  class="navItem" press="onGoToPRList" visible="{=
+        ${userRole>/feRole} === 'INVENTORY_STAFF' ||
+        ${userRole>/feRole} === 'INVENTORY_MANAGER' ||
+        ${userRole>/feRole} === 'ADMIN'
+    }" />
+              <Link  text="Requistion for Quotation" class="navItem" press="onGoToRFQList" visible="{=
+        ${userRole>/feRole} === 'PROCUREMENT_STAFF' ||
+        ${userRole>/feRole} === 'PROCUREMENT_MANAGER' ||
+        ${userRole>/feRole} === 'ADMIN'
+    }" />
+              <Link  text="Purchase Order" class="navItem" press="onGoToPOList" visible="{=
+        ${userRole>/feRole} === 'PROCUREMENT_STAFF' ||
+        ${userRole>/feRole} === 'PROCUREMENT_MANAGER' ||
+        ${userRole>/feRole} === 'ADMIN'
+    }" />
+          </HBox>
 
 </HBox>
+
+
+
     <!-- ========= PAGE CONTENT MUST WRAP EVERYTHING ========= -->
     <content>
       <!-- ==================== FILTER BAR ==================== -->
@@ -167,13 +182,11 @@
                   <HBox id="_IDGenHBox6" class="sapUiTinyMarginTop" justifyContent="End">
                     <Button id="btnApprovePO" text="Approve PO" icon="sap-icon://accept" type="Emphasized" press=".onApprovePO" visible="{=
                                           ${userRole>/feRole} === 'PROCUREMENT_MANAGER' ||
-
                                           ${userRole>/feRole} === 'ADMIN'
                                       }"/>
 
                     <Button id="btnRejectPO" text="Reject PO" icon="sap-icon://decline" type="Reject" press=".onRejectPO" class="sapUiTinyMarginEnd" visible="{=
                                           ${userRole>/feRole} === 'PROCUREMENT_MANAGER' ||
-
                                           ${userRole>/feRole} === 'ADMIN'
                                       }"/>
                   </HBox>

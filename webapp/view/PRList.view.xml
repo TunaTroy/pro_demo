@@ -20,13 +20,28 @@
           </HBox>
 
           <!-- Menu -->
-          <HBox class="navMenu" alignItems="Center" justifyContent="Center">
-              <Link  text="Purchase Requisiton"  class="navItem" press="onGoToPRList" />
-              <Link  text="Requistion for Quotation" class="navItem" press="onGoToRFQList" />
-              <Link  text="Purchase Order" class="navItem" press="onGoToPOList" />
+         <HBox class="navMenu" alignItems="Center" justifyContent="Center">
+              <Link  text="Purchase Requisiton"  class="navItem" press="onGoToPRList" visible="{=
+        ${userRole>/feRole} === 'INVENTORY_STAFF' ||
+        ${userRole>/feRole} === 'INVENTORY_MANAGER' ||
+        ${userRole>/feRole} === 'ADMIN'
+    }" />
+              <Link  text="Requistion for Quotation" class="navItem" press="onGoToRFQList" visible="{=
+        ${userRole>/feRole} === 'PROCUREMENT_STAFF' ||
+        ${userRole>/feRole} === 'PROCUREMENT_MANAGER' ||
+        ${userRole>/feRole} === 'ADMIN'
+    }" />
+              <Link  text="Purchase Order" class="navItem" press="onGoToPOList" visible="{=
+        ${userRole>/feRole} === 'PROCUREMENT_STAFF' ||
+        ${userRole>/feRole} === 'PROCUREMENT_MANAGER' ||
+        ${userRole>/feRole} === 'ADMIN'
+    }" />
           </HBox>
 
-      </HBox>
+        </HBox>
+
+
+  
   
   
     <!-- ===== HEADER BUTTONS ===== -->

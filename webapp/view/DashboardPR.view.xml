@@ -22,10 +22,22 @@
 
     <!-- Menu -->
     <HBox class="navMenu" alignItems="Center" justifyContent="Center">
-        <Link  text="Purchase Requisiton"  class="navItem" press="onGoToPRList" />
-        <Link  text="Requistion for Quotation" class="navItem" press="onGoToRFQList" />
-        <Link  text="Purchase Order" class="navItem" press="onGoToPOList" />
-    </HBox>
+              <Link  text="Purchase Requisiton"  class="navItem" press="onGoToPRList" visible="{=
+        ${userRole>/feRole} === 'INVENTORY_STAFF' ||
+        ${userRole>/feRole} === 'INVENTORY_MANAGER' ||
+        ${userRole>/feRole} === 'ADMIN'
+    }" />
+              <Link  text="Requistion for Quotation" class="navItem" press="onGoToRFQList" visible="{=
+        ${userRole>/feRole} === 'PROCUREMENT_STAFF' ||
+        ${userRole>/feRole} === 'PROCUREMENT_MANAGER' ||
+        ${userRole>/feRole} === 'ADMIN'
+    }" />
+              <Link  text="Purchase Order" class="navItem" press="onGoToPOList" visible="{=
+        ${userRole>/feRole} === 'PROCUREMENT_STAFF' ||
+        ${userRole>/feRole} === 'PROCUREMENT_MANAGER' ||
+        ${userRole>/feRole} === 'ADMIN'
+    }" />
+          </HBox>
 
 </HBox>
 
@@ -159,27 +171,7 @@
           <CheckBox text="PO" selected="true" select=".onTogglePhase" />
           <CheckBox text="RFQ" selected="true" select=".onTogglePhase" />
         </HBox>
-<<<<<<< HEAD
         
-=======
-        <!-- 🔚 Nút điều hướng -->
-        <!-- PR List: Mọi role đều xem được -->
-        <Button text="Go to PR List" press="onGoToPRList" visible="{=
-        ${userRole>/feRole} === 'INVENTORY_STAFF' ||
-        ${userRole>/feRole} === 'INVENTORY_MANAGER' ||
-        ${userRole>/feRole} === 'ADMIN'
-    }" />
-        <Button text="Go to RFQ List" press="onGoToRFQList" class="sapUiSmallMarginTop" visible="{=
-        ${userRole>/feRole} === 'PROCUREMENT_STAFF' ||
-        ${userRole>/feRole} === 'PROCUREMENT_MANAGER' ||
-        ${userRole>/feRole} === 'ADMIN'
-    }" />
-        <Button text="Go to PO List" press="onGoToPOList" class="sapUiSmallMarginTop" visible="{=
-        ${userRole>/feRole} === 'PROCUREMENT_STAFF' ||
-        ${userRole>/feRole} === 'PROCUREMENT_MANAGER' ||
-        ${userRole>/feRole} === 'ADMIN'
-    }" />
->>>>>>> e6cdff38ba96600f4d5913f563f2aa1d0bd7745f
       </VBox>
     </content>
   </Page>
