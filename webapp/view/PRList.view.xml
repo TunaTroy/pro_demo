@@ -1,5 +1,4 @@
-<mvc:View
-  controllerName="demodashboard.controller.PRList"
+<mvc:View controllerName="demodashboard.controller.PRList"
   xmlns:mvc="sap.ui.core.mvc"
   xmlns="sap.m"
   xmlns:l="sap.ui.layout"
@@ -40,59 +39,36 @@
     </headerContent>
     <content>
       <!-- ======== FILTER BAR ======== -->
-      <fb:FilterBar
-        id="prFilterBar"
-        useToolbar="false"
-        search=".onGoFilter"
-        showRestoreButton="true"
-        showClearButton="true"
-        showGoOnFB="true"
-        filterBarExpanded="true">
+      <fb:FilterBar id="prFilterBar" useToolbar="false" search=".onGoFilter" showRestoreButton="true" showClearButton="true" showGoOnFB="true" filterBarExpanded="true">
         <fb:filterGroupItems>
           <!-- PR Number -->
           <fb:FilterGroupItem name="Banfn" label="Purchase Req." groupName="PR" visibleInFilterBar="true">
             <fb:control>
-              <MultiInput id="inpBanfn"
-                  showValueHelp="true"
-                  valueHelpRequest=".onValueHelpBanfn"
-                  placeholder="Enter PR Number"/>
+              <MultiInput id="inpBanfn" showValueHelp="true" valueHelpRequest=".onValueHelpBanfn" placeholder="Enter PR Number"/>
             </fb:control>
           </fb:FilterGroupItem>
           <!-- Document Type -->
           <fb:FilterGroupItem name="Bsart" label="Document Type" groupName="PR" visibleInFilterBar="true">
             <fb:control>
-              <MultiInput id="inpBsart"
-                  showValueHelp="true"
-                  valueHelpRequest=".onValueHelpBsart"
-                  placeholder="Select Doc Type"/>
+              <MultiInput id="inpBsart" showValueHelp="true" valueHelpRequest=".onValueHelpBsart" placeholder="Select Doc Type"/>
             </fb:control>
           </fb:FilterGroupItem>
           <!-- Purchasing Group -->
           <fb:FilterGroupItem name="Ekgrp" label="Purchasing Group" groupName="PR" visibleInFilterBar="true">
             <fb:control>
-              <MultiInput id="inpEkgrp"
-                  showValueHelp="true"
-                  valueHelpRequest=".onValueHelpEkgrp"
-                  placeholder="Select Group"/>
+              <MultiInput id="inpEkgrp" showValueHelp="true" valueHelpRequest=".onValueHelpEkgrp" placeholder="Select Group"/>
             </fb:control>
           </fb:FilterGroupItem>
           <!-- Created By -->
           <fb:FilterGroupItem name="Ernam" label="Created By" groupName="PR" visibleInFilterBar="true">
             <fb:control>
-              <MultiInput id="inpErnam"
-                  showValueHelp="true"
-                  valueHelpRequest=".onValueHelpErnam"
-                  placeholder="Select User"/>
+              <MultiInput id="inpErnam" showValueHelp="true" valueHelpRequest=".onValueHelpErnam" placeholder="Select User"/>
             </fb:control>
           </fb:FilterGroupItem>
           <!-- Date Range -->
           <fb:FilterGroupItem name="Badat" label="Requisition Date Range" groupName="PR" visibleInFilterBar="true">
             <fb:control>
-              <DateRangeSelection id="inpDateRange"
-                          delimiter=" to "
-                          displayFormat="dd.MM.yyyy"
-                          valueFormat="yyyy-MM-dd"
-                          placeholder="Select date range"/>
+              <DateRangeSelection id="inpDateRange" delimiter=" to " displayFormat="dd.MM.yyyy" valueFormat="yyyy-MM-dd" placeholder="Select date range"/>
             </fb:control>
           </fb:FilterGroupItem>
           <!-- Status -->
@@ -118,20 +94,9 @@
             <l:layoutData>
               <l:SplitterLayoutData id="layoutMaster" size="100%" resizable="true"/>
             </l:layoutData>
-            <Table
-              id="tblPRList"
-              items="{ path: '/groups' }"
-              mode="SingleSelectLeft"
-              selectionChange="onSelectPR"
-              class="sapUiSizeCompact stickyTable"
-              growing="true"
-              growingThreshold="100"
-              width="100%">
+            <Table id="tblPRList" items="{ path: '/groups' }" mode="SingleSelectLeft" selectionChange="onSelectPR" class="sapUiSizeCompact stickyTable" growing="true" growingThreshold="100" width="100%">
               <noData>
-                <IllustratedMessage
-                  illustrationType="sapIllus-NoData"
-                  title="No matching Purchase Requisitions found"
-                  description="Try adjusting your filters or clear all filters to see more results."/>
+                <IllustratedMessage illustrationType="sapIllus-NoData" title="No matching Purchase Requisitions found" description="Try adjusting your filters or clear all filters to see more results."/>
               </noData>
               <columns>
                 <Column>
@@ -166,9 +131,7 @@
                     <Text text="{path:'Badat', formatter:'.formatter.dateFormat'}"/>
                     <Text text="{ItemCount}"/>
                     <!-- ⭐ FIX 1: Status sử dụng Frgkz + ReasonId -->
-                    <ObjectStatus
-                      text="{parts:[{path:'Frgkz'}, {path:'ReasonId'}], formatter:'.formatter.statusText'}"
-                      state="{parts:[{path:'Frgkz'}, {path:'ReasonId'}], formatter:'.formatter.statusState'}"/>
+                    <ObjectStatus text="{parts:[{path:'Frgkz'}, {path:'ReasonId'}], formatter:'.formatter.statusText'}" state="{parts:[{path:'Frgkz'}, {path:'ReasonId'}], formatter:'.formatter.statusState'}"/>
                   </cells>
                 </ColumnListItem>
               </items>
@@ -176,53 +139,39 @@
           </l:SplitPane>
           <!-- RIGHT DETAIL PANEL -->
           <l:SplitPane id="paneDetail">
-            <VBox id="detailPanel" visible="false"
-              class="sapUiMediumMargin sapUiSizeCompact sapUiNoContentPadding">
+            <VBox id="detailPanel" visible="false" class="sapUiMediumMargin sapUiSizeCompact sapUiNoContentPadding">
               <!-- HEADER -->
-              <Panel id="panelDetailHeader"
-                class="sapUiNoContentPadding sapUiResponsiveContentPadding sapUiSizeCompact sapUiMediumMarginBottom"
-                width="100%">
+              <Panel id="panelDetailHeader" class="sapUiNoContentPadding sapUiResponsiveContentPadding sapUiSizeCompact sapUiMediumMarginBottom" width="100%">
                 <VBox class="sapUiSmallMargin sapUiSizeCompact">
-                  <HBox justifyContent="SpaceBetween" alignItems="Center"
-                        class="sapUiTinyMarginBottom">
+                  <HBox justifyContent="SpaceBetween" alignItems="Center" class="sapUiTinyMarginBottom">
                     <Text id="txtBanfnDetail" text="{Banfn}"/>
-                    <Button id="btnCloseDetail" icon="sap-icon://decline"
-                            press="onCloseDetail" type="Transparent"/>
+                    <Button id="btnCloseDetail" icon="sap-icon://decline" press="onCloseDetail" type="Transparent"/>
                   </HBox>
                   <Text id="txtBsartDetail" text="{Bsart}" class="prHeaderSubTitle"/>
                   <HBox class="sapUiTinyMarginTop" wrap="Wrap">
-                    <Text
-                      id="txtDetailMeta"
-                      text="{= 'Group: ' + ${Ekgrp} + ' • Created By: ' + ${Ernam} + ' • Req. Date: ' + ${path:'Badat', formatter:'.formatter.dateFormat'} }"/>
+                    <Text id="txtDetailMeta" text="{= 'Group: ' + ${Ekgrp} + ' • Created By: ' + ${Ernam} + ' • Req. Date: ' + ${path:'Badat', formatter:'.formatter.dateFormat'} }"/>
                   </HBox>
                   <HBox class="sapUiTinyMarginTop" alignItems="Center">
                     <Text text="Status:"/>
                     <!-- ⭐ FIX 2: Detail Status sử dụng ReasonId -->
-                    <ObjectStatus
-                      id="statusDetail"
-                      text="{parts:[{path:'Frgkz'}, {path:'ReasonId'}], formatter:'.formatter.statusText'}"
-                      state="{parts:[{path:'Frgkz'}, {path:'ReasonId'}], formatter:'.formatter.statusState'}"
-                      class="sapUiTinyMarginBegin"/>
+                    <ObjectStatus id="statusDetail" text="{parts:[{path:'Frgkz'}, {path:'ReasonId'}], formatter:'.formatter.statusText'}" state="{parts:[{path:'Frgkz'}, {path:'ReasonId'}], formatter:'.formatter.statusState'}" class="sapUiTinyMarginBegin"/>
                   </HBox>
                 </VBox>
               </Panel>
               <!-- ACTION BUTTONS -->
               <HBox class="sapUiTinyMarginBottom" justifyContent="End">
-                <Button icon="sap-icon://accept" text="Approve" type="Emphasized" press="onApprovePR"/>
-                <Button icon="sap-icon://decline" text="Reject" type="Reject" press="onRejectPR" class="sapUiTinyMarginBegin"/>
+                <Button icon="sap-icon://accept" text="Approve" type="Emphasized" press="onApprovePR" visible="{=
+        ${userRole>/feRole} === 'INVENTORY_MANAGER' ||
+        ${userRole>/feRole} === 'ADMIN'
+    }" />
+                <Button icon="sap-icon://decline" text="Reject" type="Reject" press="onRejectPR" class="sapUiTinyMarginBegin" visible="{=
+        ${userRole>/feRole} === 'INVENTORY_MANAGER' ||
+        ${userRole>/feRole} === 'ADMIN'
+    }" />
               </HBox>
               <!-- ITEMS TABLE -->
-              <Panel id="panelItems"
-                headerText="📦 Items"
-                class="sapUiNoContentPadding sapUiResponsiveContentPadding sapUiSizeCompact"
-                width="100%">
-                <Table
-                  id="tblPRItems"
-                  mode="SingleSelectMaster"
-                  selectionChange="onSelectItem"
-                  items="{path:'/Items'}"
-                  class="sapUiSizeCompact"
-                  width="100%">
+              <Panel id="panelItems" headerText="📦 Items" class="sapUiNoContentPadding sapUiResponsiveContentPadding sapUiSizeCompact" width="100%">
+                <Table id="tblPRItems" mode="SingleSelectMaster" selectionChange="onSelectItem" items="{path:'/Items'}" class="sapUiSizeCompact" width="100%">
                   <columns>
                     <Column>
                       <Text text="Item"/>
@@ -248,45 +197,21 @@
                         <Text text="{path:'Menge', formatter:'.formatter.quantityFormat'}" textAlign="End"/>
                         <Text text="{path:'Badat', formatter:'.formatter.dateFormat'}"/>
                         <!-- ⭐ FIX 3: Items table status cũng dùng ReasonId -->
-                        <ObjectStatus
-                          text="{parts:[{path:'Frgkz'}, {path:'ReasonId'}], formatter:'.formatter.statusText'}"
-                          state="{parts:[{path:'Frgkz'}, {path:'ReasonId'}], formatter:'.formatter.statusState'}"/>
+                        <ObjectStatus text="{parts:[{path:'Frgkz'}, {path:'ReasonId'}], formatter:'.formatter.statusText'}" state="{parts:[{path:'Frgkz'}, {path:'ReasonId'}], formatter:'.formatter.statusState'}"/>
                       </cells>
                     </ColumnListItem>
                   </items>
                 </Table>
               </Panel>
               <!-- NOTE PANEL (sẽ sửa sau) -->
-              <Panel id="panelNote"
-                headerText="📝 Note"
-                class="sapUiNoContentPadding sapUiResponsiveContentPadding sapUiSizeCompact sapUiMediumMarginTop prHeaderCard"
-                width="100%">
+              <Panel id="panelNote" headerText="📝 Note" class="sapUiNoContentPadding sapUiResponsiveContentPadding sapUiSizeCompact sapUiMediumMarginTop prHeaderCard" width="100%">
                 <VBox class="sapUiSmallMargin sapUiSizeCompact">
-                  <Text id="txtPRNote"
-                    text="{noteModel>/Note}"
-                    wrapping="true"
-                    visible="{= !${noteModel>/Editable} }"
-                    class="sapUiTinyMarginTop sapUiSmallMarginBottom sapUiSmallPadding"/>
-                  <TextArea id="taPRNoteEdit"
-                    value="{noteModel>/Note}"
-                    rows="4"
-                    width="100%"
-                    visible="{noteModel>/Editable}"
-                    placeholder="Enter note here..."
-                    class="sapUiTinyMarginTop sapUiSmallMarginBottom sapUiSmallPadding"/>
+                  <Text id="txtPRNote" text="{noteModel>/Note}" wrapping="true" visible="{= !${noteModel>/Editable} }" class="sapUiTinyMarginTop sapUiSmallMarginBottom sapUiSmallPadding"/>
+                  <TextArea id="taPRNoteEdit" value="{noteModel>/Note}" rows="4" width="100%" visible="{noteModel>/Editable}" placeholder="Enter note here..." class="sapUiTinyMarginTop sapUiSmallMarginBottom sapUiSmallPadding"/>
                   <HBox class="sapUiTinyMarginTop" justifyContent="End">
-                    <Button id="btnEditNote"
-                      text="Edit" type="Transparent" icon="sap-icon://edit"
-                      visible="{= !${noteModel>/Editable} }"
-                      press=".onEditNote"/>
-                    <Button id="btnSaveNote"
-                      text="Save" type="Emphasized" icon="sap-icon://save"
-                      visible="{noteModel>/Editable}"
-                      press=".onSaveNote"/>
-                    <Button id="btnCancelEdit"
-                      text="Cancel" type="Reject" icon="sap-icon://decline"
-                      visible="{noteModel>/Editable}"
-                      press=".onCancelEditNote"/>
+                    <Button id="btnEditNote" text="Edit" type="Transparent" icon="sap-icon://edit" visible="{= !${noteModel>/Editable} }" press=".onEditNote"/>
+                    <Button id="btnSaveNote" text="Save" type="Emphasized" icon="sap-icon://save" visible="{noteModel>/Editable}" press=".onSaveNote"/>
+                    <Button id="btnCancelEdit" text="Cancel" type="Reject" icon="sap-icon://decline" visible="{noteModel>/Editable}" press=".onCancelEditNote"/>
                   </HBox>
                 </VBox>
               </Panel>

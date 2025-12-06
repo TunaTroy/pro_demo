@@ -80,15 +80,7 @@
             <l:layoutData>
               <l:SplitterLayoutData id="poTableLayout" size="100%" resizable="true"/>
             </l:layoutData>
-            <Table 
-              id="poTable" 
-              items="{path: 'po>/'}"
-              mode="SingleSelectLeft" 
-              selectionChange=".onSelectPO" 
-              sticky="ColumnHeaders"
-              growing="true" 
-              growingThreshold="150" 
-              width="100%">
+            <Table id="poTable" items="{path: 'po>/'}" mode="SingleSelectLeft" selectionChange=".onSelectPO" sticky="ColumnHeaders" growing="true" growingThreshold="150" width="100%">
               <headerToolbar>
                 <OverflowToolbar id="_IDGenOverflowToolbar">
                   <Title id="_IDGenTitle" text="PO List ({= ${po>/}.length } items)" level="H2"/>
@@ -131,12 +123,9 @@
                     <Text id="_IDGenText15" text="{po>Ernam}"/>
                     <Text id="_IDGenText17" text="{ path:'po>Aedat', formatter:'.formatter.dateFormat' }"/>
                     <Text id="_IDGenText16" text="{po>ItemCount}"/>
-                    <ObjectStatus id="_IDGenObjectStatus" 
-                                  text="{path:'po>Frgke', 
-                                  formatter:'.formatter.formatReleaseStatusText'}" 
-                                  state="{path:'po>Frgke', 
-                                  formatter:'.formatter.formatReleaseStatusState'}" 
-                                  icon="{path:'po>Frgke', 
+                    <ObjectStatus id="_IDGenObjectStatus" text="{path:'po>Frgke', 
+                                  formatter:'.formatter.formatReleaseStatusText'}" state="{path:'po>Frgke', 
+                                  formatter:'.formatter.formatReleaseStatusState'}" icon="{path:'po>Frgke', 
                                   formatter:'.formatter.formatReleaseStatusIcon'}"/>
                   </cells>
                 </ColumnListItem>
@@ -176,29 +165,23 @@
                     <ObjectStatus id="_IDGenObjectStatus1" text="{path:'detailPO>Frgke', formatter:'.formatter.formatReleaseStatusText'}" state="{path:'detailPO>Frgke', formatter:'.formatter.formatReleaseStatusState'}" icon="{path:'detailPO>Frgke', formatter:'.formatter.formatReleaseStatusIcon'}" class="sapUiTinyMarginBegin"/>
                   </HBox>
                   <HBox id="_IDGenHBox6" class="sapUiTinyMarginTop" justifyContent="End">
-                      <Button id="btnApprovePO" 
-                              text="Approve PO" 
-                              icon="sap-icon://accept" 
-                              type="Emphasized"
-                              press=".onApprovePO"/>
+                    <Button id="btnApprovePO" text="Approve PO" icon="sap-icon://accept" type="Emphasized" press=".onApprovePO" visible="{=
+                                          ${userRole>/feRole} === 'PROCUREMENT_MANAGER' ||
 
-                          <Button id="btnRejectPO"
-                              text="Reject PO"
-                              icon="sap-icon://decline"
-                              type="Reject"
-                              press=".onRejectPO"
-                              class="sapUiTinyMarginEnd"/>
+                                          ${userRole>/feRole} === 'ADMIN'
+                                      }"/>
+
+                    <Button id="btnRejectPO" text="Reject PO" icon="sap-icon://decline" type="Reject" press=".onRejectPO" class="sapUiTinyMarginEnd" visible="{=
+                                          ${userRole>/feRole} === 'PROCUREMENT_MANAGER' ||
+
+                                          ${userRole>/feRole} === 'ADMIN'
+                                      }"/>
                   </HBox>
                 </VBox>
               </Panel>
               <!-- ===== ITEMS TABLE ===== -->
               <Panel id="panelPOItems" headerText="📦 Items" class="sapUiNoContentPadding sapUiResponsiveContentPadding sapUiSizeCompact" width="100%">
-                <Table id="tblPOItems" 
-                       mode="SingleSelectMaster" 
-                       selectionChange="onItemPress" 
-                       items="{detailPO>/Items}" 
-                       class="sapUiSizeCompact" 
-                       width="100%">
+                <Table id="tblPOItems" mode="SingleSelectMaster" selectionChange="onItemPress" items="{detailPO>/Items}" class="sapUiSizeCompact" width="100%">
                   <columns>
                     <Column id="_IDGenColumn6">
                       <Text id="_IDGenText18" text="Item"/>
