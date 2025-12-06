@@ -4,7 +4,7 @@
   xmlns:core="sap.ui.core"
   xmlns:fb="sap.ui.comp.filterbar"
   xmlns:l="sap.ui.layout" displayBlock="true">
-  <Page id="poListPage" title="Purchase Order List">
+  <Page id="poListPage">
       <!-- Modern Navigation Bar -->
 <HBox class="topNavBar" justifyContent="SpaceBetween" alignItems="Center" width="100%">
     
@@ -14,6 +14,7 @@
                width="90px"
                class="sapLogo"
                 press="onGoToDashboard"/>
+                <Text text="Purchase Order" class="dashboardTitle"/>
     </HBox>
 
     <!-- Menu -->

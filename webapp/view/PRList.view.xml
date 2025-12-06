@@ -7,7 +7,7 @@
   xmlns:fb="sap.ui.comp.filterbar"
   xmlns:table="sap.ui.table"
   displayBlock="true">
-  <Page id="pagePRList" title="📄 Purchase Requisition List">
+  <Page id="pagePRList">
       <!-- Modern Navigation Bar -->
 <HBox class="topNavBar" justifyContent="SpaceBetween" alignItems="Center" width="100%">
     
@@ -17,6 +17,7 @@
                width="90px" 
                class="sapLogo"
                press="onGoToDashboard"/>
+         <Text text="Purchase Requistion" class="dashboardTitle"/>
     </HBox>
 
     <!-- Menu -->

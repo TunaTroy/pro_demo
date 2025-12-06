@@ -7,7 +7,6 @@
   displayBlock="true"
   height="100%">
   <Page id="rfqListPage"
-        title="Request for Quotation List"
         showNavButton="false"
         class="sapUiResponsiveContentPadding">
 
@@ -20,6 +19,7 @@
                width="90px"
                class="sapLogo"
               press="onGoToDashboard"/>
+        <Text text="Requistion of Quotation" class="dashboardTitle"/>
     </HBox>
 
     <!-- Menu -->

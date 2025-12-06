@@ -840,4 +840,10 @@
     cursor: pointer;
 }
 
+.dashboardTitle {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1a1a1a;
+}
+
 
