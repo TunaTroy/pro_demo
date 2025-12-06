@@ -25,22 +25,7 @@
 /* ============================================================
    🟨 KPI ROW (Hàng đầu chứa 3 thẻ KPI)
    ============================================================ */
-#kpiRow {
-  display: flex;
-  justify-content: space-around;
-  flex-wrap: wrap;
-  gap: 1.25rem;
-  width: 100%;
-}
 
-/* KPI Card Container */
-#kpiContainer {
-  display: flex;
-  justify-content: space-around;
-  flex-wrap: wrap;
-  gap: 1.25rem;
-  width: 100%;
-}
 
 /* Base style cho tất cả card */
 .dashboardCard {
@@ -63,9 +48,6 @@
 }
 
 /* KPI Card style */
-.kpiCard {
-  border-left-color: #0a6ed1;
-}
 
 .kpiTitle {
   font-size: 1rem;
@@ -106,6 +88,27 @@
   height: 6px;
   border-radius: 3px;
 }
+
+/* Row chứa 3 KPI */
+.kpiRow {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1.2rem;
+  width: 100%;
+}
+
+/* 3 card có kích thước bằng nhau */
+.kpiRow .dashboardCard {
+  flex: 1;
+  min-width: 300px;
+  max-width: 32%;   /* = độ rộng card chart */
+  background-color: #fff;
+  border-radius: 14px;
+  padding: 18px 20px;
+  box-shadow: none !important;     /* 🔥 loại bỏ shadow KDE gây cảm giác chồng thẻ */
+}
+
 
 /* ============================================================
    🟧 CHART ROW (Hàng thứ 2: Donut, Top Material, Top Vendor)
@@ -291,7 +294,6 @@
   border-radius: 1rem;
   padding: 1.5rem 1.25rem;
   text-align: center;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   transition: all 0.25s ease-in-out;
   flex: 1;
   min-width: 280px;
@@ -347,46 +349,7 @@
    ============================================================ */
 
 /* PR (Purchase Requisition) */
-.kpiCard.PR {
-  border-top: 5px solid #0a6ed1;
-}
-.kpiCard.PR .kpiValue {
-  color: #0a6ed1;
-}
-.kpiCard.PR .kpiPercent[data-state="Success"] {
-  color: #107e3e;
-}
-.kpiCard.PR .kpiPercent[data-state="Error"] {
-  color: #bb0000;
-}
 
-/* RFQ (Request for Quotation) */
-.kpiCard.RFQ {
-  border-top: 5px solid #f39c12;
-}
-.kpiCard.RFQ .kpiValue {
-  color: #e67e22;
-}
-.kpiCard.RFQ .kpiPercent[data-state="Success"] {
-  color: #2e7d32;
-}
-.kpiCard.RFQ .kpiPercent[data-state="Error"] {
-  color: #c0392b;
-}
-
-/* PO (Purchase Order) */
-.kpiCard.PO {
-  border-top: 5px solid #8e44ad;
-}
-.kpiCard.PO .kpiValue {
-  color: #8e44ad;
-}
-.kpiCard.PO .kpiPercent[data-state="Success"] {
-  color: #2e7d32;
-}
-.kpiCard.PO .kpiPercent[data-state="Error"] {
-  color: #c0392b;
-}
 
 /* ============================================================
    ⚙️ Căn chỉnh hàng KPI
@@ -812,18 +775,20 @@
 .navMenu {
     display: flex;
     gap: 48px;              /* giãn cách đều đẹp hơn */
-    align-items: center;
+    
+    margin-top:10px;
 }
 
 /* NAV ITEM (chữ to hơn + đậm hơn) */
 .navItem {
     padding: 10px 18px;
-    border-radius: 10px;
+    border: 2px solid #c7cbde;     /* màu xanh SAP */
+    border-radius: 5px;
     font-size: 16px;        /* 🔥 cỡ chữ TO hơn */
     font-weight: 600;       /* 🔥 đậm hơn */
     cursor: pointer;
     transition: 0.2s ease-in-out;
-    color: #0066CC;         /* màu xanh SAP */
+    color: #0c2f52;         /* màu xanh SAP */
     text-decoration: none;
 }
 
@@ -846,4 +811,15 @@
     color: #1a1a1a;
 }
 
+.topNavBar {   
+    top: 0;               /* Khoảng cách từ top = 0 */
+    z-index: 9999;        /* Luôn nằm trên các thành phần khác */
+    background-color: #E3F2FD;    /* Giữ nền trắng khi scroll */
+    padding: 10px 20px;   /* Đẹp hơn */
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    border-bottom: 1px solid #BBDEFB;  /* Tạo bóng nhẹ kiểu Fiori */
+}
 
+.sapMLnk:visited{
+  color: #0a396f;
+}

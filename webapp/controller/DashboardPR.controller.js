@@ -217,22 +217,6 @@ sap.ui.define(
         this._loadMonthlyPoBarChart(sPeriodKey);
       },
 
-      setActiveMenu: function(key) {
-    const items = ["PR", "RFQ", "PO"];
-    items.forEach(i => {
-        const oItem = this.byId("menu" + i);
-        if (oItem) {
-            oItem.removeStyleClass("navItemActive");
-        }
-    });
-
-    const active = this.byId("menu" + key);
-    if (active) active.addStyleClass("navItemActive");
-},
-
-
-
-
       /* ===== Tải toàn bộ dashboard ===== */
       _reloadChartsOnly: function (sPeriodKey) {
         BusyIndicator.show(0);
@@ -2270,7 +2254,7 @@ sap.ui.define(
             colorPalette: ["#1976D2", "#F57C00", "#388E3C"],
           },
           valueAxis: {
-            title: { visible: true, text: "Value (VND)" },
+            title: { visible: true, text: "Value (USD)" },
           },
           categoryAxis: {
             title: { visible: true, text: "Timeline (Month/Year)" },

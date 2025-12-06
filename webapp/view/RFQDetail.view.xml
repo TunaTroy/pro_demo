@@ -37,7 +37,7 @@
                     class="headerImageContainer"
                 >
                     <Image
-                        src="/images/tuanthanden.jpg"
+                        src="images/tuanthanden.jpg"
                         width="140px"
                         height="140px"
                         decorative="false"

@@ -6,6 +6,7 @@
   xmlns:viz.data="sap.viz.ui5.data"
   xmlns:viz.feeds="sap.viz.ui5.controls.common.feeds"
   controllerName="demodashboard.controller.DashboardPR">
+  
 
   <Page id="dashboard" enableScrolling="true">
     <content>

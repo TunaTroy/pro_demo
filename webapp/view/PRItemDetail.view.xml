@@ -17,7 +17,7 @@
         <VBox id="vboxHeaderImage" width="25%" alignItems="Center" class="headerImageContainer">
           <Image
             id="imgMaterial"
-            src="/images/batluc.jpg"
+            src="images/batluc.jpg"
             width="140px"
             height="140px"
             decorative="false"

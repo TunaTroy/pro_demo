@@ -32,7 +32,7 @@
           class="headerImageContainer">
           <Image
             id="imgMaterialPo"
-            src="/images/tuandat.jpg"
+            src="images/tuandat.jpg"
             width="140px"
             height="140px"
             decorative="false"
