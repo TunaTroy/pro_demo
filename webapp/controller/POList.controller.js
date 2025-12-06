@@ -846,6 +846,18 @@ sap.ui.define(
             MessageToast.show("⚠️ Cannot refresh PO details.");
           });
       },
+
+      onGoToDashboard: function () {
+        sap.ui.core.UIComponent.getRouterFor(this).navTo("DashboardPR");
+      },
+
+      onGoToPRList: function () {
+          this.getOwnerComponent().getRouter().navTo("PRList");
+      },
+      onGoToRFQList: function () {
+          this.getOwnerComponent().getRouter().navTo("RFQList");
+      },
+
     });
   }
 );

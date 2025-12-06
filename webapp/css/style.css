@@ -787,3 +787,57 @@
     min-width: 95% !important;
   }
 }
+
+
+
+
+
+
+
+/* ===== TOP NAV BAR ===== */
+.topNavBar {
+    padding: 10px 30px;
+    background: #ffffff;
+    border-bottom: 1px solid #e6e6e6;
+}
+
+/* SAP Logo adjust */
+.sapLogo {
+    margin-right: 20px;
+}
+
+
+/* ===== NAV MENU ===== */
+/* NAV MENU CONTAINER */
+.navMenu {
+    display: flex;
+    gap: 48px;              /* giãn cách đều đẹp hơn */
+    align-items: center;
+}
+
+/* NAV ITEM (chữ to hơn + đậm hơn) */
+.navItem {
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-size: 16px;        /* 🔥 cỡ chữ TO hơn */
+    font-weight: 600;       /* 🔥 đậm hơn */
+    cursor: pointer;
+    transition: 0.2s ease-in-out;
+    color: #0066CC;         /* màu xanh SAP */
+    text-decoration: none;
+}
+
+/* HOVER EFFECT — highlight cả ô */
+.navItem:hover {
+    background-color: #e8f2ff;   /* xanh nhạt highlight */
+    border: 1px solid #0070f2;   /* viền xanh SAP */
+    color: #004a99;
+}
+
+
+
+.sapLogo {
+    cursor: pointer;
+}
+
+

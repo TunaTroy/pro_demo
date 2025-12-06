@@ -217,6 +217,22 @@ sap.ui.define(
         this._loadMonthlyPoBarChart(sPeriodKey);
       },
 
+      setActiveMenu: function(key) {
+    const items = ["PR", "RFQ", "PO"];
+    items.forEach(i => {
+        const oItem = this.byId("menu" + i);
+        if (oItem) {
+            oItem.removeStyleClass("navItemActive");
+        }
+    });
+
+    const active = this.byId("menu" + key);
+    if (active) active.addStyleClass("navItemActive");
+},
+
+
+
+
       /* ===== Tải toàn bộ dashboard ===== */
       _reloadChartsOnly: function (sPeriodKey) {
         BusyIndicator.show(0);
@@ -259,7 +275,7 @@ sap.ui.define(
 
             const aResults = oData.results || [];
             if (aResults.length === 0) {
-              MessageToast.show("Không có dữ liệu Purchase Requisition");
+              MessageToast.show("No Purchase Requisition data available");
               this._displayKpiCardGeneric("PR", sPeriodKey, 0, 0);
               return;
             }
@@ -296,7 +312,7 @@ sap.ui.define(
           error: function (e) {
             BusyIndicator.hide();
             console.error("❌ OData Read error:", e);
-            MessageToast.show("Lỗi khi tải dữ liệu KPI Purchase Requisition");
+            MessageToast.show("Error loading KPI Purchase Requisition data");
             this._displayKpiCardGeneric("PR", sPeriodKey, 0, 0);
           }.bind(this),
         });
@@ -608,8 +624,8 @@ sap.ui.define(
 
           error: function (e) {
             BusyIndicator.hide();
-            console.error("❌ Lỗi load PO Status Donut:", e);
-            MessageToast.show("Không thể tải dữ liệu trạng thái PO");
+            console.error("❌ Error loading PO Status Donut:", e);
+            MessageToast.show("Failed to load PO status data");
             this._displayStatusDonutChartPO([{ Status: "No Data", Count: 1 }]);
           }.bind(this),
         });
@@ -629,7 +645,7 @@ sap.ui.define(
             BusyIndicator.hide();
 
             if (!oData.results || oData.results.length === 0) {
-              MessageToast.show("Không có dữ liệu vật tư");
+              MessageToast.show("No material data available");
               this._displayTopMaterialBarChart([]);
               return;
             }
@@ -654,7 +670,7 @@ sap.ui.define(
             // Nhóm theo Txz01
             var oCountMap = {};
             aCurr.forEach(function (r) {
-              var key = r.Txz01 || "Không xác định";
+              var key = r.Txz01 ||"Unknown";
               oCountMap[key] = (oCountMap[key] || 0) + 1;
             });
 
@@ -672,7 +688,7 @@ sap.ui.define(
 
           error: function (e) {
             BusyIndicator.hide();
-            MessageToast.show("Lỗi khi tải dữ liệu vật tư");
+            MessageToast.show("Error loading material data");
             this._displayTopMaterialBarChart([]);
           }.bind(this),
         });
@@ -741,13 +757,13 @@ sap.ui.define(
 
               error: function (e) {
                 BusyIndicator.hide();
-                MessageToast.show("Lỗi khi đọc PRSet");
+                MessageToast.show("Error reading PRSet");
               }.bind(this),
             });
           }.bind(this),
           error: function (e) {
             BusyIndicator.hide();
-            MessageToast.show("Lỗi khi đọc VendorsSet");
+            MessageToast.show("Error reading VendorsSet");
           }.bind(this),
         });
       },
@@ -990,8 +1006,8 @@ sap.ui.define(
 
           error: (e) => {
             BusyIndicator.hide();
-            console.error("❌ Lỗi khi tải dữ liệu Top Requesters:", e);
-            MessageToast.show("Lỗi khi tải dữ liệu Top Requesters");
+            console.error("❌ Error loading Top Requesters data:", e);
+            MessageToast.show("Error loading Top Requesters data");
           },
         });
       },
@@ -1323,7 +1339,7 @@ sap.ui.define(
           })
           .catch((e) => {
             BusyIndicator.hide();
-            console.error("❌ Lỗi Connected Chart:", e);
+            console.error("❌Connected Chart Error:", e);
           });
       },
 
@@ -1517,7 +1533,7 @@ sap.ui.define(
       _displayTopMaterialBarChart: function (aChartData) {
         var oVizFrame = this.getView().byId("idBarChart");
         if (!oVizFrame) {
-          console.error("❌ Không tìm thấy Bar Chart VizFrame!");
+          console.error("❌ Bar Chart VizFrame not found!");
           return;
         }
 
@@ -1569,7 +1585,7 @@ sap.ui.define(
       _displayTopVendorBarChart: function (aChartData) {
         const oVizFrame = this.getView().byId("idVendorBarChart");
         if (!oVizFrame) {
-          console.error("❌ Không tìm thấy idVendorBarChart");
+          console.error("❌ idVendorBarChart not found");
           return;
         }
 
@@ -1619,138 +1635,204 @@ sap.ui.define(
       },
 
       _displayMonthlyPRBarChart: function (aChartData) {
-        const oVizFrame = this.getView().byId("idMonthlyBarChartPR");
-        if (!oVizFrame) {
-          console.error("❌ Không tìm thấy VizFrame idMonthlyBarChartPR");
-          return;
-        }
+    const oVizFrame = this.getView().byId("idMonthlyBarChartPR");
+    if (!oVizFrame) {
+      console.error("❌ VizFrame idMonthlyBarChartPR not found");
+      return;
+    }
 
-        oVizFrame.destroyFeeds();
-        oVizFrame.destroyDataset();
+    // =======================
+    // ⭐ MAP MONTH TO ENGLISH
+    // =======================
+    const MONTH_MAP = {
+      1: "January",
+      2: "February",
+      3: "March",
+      4: "April",
+      5: "May",
+      6: "June",
+      7: "July",
+      8: "August",
+      9: "September",
+      10: "October",
+      11: "November",
+      12: "December"
+    };
 
-        const oModel = new JSONModel({ items: aChartData });
-        this.getView().setModel(oModel, "monthlyPR");
+    aChartData = aChartData.map(item => {
+      let raw = item.Month;
 
-        const oDataset = new FlattenedDataset({
-          dimensions: [{ name: "Tháng", value: "{monthlyPR>Month}" }],
-          measures: [{ name: "Số lượng PR", value: "{monthlyPR>Count}" }],
-          data: { path: "monthlyPR>/items" },
-        });
+      // If value is like "Tháng 11"
+      if (typeof raw === "string" && raw.includes("Tháng")) {
+        raw = raw.replace("Tháng", "").trim();
+      }
 
-        oVizFrame.setDataset(oDataset);
-        oVizFrame.setModel(oModel, "monthlyPR");
+      const monthNum = parseInt(raw, 10);
 
-        oVizFrame.addFeed(
-          new FeedItem({
-            uid: "categoryAxis",
-            type: "Dimension",
-            values: ["Tháng"],
-          })
-        );
-        oVizFrame.addFeed(
-          new FeedItem({
-            uid: "valueAxis",
-            type: "Measure",
-            values: ["Số lượng PR"],
-          })
-        );
+      return {
+        ...item,
+        Month: MONTH_MAP[monthNum] || item.Month
+      };
+    });
 
-        oVizFrame.setVizType("column");
+    // ============ TIẾP TỤC RENDER ============
+    oVizFrame.destroyFeeds();
+    oVizFrame.destroyDataset();
 
-        oVizFrame.setVizProperties({
-          title: {
-            text:
-              aChartData.length > 0 && aChartData[0].Month.startsWith("Năm")
-                ? "Số lượng PR theo năm (Toàn bộ thời gian)"
-                : "Số lượng PR theo tháng",
-            alignment: "center",
-            visible: true,
-          },
-          plotArea: {
-            colorPalette: ["#5CBAE6"],
-            dataLabel: { visible: true },
-          },
-          legend: { visible: false },
-          valueAxis: {
-            title: { visible: false },
-          },
-          categoryAxis: {
-            title: { visible: false },
-            label: { angle: 0 },
-          },
-        });
+    const oModel = new JSONModel({ items: aChartData });
+    this.getView().setModel(oModel, "monthlyPR");
+
+    const oDataset = new FlattenedDataset({
+      dimensions: [{ name: "Month", value: "{monthlyPR>Month}" }],
+      measures: [{ name: "Number of PR", value: "{monthlyPR>Count}" }],
+      data: { path: "monthlyPR>/items" },
+    });
+
+    oVizFrame.setDataset(oDataset);
+    oVizFrame.setModel(oModel, "monthlyPR");
+
+    oVizFrame.addFeed(
+      new FeedItem({
+        uid: "categoryAxis",
+        type: "Dimension",
+        values: ["Month"],
+      })
+    );
+    oVizFrame.addFeed(
+      new FeedItem({
+        uid: "valueAxis",
+        type: "Measure",
+        values: ["Number of PR"],
+      })
+    );
+
+    oVizFrame.setVizType("column");
+
+    oVizFrame.setVizProperties({
+      title: {
+        text: "Number of PR per Month",
+        alignment: "center",
+        visible: true,
       },
+      plotArea: {
+        colorPalette: ["#5CBAE6"],
+        dataLabel: { visible: true },
+      },
+      legend: { visible: false },
+      valueAxis: { title: { visible: false } },
+      categoryAxis: { title: { visible: false }, label: { angle: 0 } },
+    });
+},
+
 
       _displayMonthlyPOBarChart: function (aChartData) {
-        console.log("🎨 Rendering PO Chart with data:", aChartData);
+    console.log("🎨 Rendering PO Chart with data:", aChartData);
 
-        const oVizFrame = this.getView().byId("idMonthlyBarChartPO");
-        if (!oVizFrame) {
-          console.error("❌ VizFrame 'idMonthlyBarChartPO' not found!");
-          return;
+    const oVizFrame = this.getView().byId("idMonthlyBarChartPO");
+    if (!oVizFrame) {
+      console.error("❌ VizFrame 'idMonthlyBarChartPO' not found!");
+      return;
+    }
+
+    // =======================
+    // ⭐ MAP MONTH TO ENGLISH
+    // =======================
+    const MONTH_MAP = {
+      1: "January",
+      2: "February",
+      3: "March",
+      4: "April",
+      5: "May",
+      6: "June",
+      7: "July",
+      8: "August",
+      9: "September",
+      10: "October",
+      11: "November",
+      12: "December"
+    };
+
+    aChartData = aChartData.map(item => {
+        let raw = item.Month;
+
+        // Convert "Tháng 11" → 11
+        if (typeof raw === "string" && raw.includes("Tháng")) {
+            raw = raw.replace("Tháng", "").trim();
         }
 
-        // ✅ Clear existing feeds/dataset
-        oVizFrame.destroyFeeds();
-        oVizFrame.destroyDataset();
+        const num = parseInt(raw, 10);
 
-        // ✅ Tạo model mới
-        const oModel = new sap.ui.model.json.JSONModel({ items: aChartData });
-        this.getView().setModel(oModel, "monthlyPO");
+        return {
+            ...item,
+            Month: MONTH_MAP[num] || item.Month
+        };
+    });
 
-        // ✅ Tạo dataset
-        const oDataset = new sap.viz.ui5.data.FlattenedDataset({
-          dimensions: [{ name: "Tháng", value: "{monthlyPO>Month}" }],
-          measures: [{ name: "Số lượng PO", value: "{monthlyPO>Count}" }],
-          data: { path: "monthlyPO>/items" },
-        });
+    // ======= CLEAR OLD DATA =======
+    oVizFrame.destroyFeeds();
+    oVizFrame.destroyDataset();
 
-        oVizFrame.setDataset(oDataset);
-        oVizFrame.setModel(oModel, "monthlyPO");
+    // ======= CREATE MODEL =======
+    const oModel = new sap.ui.model.json.JSONModel({ items: aChartData });
+    this.getView().setModel(oModel, "monthlyPO");
 
-        // ✅ Add feeds
-        oVizFrame.addFeed(
-          new sap.viz.ui5.controls.common.feeds.FeedItem({
-            uid: "categoryAxis",
-            type: "Dimension",
-            values: ["Tháng"],
-          })
-        );
-        oVizFrame.addFeed(
-          new sap.viz.ui5.controls.common.feeds.FeedItem({
-            uid: "valueAxis",
-            type: "Measure",
-            values: ["Số lượng PO"],
-          })
-        );
+    // ======= CREATE DATASET =======
+    const oDataset = new sap.viz.ui5.data.FlattenedDataset({
+      dimensions: [{ name: "Month", value: "{monthlyPO>Month}" }],
+      measures: [{ name: "Number of PO", value: "{monthlyPO>Count}" }],
+      data: { path: "monthlyPO>/items" },
+    });
 
-        oVizFrame.setVizType("column");
+    oVizFrame.setDataset(oDataset);
+    oVizFrame.setModel(oModel, "monthlyPO");
 
-        const sDocType = this._currentPoType === "A" ? "RFQ" : "PO";
+    // ======= ADD FEEDS =======
+    oVizFrame.addFeed(
+      new sap.viz.ui5.controls.common.feeds.FeedItem({
+        uid: "categoryAxis",
+        type: "Dimension",
+        values: ["Month"],
+      })
+    );
 
-        oVizFrame.setVizProperties({
-          title: {
-            text:
-              aChartData.length > 0 && aChartData[0].Month.startsWith("Năm")
-                ? `Số lượng ${sDocType} theo năm`
-                : `Số lượng ${sDocType} theo tháng`,
-            alignment: "center",
-            visible: true,
-          },
-          plotArea: {
-            colorPalette: [sDocType === "A" ? "#2196F3" : "#4CAF50"], // RFQ xanh dương, PO xanh lá
-            dataLabel: { visible: true },
-          },
-          legend: { visible: false },
-          valueAxis: { title: { visible: false } },
-          categoryAxis: {
-            title: { visible: false },
-            label: { angle: 0 },
-          },
-        });
+    oVizFrame.addFeed(
+      new sap.viz.ui5.controls.common.feeds.FeedItem({
+        uid: "valueAxis",
+        type: "Measure",
+        values: ["Number of PO"],
+      })
+    );
 
-        console.log("✅ PO Chart rendered successfully");
+    // ======= SET TYPE =======
+    oVizFrame.setVizType("column");
+
+    const sDocType = this._currentPoType === "A" ? "RFQ" : "PO";
+
+    // ======= DISPLAY PROPERTIES =======
+    oVizFrame.setVizProperties({
+      title: {
+        text:
+          aChartData.length > 0 && aChartData[0].Month.startsWith("Year")
+            ? `Number of ${sDocType} per year`
+            : `Number of ${sDocType} per month`,
+        alignment: "center",
+        visible: true,
       },
+      plotArea: {
+        colorPalette: [sDocType === "A" ? "#2196F3" : "#4CAF50"],
+        dataLabel: { visible: true },
+      },
+      legend: { visible: false },
+      valueAxis: { title: { visible: false } },
+      categoryAxis: {
+        title: { visible: false },
+        label: { angle: 0 },
+      },
+    });
+
+    console.log("✅ PO Chart rendered successfully");
+},
+
 
       _displayConnectedScatterChart: function (aChartData) {
         const oVizFrame = this.byId("idConnectedChart");
@@ -1786,14 +1868,14 @@ sap.ui.define(
         // ✅ Chuẩn hóa dữ liệu cho hiển thị đẹp (chuyển sang triệu hoặc tỷ)
         const aFormatted = aProcessed.map((item) => {
           let displayAmount = item.Amount;
-          let unit = "VND";
+          let unit = "USD";
 
           if (displayAmount >= 1_000_000_000) {
             displayAmount = displayAmount / 1_000_000_000;
-            unit = "Tỷ VND";
+            unit = "Billion USD";
           } else if (displayAmount >= 1_000_000) {
             displayAmount = displayAmount / 1_000_000;
-            unit = "Triệu VND";
+            unit = "Million USD";
           }
 
           return {
@@ -1816,10 +1898,10 @@ sap.ui.define(
 
         const oDataset = new sap.viz.ui5.data.FlattenedDataset({
           dimensions: [
-            { name: "Mốc thời gian", value: "{chart>Date}" },
-            { name: "Loại chứng từ", value: "{chart>Phase}" },
+            { name: "Time Line", value: "{chart>Date}" },
+            { name: "Type of document", value: "{chart>Phase}" },
           ],
-          measures: [{ name: "Giá trị", value: "{chart>DisplayAmount}" }],
+          measures: [{ name: "Value", value: "{chart>DisplayAmount}" }],
           data: { path: "chart>/items" },
         });
 
@@ -1831,33 +1913,33 @@ sap.ui.define(
           new sap.viz.ui5.controls.common.feeds.FeedItem({
             uid: "categoryAxis",
             type: "Dimension",
-            values: ["Mốc thời gian"],
+            values: ["Time Line"],
           })
         );
         oVizFrame.addFeed(
           new sap.viz.ui5.controls.common.feeds.FeedItem({
             uid: "color",
             type: "Dimension",
-            values: ["Loại chứng từ"],
+            values: ["Type of document"],
           })
         );
         oVizFrame.addFeed(
           new sap.viz.ui5.controls.common.feeds.FeedItem({
             uid: "valueAxis",
             type: "Measure",
-            values: ["Giá trị"],
+            values: ["Value"],
           })
         );
 
         oVizFrame.setVizType("line");
 
         // ✅ Lấy đơn vị lớn nhất để đặt trục tung
-        const firstUnit = aFormatted.length > 0 ? aFormatted[0].Unit : "VND";
+        const firstUnit = aFormatted.length > 0 ? aFormatted[0].Unit : "USD";
 
         // ✅ Hiển thị đẹp như PR chart
         oVizFrame.setVizProperties({
           title: {
-            text: `Giá trị PR / RFQ / PO theo mốc thời gian (${firstUnit})`,
+            text: `PR / RFQ / PO Value by Timeline (${firstUnit})`,
             visible: true,
             alignment: "center",
           },
@@ -1872,11 +1954,11 @@ sap.ui.define(
             window: { start: "firstDataPoint", end: "lastDataPoint" },
           },
           valueAxis: {
-            title: { visible: true, text: `Giá trị (${firstUnit})` },
+            title: { visible: true, text: `Value (${firstUnit})` },
             // label: { formatString: "n1" }
           },
           categoryAxis: {
-            title: { visible: true, text: "Mốc thời gian (Tháng/Năm)" },
+            title: { visible: true, text: "Time Line (Month/Year)" },
             label: { angle: -45, style: { fontSize: "11px" } },
           },
           tooltip: {
@@ -2083,17 +2165,17 @@ sap.ui.define(
         var now = new Date();
         switch (key) {
           case "today":
-            return "Hôm nay";
+            return "Today";
           case "thisWeek":
-            return "Tuần này";
+            return "This Week";
           case "thisMonth":
-            return "Tháng " + (now.getMonth() + 1);
+            return "This Month" + (now.getMonth() + 1);
           case "thisQuarter":
-            return "Quý " + (Math.floor(now.getMonth() / 3) + 1);
+            return "This Quater " + (Math.floor(now.getMonth() / 3) + 1);
           case "thisYear":
-            return "Năm " + now.getFullYear();
+            return "Year " + now.getFullYear();
           case "thisAll":
-            return "Toàn bộ thời gian";
+            return "All Time";
           default:
             return "";
         }
@@ -2143,10 +2225,10 @@ sap.ui.define(
 
         const oDataset = new sap.viz.ui5.data.FlattenedDataset({
           dimensions: [
-            { name: "Mốc thời gian", value: "{chart>Date}" },
-            { name: "Loại chứng từ", value: "{chart>Phase}" },
+            { name: "Timeline", value: "{chart>Date}" },
+            { name: "Type of Document", value: "{chart>Phase}" },
           ],
-          measures: [{ name: "Giá trị", value: "{chart>DisplayAmount}" }],
+          measures: [{ name: "Value", value: "{chart>DisplayAmount}" }],
           data: { path: "chart>/items" },
         });
 
@@ -2157,28 +2239,28 @@ sap.ui.define(
           new sap.viz.ui5.controls.common.feeds.FeedItem({
             uid: "categoryAxis",
             type: "Dimension",
-            values: ["Mốc thời gian"],
+            values: ["Timeline"],
           })
         );
         oVizFrame.addFeed(
           new sap.viz.ui5.controls.common.feeds.FeedItem({
             uid: "color",
             type: "Dimension",
-            values: ["Loại chứng từ"],
+            values: ["Type of Document"],
           })
         );
         oVizFrame.addFeed(
           new sap.viz.ui5.controls.common.feeds.FeedItem({
             uid: "valueAxis",
             type: "Measure",
-            values: ["Giá trị"],
+            values: ["Value"],
           })
         );
 
         // Optional: Giữ lại các vizProperties nếu muốn
         oVizFrame.setVizProperties({
           title: {
-            text: "Giá trị PR / RFQ / PO theo mốc thời gian (VND)",
+            text: "PR / RFQ / PO value by time (USD)",
             visible: true,
             alignment: "center",
           },
@@ -2188,10 +2270,10 @@ sap.ui.define(
             colorPalette: ["#1976D2", "#F57C00", "#388E3C"],
           },
           valueAxis: {
-            title: { visible: true, text: "Giá trị (VND)" },
+            title: { visible: true, text: "Value (VND)" },
           },
           categoryAxis: {
-            title: { visible: true, text: "Mốc thời gian (Tháng/Năm)" },
+            title: { visible: true, text: "Timeline (Month/Year)" },
             label: { angle: -45 },
           },
           tooltip: { visible: true },

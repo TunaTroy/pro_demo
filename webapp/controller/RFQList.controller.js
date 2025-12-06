@@ -902,6 +902,18 @@ sap.ui.define(
           aEkgrp
         );
       },
+
+      onGoToDashboard: function () {
+      sap.ui.core.UIComponent.getRouterFor(this).navTo("DashboardPR");
+      },
+
+       onGoToPRList: function () {
+        sap.ui.core.UIComponent.getRouterFor(this).navTo("PRList");
+      },
+
+      onGoToPOList: function () {
+        sap.ui.core.UIComponent.getRouterFor(this).navTo("POList");
+      },
     });
   }
 );

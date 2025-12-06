@@ -1123,6 +1123,18 @@ sap.ui.define(
           },
         });
       },
+
+      onGoToDashboard: function () {
+    sap.ui.core.UIComponent.getRouterFor(this).navTo("DashboardPR");
+      },
+ 
+
+      onGoToRFQList: function () {
+        sap.ui.core.UIComponent.getRouterFor(this).navTo("RFQList");
+      },
+      onGoToPOList: function () {
+        sap.ui.core.UIComponent.getRouterFor(this).navTo("POList");
+      },
     });
   }
 );
