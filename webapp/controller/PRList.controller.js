@@ -107,6 +107,25 @@ sap.ui.define(
           if (isNaN(num)) return value;
           return num % 1 === 0 ? num.toString() : num.toFixed(3);
         },
+
+        reasonText: function (sReason) {
+          if (!sReason) return "";
+          const map = {
+            "00": "Incorrect quantity requested",
+            "01": "Budget not approved",
+            "02": "Material not required anymore",
+            "03": "Duplicate purchase requisition",
+            "04": "Incorrect material number",
+            "05": "Wrong plant or storage location",
+            "06": "Pricing information is incorrect",
+            "07": "Missing technical specification",
+            "08": "Vendor issue or restriction",
+            "09": "Request requires further review",
+            "12": "None"
+          };
+          return sReason + " – " + (map[sReason] || "");
+      }
+
       },
 
       // ⭐ Danh sách lý do reject (demo – bạn chỉnh theo master data của bạn)
@@ -121,6 +140,7 @@ sap.ui.define(
         { key: "07", text: "Missing technical specification" },
         { key: "08", text: "Vendor issue or restriction" },
         { key: "09", text: "Request requires further review" },
+         { key: "12", text: "None" },
       ],
 
       // =========================================================

@@ -41,7 +41,7 @@
         </HBox>
 
 
-  
+
   
   
     <!-- ===== HEADER BUTTONS ===== -->
@@ -164,13 +164,23 @@
                   </HBox>
                   <Text id="txtBsartDetail" text="{Bsart}" class="prHeaderSubTitle"/>
                   <HBox class="sapUiTinyMarginTop" wrap="Wrap">
-                    <Text id="txtDetailMeta" text="{= 'Group: ' + ${Ekgrp} + ' • Created By: ' + ${Ernam} + ' • Req. Date: ' + ${path:'Badat', formatter:'.formatter.dateFormat'} }"/>
+                    <Text id="txtDetailMeta" 
+                          text="{= 'Group: ' + ${Ekgrp} + ' • Created By: ' + ${Ernam} + ' • Req. Date: ' + ${path:'Badat', formatter:'.formatter.dateFormat'} }"/>
                   </HBox>
                   <HBox class="sapUiTinyMarginTop" alignItems="Center">
                     <Text text="Status:"/>
                     <!-- ⭐ FIX 2: Detail Status sử dụng ReasonId -->
-                    <ObjectStatus id="statusDetail" text="{parts:[{path:'Frgkz'}, {path:'ReasonId'}], formatter:'.formatter.statusText'}" state="{parts:[{path:'Frgkz'}, {path:'ReasonId'}], formatter:'.formatter.statusState'}" class="sapUiTinyMarginBegin"/>
+                    <ObjectStatus id="statusDetail" 
+                                  text="{parts:[{path:'Frgkz'}, {path:'ReasonId'}], formatter:'.formatter.statusText'}" 
+                                  state="{parts:[{path:'Frgkz'}, {path:'ReasonId'}], formatter:'.formatter.statusState'}" 
+                                  class="sapUiTinyMarginBegin"/>
                   </HBox>
+                  <!-- Only show Reason if rejected -->
+                  <HBox class="sapUiTinyMarginTop" visible="{= ${ReasonId} ? true : false }">
+                    <Text text="Reason:"/>
+                    <Text text="{path:'ReasonId', formatter:'.formatter.reasonText'}" class="sapUiTinyMarginBegin"/>
+                </HBox>
+
                 </VBox>
               </Panel>
               <!-- ACTION BUTTONS -->

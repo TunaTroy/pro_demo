@@ -61,7 +61,11 @@
           </Select>
         </HBox>
         <!-- 🔸 HÀNG 1: KPI Cards -->
-        <HBox id="kpiRow" alignItems="Start" justifyContent="SpaceAround" wrap="Wrap" class="sapUiMediumMarginBottom sapUiSmallMarginTop">
+        <HBox id="kpiRow" 
+              alignItems="Start" 
+              justifyContent="SpaceAround"              
+              wrap="Wrap" 
+              class="sapUiMediumMarginBottom sapUiSmallMarginTop">
           <HBox id="kpiContainer" justifyContent="SpaceAround" width="100%" class="sapUiSmallMargin" />
         </HBox>
         <!-- 🔸 HÀNG 2: Donut Chart + Top Material/Vendor -->
