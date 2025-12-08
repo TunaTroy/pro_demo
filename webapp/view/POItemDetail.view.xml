@@ -95,30 +95,28 @@
               class="sapUiSmallMarginEnd">
               <Label text="Material:" />
               <Text text="{Matnr}" />
-              <Label text="Description:" />
-              <Text text="{Txz01}" />
+              <Label text="Material Group:" />
+              <Text text="{Matkl}" />
+              <Label text="Company Code:" />
+              <Text text="{Bukrs}" />
               <Label text="Order Quantity:" />
               <Text text="{Menge} {Meins}" />
-              <Label text="Net Price:" />
-              <Text text="{Netpr} {Waers}" />
-              <Label text="Price Unit:" />
-              <Text text="{Peinh}" />
+             
             </VBox>
 
             <!-- RIGHT BOX -->
             <VBox
               id="vboxBasicRightPo"
-              width="48%">
-              <Label text="Plant:" />
-              <Text text="{Werks}" />
-              <Label text="Storage Location:" />
-              <Text text="{Lgort}" />
+              width="48%">           
               <Label text="Changed On:" />
-              <Text text="{path:'Aedat', formatter:'.formatter.dateFormat'}" />
-              <Label text="Created By:" />
-              <Text text="{Ernam}" />
-              <Label text="Vendor:" />
-              <Text text="{Lifnr}" />
+              <Text text="{path:'Agdat', formatter:'.formatter.dateFormat'}" />
+              <Label text="Net Value:" />
+              <Text text="{Netwr}" />
+               <Label text="Net Price:" />
+              <Text text="{Netpr} {Waers}" />
+              <Label text="Price Unit:" />
+              <Text text="{Peinh}" />
+              
             </VBox>
           </HBox>
         </Panel>
@@ -134,12 +132,10 @@
           columnsL="1"
           columnsM="1">
 
-          <Label text="Quotation Deadline" />
-          <Text text="{path:'Agdat', formatter:'.formatter.dateFormat'}" />
-
-          <Label text="Delivery Address" />
-          <Text text="{Adrnr}" />
-
+          <Label text="Storage Location" />
+          <Text text="{Lgort}" />
+          <Label text="Plant" />
+          <Text text="{Werks}" />        
           <Label text="Incoterms" />
           <Text text="{Inco1}" />
         </form:SimpleForm>

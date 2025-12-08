@@ -2,8 +2,8 @@
    🟩 DASHBOARD CONTAINER (Bao ngoài toàn bộ)
    ============================================================ */
 .dashboardContainer {
-  padding: 1.5rem 2rem;
-  background-color: #f4f6f9;
+  padding: -0.5rem 2rem;
+  background-color: #dff5fb;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
@@ -14,7 +14,7 @@
    ============================================================ */
 .filterBar {
   padding: 0.75rem 1.25rem;
-  background-color: #ffffff;
+  background-color: #f9fcff;
   border-radius: 0.5rem;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
   display: flex;
@@ -292,12 +292,12 @@
 .kpiCard {
   background-color: #ffffff;
   border-radius: 1rem;
-  padding: 1.5rem 1.25rem;
+  padding: 3.5rem 1.25rem;
   text-align: center;
   transition: all 0.25s ease-in-out;
   flex: 1;
   min-width: 280px;
-  max-width: 340px;
+  max-width: 450px;
 }
 
 .kpiCard:hover {
@@ -537,7 +537,7 @@
 
 .sapUiForm .sapMText,
 .sapUiForm .sapMLnk {
-  color: #f20707;
+  color: #0c22b2;
 }
 
 .sapUiForm .sapMLnk:hover {
@@ -782,7 +782,7 @@
 /* NAV ITEM (chữ to hơn + đậm hơn) */
 .navItem {
     padding: 10px 18px;
-    border: 2px solid #c7cbde;     /* màu xanh SAP */
+    border: 2px solid #074481;     /* màu xanh SAP */
     border-radius: 5px;
     font-size: 16px;        /* 🔥 cỡ chữ TO hơn */
     font-weight: 600;       /* 🔥 đậm hơn */
@@ -806,16 +806,16 @@
 }
 
 .dashboardTitle {
-    font-size: 20px;
+    font-size: 30px;
     font-weight: 700;
-    color: #1a1a1a;
+    color: #1070c5;
 }
 
 .topNavBar {   
-    top: 0;               /* Khoảng cách từ top = 0 */
-    z-index: 9999;        /* Luôn nằm trên các thành phần khác */
-    background-color: #E3F2FD;    /* Giữ nền trắng khi scroll */
-    padding: 10px 20px;   /* Đẹp hơn */
+    top: 0;              
+    z-index: 9999;        
+    background-color: #c1e5ff;    
+    padding: 27px 20px;   /* Đẹp hơn */
     box-shadow: 0 2px 6px rgba(0,0,0,0.08);
     border-bottom: 1px solid #BBDEFB;  /* Tạo bóng nhẹ kiểu Fiori */
 }

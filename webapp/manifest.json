@@ -7,9 +7,9 @@
       "bundleUrl": "i18n/i18n.properties",
       "supportedLocales": [
         "",
-        "vi"
+        "en"
       ],
-      "fallbackLocale": "vi"
+      "fallbackLocale": "en"
     },
     "applicationVersion": {
       "version": "0.0.1"
@@ -37,12 +37,12 @@
   "sap.ui": {
     "technology": "UI5",
     "icons": {
-      "icon": "",
-      "favIcon": "",
-      "phone": "",
-      "phone@2": "",
-      "tablet": "",
-      "tablet@2": ""
+      "icon": "icons/huanhoahong.png",
+      "favIcon": "icons/huanhoahong.png",
+      "phone": "icons/huanhoahong.png",
+      "phone@2": "icons/huanhoahong.png",
+      "tablet": "icons/huanhoahong.png",
+      "tablet@2": "icons/huanhoahong.png"
     },
     "deviceTypes": {
       "desktop": true,

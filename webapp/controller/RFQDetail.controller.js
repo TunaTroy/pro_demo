@@ -61,7 +61,6 @@ sap.ui.define(
             RFQ: "Request for Quotation (RFQ)",
             ZRFQ: "Request for Quotation (ZRFQ)",
             AB: "Request for GP Bid (AB)",
-
             RQ: "Request for Quote (RQ)",
             RE: "External Sourcing Request (RE)",
 
@@ -157,20 +156,20 @@ sap.ui.define(
           });
       },
 
-      _loadNote: function (sEbeln) {
-        this.getOwnerComponent()
-          .getModel()
-          .read("/PONoteSet('" + sEbeln + "')", {
-            success: (oData) => {
-              this.getView().getModel("rfq").setProperty("/Note", oData.Note);
-            },
-            error: () => {
-              this.getView()
-                .getModel("rfq")
-                .setProperty("/Note", "No note available.");
-            },
-          });
-      },
+      // _loadNote: function (sEbeln) {
+      //   this.getOwnerComponent()
+      //     .getModel()
+      //     .read("/PONoteSet('" + sEbeln + "')", {
+      //       success: (oData) => {
+      //         this.getView().getModel("rfq").setProperty("/Note", oData.Note);
+      //       },
+      //       error: () => {
+      //         this.getView()
+      //           .getModel("rfq")
+      //           .setProperty("/Note", "No note available.");
+      //       },
+      //     });
+      // },
     });
   }
 );

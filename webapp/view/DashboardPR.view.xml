@@ -9,7 +9,7 @@
 
   <Page id="dashboard" enableScrolling="true">
     <content>
-
+    
     <!-- Modern Navigation Bar -->
 <HBox class="topNavBar" justifyContent="SpaceBetween" alignItems="Center" width="100%">
     

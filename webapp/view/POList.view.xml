@@ -40,12 +40,20 @@
 
 </HBox>
 
+        <headerContent>
+      <HBox alignItems="Center" justifyContent="End" class="sapUiTinyMarginEnd sapUiTinyMarginTop">
+        <Button icon="sap-icon://home" text="Home" press="onNavHome" type="Transparent"/>
+        <Button icon="sap-icon://refresh" text="Reload" press="onRefresh" type="Transparent"/>
+        <Button icon="sap-icon://excel-attachment" text="Export Excel" press="onExportExcel" type="Transparent"/>
+      </HBox>
+    </headerContent>
+
 
 
     <!-- ========= PAGE CONTENT MUST WRAP EVERYTHING ========= -->
     <content>
       <!-- ==================== FILTER BAR ==================== -->
-      <fb:FilterBar id=".onFilterSearch" persistencyKey="poFilterBar" useToolbar="false" search=".onFilterSearch">
+      <fb:FilterBar id=".poFilterBar" persistencyKey="poFilterBar" useToolbar="false" search=".onFilterSearch">
         <fb:filterGroupItems>
           <fb:FilterGroupItem id="_IDGenFilterGroupItem" name="Ebeln" label="PO Number" groupName="default" visibleInFilterBar="true">
             <fb:control>
@@ -169,11 +177,6 @@
                 + ' • Created By: ' + ${detailPO>Ernam}
                 + ' • Created On: ' + ${path:'detailPO>Aedat', formatter:'.formatter.dateFormat'} }"/>
                   </HBox>
-                  <!-- 🆕 Quotation Deadline -->
-                  <HBox id="_IDGenHBox5" class="sapUiTinyMarginTop" alignItems="Center">
-                    <Text id="_IDGenText22" text="Quotation Deadline:" class="sapUiSmallMarginEnd"/>
-                    <ObjectStatus id="_IDGenObjectStatus2" text="{ path:'detailPO>Agdat', formatter:'.formatter.dateFormat' }" state="Information" icon="sap-icon://calendar"/>
-                  </HBox>
                   <!-- Status -->
                   <HBox id="_IDGenHBox3" class="sapUiTinyMarginTop" alignItems="Center">
                     <Text id="_IDGenText23" text="Status:"/>
@@ -202,14 +205,14 @@
                     <Column id="_IDGenColumn8">
                       <Text id="_IDGenText25" text="Material"/>
                     </Column>
-                    <Column id="_IDGenColumn7">
-                      <Text id="_IDGenText24" text="Quantity"/>
-                    </Column>
                     <Column id="_IDGenColumn10">
                       <Text id="_IDGenText27" text="Net Price"/>
                     </Column>
+                    <Column id="_IDGenColumn7">
+                      <Text id="_IDGenText24" text="Quantity"/>
+                    </Column>                   
                     <Column id="_IDGenColumn9">
-                      <Text id="_IDGenText26" text="Deadline"/>
+                      <Text id="_IDGenText26" text="Order Unit"/>
                     </Column>
                   </columns>
                   <items>
@@ -219,7 +222,7 @@
                         <Text id="_IDGenText30" text="{detailPO>Matnr}"/>
                         <Text id="_IDGenText28" text="{detailPO>Menge}"/>
                         <Text id="_IDGenText31" text="{detailPO>Netpr}"/>
-                        <Text id="_IDGenText32" text="{path:'detailPO>Agdat', formatter:'.formatter.dateFormat'}"/>
+                        <Text id="_IDGenText32" text="{detailPO>Meins}"/>
                       </cells>
                     </ColumnListItem>
                   </items>
