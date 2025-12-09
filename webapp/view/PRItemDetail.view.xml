@@ -5,11 +5,19 @@
   xmlns:form="sap.ui.layout.form"
   xmlns:l="sap.ui.layout"
   displayBlock="true">
-  <Page id="pagePRItemDetail" title="📦 PR Item Detail">
-    <!-- HEADER BUTTON -->
-    <headerContent>
-      <Button id="btnNavBack" icon="sap-icon://nav-back" press="onNavBack" type="Transparent" />
-    </headerContent>
+<Page id="pagePRItemDetail" showHeader="true">
+  
+  <customHeader>
+    <Bar>
+      <contentLeft>
+        <Button id="btnNavBack" icon="sap-icon://nav-back" press="onNavBack" type="Transparent" />
+      </contentLeft>
+
+      <contentMiddle>
+        <Title text="📦 PR Item Detail" />
+      </contentMiddle>
+    </Bar>
+  </customHeader>
     <content>
       <!-- 🧾 HEADER SECTION -->
       <HBox id="hboxHeader" class="customHeaderBox" alignItems="Center" justifyContent="SpaceBetween">
@@ -17,9 +25,9 @@
         <VBox id="vboxHeaderImage" width="25%" alignItems="Center" class="headerImageContainer">
           <Image
             id="imgMaterial"
-            src="images/batluc.jpg"
-            width="140px"
-            height="140px"
+            src="images/doanhnhan.jpg"
+            width="180px"
+            height="180px"
             decorative="false"
             densityAware="false"
             class="headerProfileImage" />

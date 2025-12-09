@@ -500,7 +500,7 @@ sap.ui.define(
             oDetail.bindElement("/");
 
             oDetail.setVisible(true);
-            oLayout.setSize("65%");
+            oLayout.setSize("72%");
 
             const oItemTable = this.byId("tblPRItems");
             if (oItemTable) oItemTable.setModel(oDetailModel);
@@ -1119,7 +1119,7 @@ sap.ui.define(
     if (oLayout) {
         oLayout.setSize("100%");
     }
-},
+   },
 
 
       _loadPRNote: function (sBanfn) {

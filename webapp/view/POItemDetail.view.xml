@@ -6,15 +6,23 @@
   xmlns:l="sap.ui.layout"
   displayBlock="true">
 
-  <Page id="pagePOItemDetail" title="📦 PO Item Detail">
-    <!-- ===== HEADER BUTTON ===== -->
-    <headerContent>
-      <Button
-        id="btnNavBackPo"
-        icon="sap-icon://nav-back"
-        press=".onNavBack"
-        type="Transparent" />
-    </headerContent>
+<Page id="pagePOItemDetail" showHeader="true">
+
+  <customHeader>
+    <Bar>
+      <contentLeft>
+        <Button
+          id="btnNavBackPo"
+          icon="sap-icon://nav-back"
+          press=".onNavBack"
+          type="Transparent" />
+      </contentLeft>
+
+      <contentMiddle>
+        <Title text="📦 PO Item Detail" />
+      </contentMiddle>
+    </Bar>
+  </customHeader>
 
     <content>
       <!-- 🧾 HEADER SECTION -->
@@ -32,9 +40,9 @@
           class="headerImageContainer">
           <Image
             id="imgMaterialPo"
-            src="images/tuandat.jpg"
-            width="140px"
-            height="140px"
+            src="images/doanhnhan.jpg"
+            width="180px"
+            height="180px"
             decorative="false"
             densityAware="false"
             class="headerProfileImage" />
@@ -109,7 +117,7 @@
               id="vboxBasicRightPo"
               width="48%">           
               <Label text="Changed On:" />
-              <Text text="{path:'Agdat', formatter:'.formatter.dateFormat'}" />
+              <Text text="{path:'Aedat', formatter:'.formatter.dateFormat'}" />
               <Label text="Net Value:" />
               <Text text="{Netwr}" />
                <Label text="Net Price:" />

@@ -1444,7 +1444,13 @@ sap.ui.define(
 
         // ✅ Thiết lập colorPalette động theo dữ liệu thực tế
         oVizFrame.setVizProperties({
-          title: { text: "PR Status Overview" },
+          title: { text: "PR Status Overview",
+                  style: {
+            fontSize: "20px",   // <-- chỉnh cỡ chữ
+            fontWeight: "bold",
+            color: "#000"       // tùy chọn
+          },
+           },
           plotArea: {
             colorPalette: aColoredData.map((d) => d.Color),
             dataLabel: { visible: true },
@@ -1507,6 +1513,11 @@ sap.ui.define(
             text: "PO Status Overview",
             visible: true,
             alignment: "center",
+            style: {
+            fontSize: "20px",   // <-- chỉnh cỡ chữ
+            fontWeight: "bold",
+            color: "#000"       // tùy chọn
+          },
           },
           plotArea: {
             colorPalette: aColoredData.map((d) => d.Color),
@@ -1558,7 +1569,12 @@ sap.ui.define(
           title: {
             text: "TopMaterial",
             visible: true,
-            alignment: "center", // 👈 THÊM DÒNG NÀY
+            alignment: "center",
+            style: {
+            fontSize: "20px",   // <-- chỉnh cỡ chữ
+            fontWeight: "bold",
+            color: "#000"       // tùy chọn
+          }, 
           },
           plotArea: {
             colorPalette: ["#5CBAE6"],

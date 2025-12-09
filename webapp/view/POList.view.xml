@@ -158,7 +158,7 @@
           <!-- RIGHT DETAIL PANEL -->
           <l:SplitPane id="poDetailPane">
             <l:layoutData>
-              <l:SplitterLayoutData id="_IDGenSplitterLayoutData1" size="40%" minSize="350px" resizable="true"/>
+              <l:SplitterLayoutData id="_IDGenSplitterLayoutData1" size="0%" resizable="true"/>
             </l:layoutData>
             <VBox id="poDetailPanel" visible="false" class="sapUiMediumMargin sapUiSizeCompact sapUiNoContentPadding sapUiResponsiveContentPadding">
               <!-- ===== HEADER CARD ===== -->
@@ -183,16 +183,31 @@
                     <ObjectStatus id="_IDGenObjectStatus1" text="{path:'detailPO>Frgke', formatter:'.formatter.formatReleaseStatusText'}" state="{path:'detailPO>Frgke', formatter:'.formatter.formatReleaseStatusState'}" icon="{path:'detailPO>Frgke', formatter:'.formatter.formatReleaseStatusIcon'}" class="sapUiTinyMarginBegin"/>
                   </HBox>
                   <HBox id="_IDGenHBox6" class="sapUiTinyMarginTop" justifyContent="End">
-                    <Button id="btnApprovePO" text="Approve PO" icon="sap-icon://accept" type="Emphasized" press=".onApprovePO" visible="{=
-                                          ${userRole>/feRole} === 'PROCUREMENT_MANAGER' ||
-                                          ${userRole>/feRole} === 'ADMIN'
-                                      }"/>
 
-                    <Button id="btnRejectPO" text="Reject PO" icon="sap-icon://decline" type="Reject" press=".onRejectPO" class="sapUiTinyMarginEnd" visible="{=
-                                          ${userRole>/feRole} === 'PROCUREMENT_MANAGER' ||
-                                          ${userRole>/feRole} === 'ADMIN'
-                                      }"/>
-                  </HBox>
+                  <!-- Nút APPROVE → thêm marginEnd để tách khỏi Reject -->
+                  <Button id="btnApprovePO"
+                          text="Approve"
+                          icon="sap-icon://accept"
+                          type="Emphasized"
+                          press=".onApprovePO"
+                          class="sapUiTinyMarginEnd"
+                          visible="{
+                              = ${userRole>/feRole} === 'PROCUREMENT_MANAGER' ||
+                                ${userRole>/feRole} === 'ADMIN'
+                          }"/>
+
+                  <!-- Nút REJECT đứng sau, không cần margin -->
+                  <Button id="btnRejectPO"
+                          text="Reject"
+                          icon="sap-icon://decline"
+                          type="Reject"
+                          press=".onRejectPO"
+                          visible="{
+                              = ${userRole>/feRole} === 'PROCUREMENT_MANAGER' ||
+                                ${userRole>/feRole} === 'ADMIN'
+                          }"/>
+              </HBox>
+
                 </VBox>
               </Panel>
               <!-- ===== ITEMS TABLE ===== -->

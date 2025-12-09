@@ -37,12 +37,12 @@
   "sap.ui": {
     "technology": "UI5",
     "icons": {
-      "icon": "icons/huanhoahong.png",
-      "favIcon": "icons/huanhoahong.png",
-      "phone": "icons/huanhoahong.png",
-      "phone@2": "icons/huanhoahong.png",
-      "tablet": "icons/huanhoahong.png",
-      "tablet@2": "icons/huanhoahong.png"
+      "icon": "icons/OIP.png",
+      "favIcon": "icons/OIP.png",
+      "phone": "icons/OIP.png",
+      "phone@2": "icons/OIP.png",
+      "tablet": "icons/OIP.png",
+      "tablet@2": "icons/OIP.png"
     },
     "deviceTypes": {
       "desktop": true,

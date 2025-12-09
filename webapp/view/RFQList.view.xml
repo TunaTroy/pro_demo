@@ -8,9 +8,7 @@
   height="100%">
 
   
-  <Page id="rfqListPage"
-        showNavButton="false"
-        class="sapUiResponsiveContentPadding">
+  <Page id="rfqListPage">
 
           <!-- Modern Navigation Bar -->
 <HBox class="topNavBar" justifyContent="SpaceBetween" alignItems="Center" width="100%">
