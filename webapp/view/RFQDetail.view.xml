@@ -188,7 +188,7 @@
                     class="sapUiNoContentPadding sapUiSmallMarginBottom fioriSectionBox"
                 >
                     <VBox class="sapUiSmallMargin">
-                        <Label text="Vendor (Lifnr):" />
+                        <Label text="Vendor:" />
                         <Text text="{rfq>/Lifnr}" />
                     </VBox>
                 </Panel>

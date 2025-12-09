@@ -387,6 +387,66 @@ sap.ui.define(
         this._createSimpleValueHelp(oEvent, "Created By", "Ernam", aUsers);
       },
 
+      onExportExcel: function () {
+    const oTable = this.byId("poTable");
+    const oModel = oTable.getModel("po");   // ⭐ dùng đúng model name
+    const aData = oModel.getData() || [];   // ⭐ lấy thẳng mảng
+
+    if (!aData.length) {
+      return MessageToast.show("⚠️ No data to export!");
+    }
+
+    const aCols = [
+      { label: "Purchase Order", property: "Ebeln" },
+      { label: "Order Type", property: "Bsart" },
+      { label: "Purchasing Group", property: "Ekgrp" },
+      { label: "Created By", property: "Ernam" },
+      { label: "Created Date", property: "Aedat", type: "date" }, // ⭐ thêm type để Excel hiểu ngày
+    ];
+
+    const oSheet = new Spreadsheet({
+      workbook: { columns: aCols },
+      dataSource: aData,
+      fileName: "PO_List_Export.xlsx"
+    });
+
+    oSheet.build()
+      .then(() => MessageToast.show("✅ Export successful!"))
+      .finally(() => oSheet.destroy());
+    },
+
+    onRefresh: function () {
+    const oTable = this.byId("poTable");
+    const oBinding = oTable.getBinding("items");
+
+    if (oBinding) {
+        oBinding.refresh();
+    }
+
+    MessageToast.show("🔄 Data refreshed");
+},
+      onNavHome: function () {
+    const oRouter = this.getOwnerComponent().getRouter();
+
+    // Reset detail panel (nếu có)
+    const oDetailPanel = this.byId("poDetailPanel");
+    if (oDetailPanel) {
+        oDetailPanel.setVisible(false);
+    }
+
+    // Clear selected item
+    const oTable = this.byId("poTable");
+    if (oTable) {
+        oTable.removeSelections(true);
+    }
+
+    // Điều hướng về Dashboard
+    oRouter.navTo("DashboardPR", {}, true); // replace history = true
+},
+
+
+
+
       // ============================
       // LOAD PO LIST
       _loadPOList: function () {

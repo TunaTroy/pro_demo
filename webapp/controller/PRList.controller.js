@@ -140,7 +140,7 @@ sap.ui.define(
         { key: "07", text: "Missing technical specification" },
         { key: "08", text: "Vendor issue or restriction" },
         { key: "09", text: "Request requires further review" },
-         { key: "12", text: "None" },
+        { key: "12", text: "None" },
       ],
 
       // =========================================================
@@ -1026,13 +1026,19 @@ sap.ui.define(
       // NAVIGATION
       // =========================================================
       onNavHome: function () {
-        const oRouter = sap.ui.core.UIComponent.getRouterFor(this);
-        if (oRouter) {
-          oRouter.navTo("DashBoard");
-        } else {
-          MessageToast.show("🔙 Back to Home");
-        }
-      },
+    const oRouter = this.getOwnerComponent().getRouter();
+
+    // Reset UI
+    this._resetDetailPanel();
+    const oTable = this.byId("tblPRList");
+    if (oTable) {
+        oTable.removeSelections(true);
+    }
+
+    // Điều hướng về Dashboard
+    oRouter.navTo("DashboardPR", {}, true); // replace history
+},
+
 
       // Khi manager ấn nút Edit
       onEditNote: function () {
@@ -1100,6 +1106,19 @@ sap.ui.define(
           },
         });
       },
+
+      _resetDetailPanel: function () {
+    const oDetail = this.byId("detailPanel");
+    if (oDetail) {
+        oDetail.setVisible(false);
+    }
+
+    const oLayout = this.byId("layoutMaster");
+    if (oLayout) {
+        oLayout.setSize("100%");
+    }
+},
+
 
       _loadPRNote: function (sBanfn) {
         console.log("📡 Calling OData path:", `/PRNoteSet(Banfn='${sBanfn}')`);

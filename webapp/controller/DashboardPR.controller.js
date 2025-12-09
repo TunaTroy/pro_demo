@@ -217,6 +217,9 @@ sap.ui.define(
         this._loadMonthlyPoBarChart(sPeriodKey);
       },
 
+
+
+
       /* ===== Tải toàn bộ dashboard ===== */
       _reloadChartsOnly: function (sPeriodKey) {
         BusyIndicator.show(0);
