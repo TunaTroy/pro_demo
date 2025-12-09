@@ -670,12 +670,11 @@ sap.ui.define(
           return sap.m.MessageToast.show("⚠️ No items to reject.");
         }
 
-        // chỉ reject được trạng thái R
         const aPendingItems = aItems.filter((it) => it.Frgkz === "R");
         const aLockedItems = aItems.filter((it) => it.Frgkz !== "R");
 
         if (aPendingItems.length === 0) {
-          return sap.m.MessageToast.show("ℹ️ All items already processed.");
+          return sap.m.MessageToast.show("ℹ️ All items already approved.");
         }
 
         // ⭐ Popup chọn Reason
@@ -743,7 +742,6 @@ sap.ui.define(
         oDialog.open();
       },
 
-      // ⭐ Hàm thực thi reject sau khi đã chọn reason
       _executeRejectItems: function (
         aPendingItems,
         aLockedItems,

@@ -64,7 +64,7 @@ sap.ui.define(
           var oRoleModel = that.getModel("userRole");
           if (!oRoleModel) return;
 
-          var feRole = oRoleModel.getProperty("/feRole"); // e.g., INVENTORY_MANAGER
+          var feRole = oRoleModel.getProperty("/feRole");
 
           if (
             routePermission[sRoute] &&
