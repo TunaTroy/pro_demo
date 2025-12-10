@@ -103,7 +103,7 @@
             <l:layoutData>
               <l:SplitterLayoutData id="poTableLayout" size="100%" resizable="true"/>
             </l:layoutData>
-            <Table id="poTable" items="{path: 'po>/'}" mode="SingleSelectLeft" selectionChange=".onSelectPO" sticky="ColumnHeaders" growing="true" growingThreshold="150" width="100%">
+            <Table id="poTable" class="tableHeaderBorder" items="{path: 'po>/'}" mode="SingleSelectLeft" selectionChange=".onSelectPO" sticky="ColumnHeaders" growing="true" growingThreshold="150" width="100%">
               <headerToolbar>
                 <OverflowToolbar id="_IDGenOverflowToolbar">
                   <Title id="_IDGenTitle" text="PO List ({= ${po>/}.length } items)" level="H2"/>

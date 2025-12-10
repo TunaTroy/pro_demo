@@ -117,7 +117,7 @@
             <l:layoutData>
               <l:SplitterLayoutData id="layoutMaster" size="100%" resizable="true"/>
             </l:layoutData>
-            <Table id="tblPRList" items="{ path: '/groups' }" mode="SingleSelectLeft" selectionChange="onSelectPR" class="sapUiSizeCompact stickyTable" growing="true" growingThreshold="100" width="100%">
+            <Table id="tblPRList"  items="{ path: '/groups' }" mode="SingleSelectLeft" selectionChange="onSelectPR" class="sapUiSizeCompact stickyTable tableHeaderBorder" growing="true" growingThreshold="100" width="100%">
               <noData>
                 <IllustratedMessage illustrationType="sapIllus-NoData" title="No matching Purchase Requisitions found" description="Try adjusting your filters or clear all filters to see more results."/>
               </noData>

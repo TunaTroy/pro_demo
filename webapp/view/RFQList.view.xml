@@ -154,13 +154,14 @@
                  descending: true
                }
              }"
+       
         mode="SingleSelectLeft"
         growing="true"
         growingThreshold="20"
         growingScrollToLoad="true"
         sticky="ColumnHeaders,HeaderToolbar"
         selectionChange=".onSelectionChange"
-        class="sapUiSmallMarginTop">
+        class="sapUiSmallMarginTop tableHeaderBorder">
         <headerToolbar>
           <OverflowToolbar design="Transparent">
             <Title text="Requests for Quotations ({rfq>/length})"

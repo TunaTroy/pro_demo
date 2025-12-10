@@ -37,10 +37,14 @@
     border-bottom: 1px solid #d0d7e2 !important;
 }
 
+.tableHeaderBorder .sapMColumnHeader {
+    border-right: 1px solid #d0d0d0 !important;
+}
+
+
 /* ============================================================
    🟨 KPI ROW (Hàng đầu chứa 3 thẻ KPI)
    ============================================================ */
-
 
 /* Base style cho tất cả card */
 .dashboardCard {
