@@ -3,7 +3,7 @@
    ============================================================ */
 .dashboardContainer {
   padding: -0.5rem 2rem;
-  background-color: #e6efff;
+  background-color: #eff4f9;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
@@ -20,6 +20,21 @@
   display: flex;
   justify-content: flex-end;
   align-items: center;
+}
+
+.customPrFilterBar {
+    background-color: #eff4f9 !important;   /* màu bạn muốn */
+    border-bottom: 1px solid #d0d7e2 !important;
+}
+
+.customRfqFilterBar {
+    background-color: #eff4f9 !important;   /* màu bạn muốn */
+    border-bottom: 1px solid #d0d7e2 !important;
+}
+
+.customFoFilterBar {
+    background-color: #eff4f9 !important;   /* màu bạn muốn */
+    border-bottom: 1px solid #d0d7e2 !important;
 }
 
 /* ============================================================
@@ -802,7 +817,7 @@
 .dashboardTitle {
     font-size: 30px;
     font-weight: 700;
-    color: #1070c5;
+    color: #346187;
 }
 
 .topNavBar {   
@@ -815,5 +830,5 @@
 }
 
 .sapMLnk:visited{
-  color: #3272bb;
+  color: #0070b1;
 }

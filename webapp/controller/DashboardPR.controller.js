@@ -107,7 +107,7 @@ sap.ui.define(
                 resolve(set);
               }.bind(this),
               error: function (e) {
-                console.error("❌ Lỗi đọc EKET001Set:", e);
+                console.error("❌ EKET001Set read error:", e);
                 // nếu lỗi thì trả set rỗng, để dashboard vẫn chạy được
                 resolve(new Set());
               },

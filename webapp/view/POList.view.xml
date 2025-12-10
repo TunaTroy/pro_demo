@@ -26,7 +26,7 @@
         ${userRole>/feRole} === 'INVENTORY_MANAGER' ||
         ${userRole>/feRole} === 'ADMIN'
     }" />
-              <Link  text="Requistion for Quotation" class="navItem" press="onGoToRFQList" visible="{=
+              <Link  text="Request For Quotation" class="navItem" press="onGoToRFQList" visible="{=
         ${userRole>/feRole} === 'PROCUREMENT_STAFF' ||
         ${userRole>/feRole} === 'PROCUREMENT_MANAGER' ||
         ${userRole>/feRole} === 'ADMIN'
@@ -53,7 +53,7 @@
     <!-- ========= PAGE CONTENT MUST WRAP EVERYTHING ========= -->
     <content>
       <!-- ==================== FILTER BAR ==================== -->
-      <fb:FilterBar id=".poFilterBar" persistencyKey="poFilterBar" useToolbar="false" search=".onFilterSearch">
+      <fb:FilterBar id=".poFilterBar" class="customFoFilterBar" persistencyKey="poFilterBar" useToolbar="false" search=".onFilterSearch">
         <fb:filterGroupItems>
           <fb:FilterGroupItem id="_IDGenFilterGroupItem" name="Ebeln" label="PO Number" groupName="default" visibleInFilterBar="true">
             <fb:control>
