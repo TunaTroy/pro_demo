@@ -99,7 +99,7 @@ sap.ui.define(
       onInit: function () {
         // 🔥 Model riêng dùng cho PO, không dùng model global từ Component nữa
         this.oODataModel = new sap.ui.model.odata.v2.ODataModel(
-          "/sap/opu/odata/sap/ZGW_PRO_G18_SRV/",
+          "/sap/opu/odata/sap/ZGW_PRO_G18_SRV/"
           // {
           //   useBatch: false,
           //   defaultUpdateMethod: sap.ui.model.odata.UpdateMethod.PUT,
@@ -218,7 +218,6 @@ sap.ui.define(
         const oTable = this.byId("poTable");
         const aFilters = [];
 
-        // ====== ⛔ 1. AUTO TOKEN FOR PO NUMBER ======
         const oPO = this.byId("poFilter");
         const sPOtyped = oPO.getValue().trim();
         if (sPOtyped) {
@@ -388,64 +387,62 @@ sap.ui.define(
       },
 
       onExportExcel: function () {
-    const oTable = this.byId("poTable");
-    const oModel = oTable.getModel("po");   // ⭐ dùng đúng model name
-    const aData = oModel.getData() || [];   // ⭐ lấy thẳng mảng
+        const oTable = this.byId("poTable");
+        const oModel = oTable.getModel("po"); // ⭐ dùng đúng model name
+        const aData = oModel.getData() || []; // ⭐ lấy thẳng mảng
 
-    if (!aData.length) {
-      return MessageToast.show("⚠️ No data to export!");
-    }
+        if (!aData.length) {
+          return MessageToast.show("⚠️ No data to export!");
+        }
 
-    const aCols = [
-      { label: "Purchase Order", property: "Ebeln" },
-      { label: "Order Type", property: "Bsart" },
-      { label: "Purchasing Group", property: "Ekgrp" },
-      { label: "Created By", property: "Ernam" },
-      { label: "Created Date", property: "Aedat", type: "date" }, // ⭐ thêm type để Excel hiểu ngày
-    ];
+        const aCols = [
+          { label: "Purchase Order", property: "Ebeln" },
+          { label: "Order Type", property: "Bsart" },
+          { label: "Purchasing Group", property: "Ekgrp" },
+          { label: "Created By", property: "Ernam" },
+          { label: "Created Date", property: "Aedat", type: "date" }, // ⭐ thêm type để Excel hiểu ngày
+        ];
 
-    const oSheet = new Spreadsheet({
-      workbook: { columns: aCols },
-      dataSource: aData,
-      fileName: "PO_List_Export.xlsx"
-    });
+        const oSheet = new Spreadsheet({
+          workbook: { columns: aCols },
+          dataSource: aData,
+          fileName: "PO_List_Export.xlsx",
+        });
 
-    oSheet.build()
-      .then(() => MessageToast.show("✅ Export successful!"))
-      .finally(() => oSheet.destroy());
-    },
+        oSheet
+          .build()
+          .then(() => MessageToast.show("✅ Export successful!"))
+          .finally(() => oSheet.destroy());
+      },
 
-    onRefresh: function () {
-    const oTable = this.byId("poTable");
-    const oBinding = oTable.getBinding("items");
+      onRefresh: function () {
+        const oTable = this.byId("poTable");
+        const oBinding = oTable.getBinding("items");
 
-    if (oBinding) {
-        oBinding.refresh();
-    }
+        if (oBinding) {
+          oBinding.refresh();
+        }
 
-    MessageToast.show("🔄 Data refreshed");
-},
+        MessageToast.show("🔄 Data refreshed");
+      },
       onNavHome: function () {
-    const oRouter = this.getOwnerComponent().getRouter();
+        const oRouter = this.getOwnerComponent().getRouter();
 
-    // Reset detail panel (nếu có)
-    const oDetailPanel = this.byId("poDetailPanel");
-    if (oDetailPanel) {
-        oDetailPanel.setVisible(false);
-    }
+        // Reset detail panel (nếu có)
+        const oDetailPanel = this.byId("poDetailPanel");
+        if (oDetailPanel) {
+          oDetailPanel.setVisible(false);
+        }
 
-    // Clear selected item
-    const oTable = this.byId("poTable");
-    if (oTable) {
-        oTable.removeSelections(true);
-    }
+        // Clear selected item
+        const oTable = this.byId("poTable");
+        if (oTable) {
+          oTable.removeSelections(true);
+        }
 
-    // Điều hướng về Dashboard
-    oRouter.navTo("DashboardPR", {}, true); // replace history = true
-},
-
-
-
+        // Điều hướng về Dashboard
+        oRouter.navTo("DashboardPR", {}, true); // replace history = true
+      },
 
       // ============================
       // LOAD PO LIST
@@ -454,7 +451,6 @@ sap.ui.define(
 
         const oModel = this.oODataModel;
 
-        // STEP 1 — lấy EKET001Set giống RFQ (giới hạn theo company / PR... từ backend)
         const pEket = new Promise((resolve, reject) => {
           oModel.read("/EKET001Set", {
             success: (d) => resolve(d.results),
@@ -912,12 +908,11 @@ sap.ui.define(
       },
 
       onGoToPRList: function () {
-          this.getOwnerComponent().getRouter().navTo("PRList");
+        this.getOwnerComponent().getRouter().navTo("PRList");
       },
       onGoToRFQList: function () {
-          this.getOwnerComponent().getRouter().navTo("RFQList");
+        this.getOwnerComponent().getRouter().navTo("RFQList");
       },
-
     });
   }
 );
