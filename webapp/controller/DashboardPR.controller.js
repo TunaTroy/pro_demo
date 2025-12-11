@@ -120,11 +120,11 @@ sap.ui.define(
         const role = this._userRole;
 
         if (!role) {
-          console.warn("⚠️ Không có role, hiển thị toàn bộ mặc định");
+          console.warn("⚠️ No role, show all default");
           return;
         }
 
-        console.log("👔 Áp dụng phân quyền cho role:", role);
+        console.log("👔 Apply permissions to roles:", role);
 
         // 🔸 CEO có full quyền
         if (role === "BASIS") {
@@ -197,7 +197,7 @@ sap.ui.define(
 
       onPRYearChange: function (oEvent) {
         const sSelectedYear = oEvent.getSource().getSelectedKey();
-        console.log("📅 Năm PR được chọn:", sSelectedYear);
+        console.log("📅 PR Year Selected:", sSelectedYear);
 
         // Lưu lại vào model
         const oViewModel = this.getView().getModel("viewModel");
@@ -854,7 +854,7 @@ sap.ui.define(
 
             error: (e) => {
               BusyIndicator.hide();
-              console.error("❌ Lỗi load Monthly PR:", e);
+              console.error("❌ Error loading Monthly PR:", e);
               this._displayMonthlyPRBarChart([]);
               reject(e);
             },

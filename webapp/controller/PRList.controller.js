@@ -281,107 +281,134 @@ sap.ui.define(
       // FILTER + GROUP
       // =========================================================
       onGoFilter: function () {
-        const oView = this.getView();
-        const oModel = oView.getModel();
-        const oTable = oView.byId("tblPRList");
-        const aFilters = [];
+    const oView = this.getView();
+    const oModel = oView.getModel();
+    const oTable = oView.byId("tblPRList");
+    let aFilters = [];
 
-        function handleTokenInput(id, field) {
-          const oInput = oView.byId(id);
-          const typed = oInput.getValue().trim();
-          if (typed) {
+    // ============================
+    // 1. HANDLE TOKEN FILTERS
+    // ============================
+    function handleTokenInput(id, field) {
+        const oInput = oView.byId(id);
+        const typed = oInput.getValue().trim();
+        if (typed) {
             oInput.addToken(new sap.m.Token({ key: typed, text: typed }));
             oInput.setValue("");
-          }
-          const tokens = oInput
-            .getTokens()
-            .map((t) => new Filter(field, FilterOperator.EQ, t.getKey()));
-          if (tokens.length) aFilters.push(new Filter(tokens, false));
         }
+        const tokens = oInput.getTokens()
+            .map(t => new sap.ui.model.Filter(field, sap.ui.model.FilterOperator.EQ, t.getKey()));
 
-        handleTokenInput("inpBanfn", "Banfn");
-        handleTokenInput("inpBsart", "Bsart");
-        handleTokenInput("inpEkgrp", "Ekgrp");
-        handleTokenInput("inpErnam", "Ernam");
-
-        const oDR = oView.byId("inpDateRange");
-        const dFrom = oDR.getDateValue();
-        const dTo = oDR.getSecondDateValue();
-
-        if (dFrom && dTo) {
-          aFilters.push(new Filter("Badat", FilterOperator.BT, dFrom, dTo));
+        if (tokens.length) {
+            aFilters.push(new sap.ui.model.Filter(tokens, false)); // OR group
         }
+    }
 
-        const sStatus = this.byId("inpStatus").getSelectedKey();
-        if (sStatus && sStatus !== "") {
-          aFilters.push(new Filter("Frgkz", FilterOperator.EQ, sStatus));
-        }
+    handleTokenInput("inpBanfn", "Banfn");
+    handleTokenInput("inpBsart", "Bsart");
+    handleTokenInput("inpEkgrp", "Ekgrp");
+    handleTokenInput("inpErnam", "Ernam");
 
-        sap.ui.core.BusyIndicator.show(0);
+    // ============================
+    // 2. DATE RANGE
+    // ============================
+    const oDR = oView.byId("inpDateRange");
+    const dFrom = oDR.getDateValue();
+    const dTo = oDR.getSecondDateValue();
 
-        oModel.read("/PRSet", {
-          filters: aFilters,
-          urlParameters: { $top: 10000 },
-          success: (data) => {
+    if (dFrom && dTo) {
+        aFilters.push(new sap.ui.model.Filter("Badat", sap.ui.model.FilterOperator.BT, dFrom, dTo));
+    }
+
+    // ============================
+    // 3. READ STATUS KEY
+    // (R, C, X)
+    // ============================
+    const sStatus = this.byId("inpStatus").getSelectedKey();
+
+    sap.ui.core.BusyIndicator.show(0);
+
+    // ============================
+    // 4. LOAD RAW PR LIST
+    // ============================
+    oModel.read("/PRSet", {
+        filters: aFilters,
+        urlParameters: { $top: 10000 },
+        success: (data) => {
             sap.ui.core.BusyIndicator.hide();
 
             const groups = [];
 
-            // ⭐ Map REASON_ID → ReasonId để view dùng
-            data.results.forEach((r) => {
-              if (r.REASON_ID !== undefined && r.REASON_ID !== null) {
-                r.ReasonId = r.REASON_ID;
-              } else {
-                r.ReasonId = "";
-              }
+            // ============================
+            // 5. GROUP BY BANFN
+            // ============================
+            data.results.forEach(r => {
+                r.ReasonId = (r.REASON_ID && r.REASON_ID.trim() !== "") ? r.REASON_ID : "";
 
-              let g = groups.find((e) => e.Banfn === r.Banfn);
-              if (!g) {
-                g = {
-                  Banfn: r.Banfn,
-                  Bsart: r.Bsart,
-                  Ekgrp: r.Ekgrp,
-                  Ernam: r.Ernam,
-                  Badat: r.Badat,
-                  Frgkz: r.Frgkz,
-                  ReasonId: "", // sẽ tính sau theo items
-                  Items: [],
-                };
-                groups.push(g);
-              }
-              g.Items.push(r);
+                let g = groups.find(e => e.Banfn === r.Banfn);
+                if (!g) {
+                    g = {
+                        Banfn: r.Banfn,
+                        Bsart: r.Bsart,
+                        Ekgrp: r.Ekgrp,
+                        Ernam: r.Ernam,
+                        Badat: r.Badat,
+                        Frgkz: r.Frgkz,
+                        ReasonId: "",
+                        Items: []
+                    };
+                    groups.push(g);
+                }
+                g.Items.push(r);
             });
 
-            // ⭐ Tính trạng thái group theo Items:
-            groups.forEach((g) => {
-              g.ItemCount = g.Items.length;
+            // ============================
+            // 6. COMPUTE HEADER STATUS
+            // ============================
+            groups.forEach(g => {
 
-              const oRejected = g.Items.find(
-                (it) => it.Frgkz === "C" && it.ReasonId
-              );
-              const oApproved = g.Items.find((it) => it.Frgkz === "R");
+                const hasRejected = g.Items.some(it => it.Frgkz === "C" && it.ReasonId);
+                const hasApproved = g.Items.some(it => it.Frgkz === "R");
 
-              if (oRejected) {
-                g.Frgkz = "C";
-                g.ReasonId = oRejected.ReasonId;
-              } else if (oApproved) {
-                g.Frgkz = "R";
-                g.ReasonId = "";
-              } else {
-                g.Frgkz = "C";
-                g.ReasonId = "";
-              }
+                if (hasRejected) {
+                    g.Frgkz = "X";        // UI REJECTED
+                } else if (hasApproved) {
+                    g.Frgkz = "R";        // APPROVED
+                } else {
+                    g.Frgkz = "C";        // PENDING
+                }
             });
 
-            oTable.setModel(new JSONModel({ groups }));
-            MessageToast.show(`${groups.length} PR found`);
-          },
-          error: () => {
+            // ============================
+            // 7. CLIENT-SIDE POST FILTER BY STATUS
+            // ============================
+            let groupsFiltered = groups;
+
+            if (sStatus === "R") {
+                groupsFiltered = groups.filter(g => g.Frgkz === "R");
+            }
+            else if (sStatus === "C") {
+                groupsFiltered = groups.filter(g => g.Frgkz === "C");
+            }
+            else if (sStatus === "X") {
+                groupsFiltered = groups.filter(g => g.Frgkz === "X");
+            }
+
+            // ============================
+            // 8. SET MODEL TO TABLE
+            // ============================
+            oTable.setModel(new sap.ui.model.json.JSONModel({ groups: groupsFiltered }));
+
+            sap.m.MessageToast.show(`${groupsFiltered.length} PR found`);
+        },
+
+        error: () => {
             sap.ui.core.BusyIndicator.hide();
-            MessageToast.show("⚠️ Error loading data");
-          },
-        });
-      },
+            sap.m.MessageToast.show("⚠️ Error loading data");
+        }
+    });
+},
+
 
       // =========================================================
       // CLEAR FILTER
@@ -554,13 +581,7 @@ sap.ui.define(
         });
       },
 
-      onCloseDetail: function () {
-        const oDetail = this.byId("detailPanel");
-        const oLayout = this.byId("layoutMaster");
-        oDetail.setVisible(false);
-        oLayout.setSize("100%");
-        this.byId("tblPRList").removeSelections();
-      },
+
 
       // =========================================================
       // APPROVE ALL PENDING ITEMS
@@ -678,7 +699,7 @@ sap.ui.define(
           return sap.m.MessageToast.show("ℹ️ All items already processed.");
         }
 
-        // ⭐ Popup chọn Reason
+        // Popup chọn Reason
         const oSelect = new sap.m.Select({
           width: "100%",
         });

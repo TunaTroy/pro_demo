@@ -130,6 +130,10 @@
   box-shadow: none !important;     /* 🔥 loại bỏ shadow KDE gây cảm giác chồng thẻ */
 }
 
+.fioriLinkBlue {
+    color: #0070b1 !important;  /* SAP Fiori Primary Link Color */
+    cursor: pointer;
+}
 
 /* ============================================================
    🟧 CHART ROW (Hàng thứ 2: Donut, Top Material, Top Vendor)
