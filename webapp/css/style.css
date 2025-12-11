@@ -3,7 +3,7 @@
    ============================================================ */
 .dashboardContainer {
   padding: -0.5rem 2rem;
-  background-color: #dff5fb;
+  background-color: #eff4f9;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
@@ -22,10 +22,29 @@
   align-items: center;
 }
 
+.customPrFilterBar {
+    background-color: #eff4f9 !important;   /* màu bạn muốn */
+    border-bottom: 1px solid #d0d7e2 !important;
+}
+
+.customRfqFilterBar {
+    background-color: #eff4f9 !important;   /* màu bạn muốn */
+    border-bottom: 1px solid #d0d7e2 !important;
+}
+
+.customFoFilterBar {
+    background-color: #eff4f9 !important;   /* màu bạn muốn */
+    border-bottom: 1px solid #d0d7e2 !important;
+}
+
+.tableHeaderBorder .sapMColumnHeader {
+    border-right: 1px solid #d0d0d0 !important;
+}
+
+
 /* ============================================================
    🟨 KPI ROW (Hàng đầu chứa 3 thẻ KPI)
    ============================================================ */
-
 
 /* Base style cho tất cả card */
 .dashboardCard {
@@ -96,9 +115,11 @@
   flex-wrap: wrap;
   gap: 1.2rem;
   width: 100%;
+  margin-left: 10px;
+  margin-top: 10px;
 }
 
-/* 3 card có kích thước bằng nhau */
+/* 3 card có kích thước bằng nhau */ 
 .kpiRow .dashboardCard {
   flex: 1;
   min-width: 300px;
@@ -109,6 +130,10 @@
   box-shadow: none !important;     /* 🔥 loại bỏ shadow KDE gây cảm giác chồng thẻ */
 }
 
+.fioriLinkBlue {
+    color: #0070b1 !important;  /* SAP Fiori Primary Link Color */
+    cursor: pointer;
+}
 
 /* ============================================================
    🟧 CHART ROW (Hàng thứ 2: Donut, Top Material, Top Vendor)
@@ -184,6 +209,8 @@
   flex-direction: column;
   gap: 0.75rem;
   margin-top: 1.5rem;
+  margin-left: 15px;
+  margin-right: 15px;
 }
 
 /* Tiêu đề + Filter */
@@ -307,7 +334,7 @@
 
 /* Tiêu đề KPI */
 .kpiCard .kpiTitle {
-  font-size: 1.05rem;
+  font-size: 1.5rem;
   font-weight: 700;
   color: #2e3b4e;
   margin-bottom: 0.25rem;
@@ -383,6 +410,9 @@
   flex-wrap: wrap;
   gap: 0.7rem;
   width: 100%;
+  font-size: 1.25rems;
+  padding: 0 1.5rem;     
+  box-sizing: border-box; 
 }
 
 /* ====== STYLE CHO MỖI THẺ CHART ====== */
@@ -618,7 +648,7 @@
 .customHeaderBox {
   border: 1px solid #d1e0f0;
   border-radius: 3px;
-  background-color: #f4f8fc;
+  background-color: #e0eeff;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   padding: 1.5rem 2rem;
   margin-bottom: 1rem;
@@ -751,19 +781,6 @@
   }
 }
 
-
-
-
-
-
-
-/* ===== TOP NAV BAR ===== */
-.topNavBar {
-    padding: 10px 30px;
-    background: #ffffff;
-    border-bottom: 1px solid #e6e6e6;
-}
-
 /* SAP Logo adjust */
 .sapLogo {
     margin-right: 20px;
@@ -808,18 +825,18 @@
 .dashboardTitle {
     font-size: 30px;
     font-weight: 700;
-    color: #1070c5;
+    color: #346187;
 }
 
 .topNavBar {   
     top: 0;              
     z-index: 9999;        
-    background-color: #c1e5ff;    
+    background-color: #e0eeff;    
     padding: 27px 20px;   /* Đẹp hơn */
     box-shadow: 0 2px 6px rgba(0,0,0,0.08);
     border-bottom: 1px solid #BBDEFB;  /* Tạo bóng nhẹ kiểu Fiori */
 }
 
 .sapMLnk:visited{
-  color: #0a396f;
+  color: #0070b1;
 }

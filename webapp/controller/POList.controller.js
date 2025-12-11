@@ -171,29 +171,51 @@ sap.ui.define(
       // SELECT PO HEADER
       // ============================
       onSelectPO: function (oEvent) {
-        const oSelectedItem = oEvent.getParameter("listItem");
-        if (!oSelectedItem) {
-          this.byId("poDetailPanel").setVisible(false);
-          this.byId("poTablePane").getLayoutData().setSize("100%");
-          return;
-        }
+    const oSelectedItem = oEvent.getParameter("listItem");
 
-        const oPOData = oSelectedItem.getBindingContext("po").getObject();
-        this.getView().getModel("detailPO").setData(oPOData);
+    if (!oSelectedItem) {
+        this.onCloseDetail();
+        return;
+    }
 
-        // ✅ Đặt binding context gốc cho detailPO
-        this.byId("poDetailPanel").bindElement("detailPO>/");
+    const oPOData = oSelectedItem.getBindingContext("po").getObject();
+    this.getView().getModel("detailPO").setData(oPOData);
 
-        this.byId("poDetailPanel").setVisible(true);
-        this.byId("poTablePane").getLayoutData().setSize("60%");
+    this.byId("poDetailPanel").bindElement("detailPO>/");
+    this.byId("poDetailPanel").setVisible(true);
 
-        const oItemTable = this.byId("tblPOItems");
-        if (oItemTable) {
-          oItemTable.removeSelections(true);
-        }
+    // LEFT 60%
+    this.byId("poTableLayout").setSize("75%");
+    // RIGHT 40%
+    this.byId("_IDGenSplitterLayoutData1").setSize("25%");
 
-        this._loadPONote(oPOData.Ebeln);
-      },
+    const oItemTable = this.byId("tblPOItems");
+    if (oItemTable) {
+        oItemTable.removeSelections(true);
+    }
+
+    this._loadPONote(oPOData.Ebeln);
+},
+
+
+      onCloseDetail: function () {
+
+    // Ẩn panel bên trong
+    this.byId("poDetailPanel").setVisible(false);
+
+    // LEFT FULL WIDTH
+    this.byId("poTableLayout").setSize("100%");
+
+    // RIGHT PANE WIDTH = 0% (rất quan trọng)
+    this.byId("_IDGenSplitterLayoutData1").setSize("0%");
+
+    // Reset chọn
+    const oTable = this.byId("poTable");
+    if (oTable) oTable.removeSelections(true);
+},
+
+
+
 
       // ============================
       // ITEM CLICK (to detail screen)

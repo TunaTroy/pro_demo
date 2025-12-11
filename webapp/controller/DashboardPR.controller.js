@@ -107,7 +107,7 @@ sap.ui.define(
                 resolve(set);
               }.bind(this),
               error: function (e) {
-                console.error("❌ Lỗi đọc EKET001Set:", e);
+                console.error("❌ EKET001Set read error:", e);
                 // nếu lỗi thì trả set rỗng, để dashboard vẫn chạy được
                 resolve(new Set());
               },
@@ -120,11 +120,11 @@ sap.ui.define(
         const role = this._userRole;
 
         if (!role) {
-          console.warn("⚠️ Không có role, hiển thị toàn bộ mặc định");
+          console.warn("⚠️ No role, show all default");
           return;
         }
 
-        console.log("👔 Áp dụng phân quyền cho role:", role);
+        console.log("👔 Apply permissions to roles:", role);
 
         // 🔸 CEO có full quyền
         if (role === "BASIS") {
@@ -197,7 +197,7 @@ sap.ui.define(
 
       onPRYearChange: function (oEvent) {
         const sSelectedYear = oEvent.getSource().getSelectedKey();
-        console.log("📅 Năm PR được chọn:", sSelectedYear);
+        console.log("📅 PR Year Selected:", sSelectedYear);
 
         // Lưu lại vào model
         const oViewModel = this.getView().getModel("viewModel");
@@ -854,7 +854,7 @@ sap.ui.define(
 
             error: (e) => {
               BusyIndicator.hide();
-              console.error("❌ Lỗi load Monthly PR:", e);
+              console.error("❌ Error loading Monthly PR:", e);
               this._displayMonthlyPRBarChart([]);
               reject(e);
             },
@@ -1444,7 +1444,13 @@ sap.ui.define(
 
         // ✅ Thiết lập colorPalette động theo dữ liệu thực tế
         oVizFrame.setVizProperties({
-          title: { text: "PR Status Overview" },
+          title: { text: "PR Status Overview",
+                  style: {
+            fontSize: "20px",   // <-- chỉnh cỡ chữ
+            fontWeight: "bold",
+            color: "#000"       // tùy chọn
+          },
+           },
           plotArea: {
             colorPalette: aColoredData.map((d) => d.Color),
             dataLabel: { visible: true },
@@ -1507,6 +1513,11 @@ sap.ui.define(
             text: "PO Status Overview",
             visible: true,
             alignment: "center",
+            style: {
+            fontSize: "20px",   // <-- chỉnh cỡ chữ
+            fontWeight: "bold",
+            color: "#000"       // tùy chọn
+          },
           },
           plotArea: {
             colorPalette: aColoredData.map((d) => d.Color),
@@ -1558,7 +1569,12 @@ sap.ui.define(
           title: {
             text: "TopMaterial",
             visible: true,
-            alignment: "center", // 👈 THÊM DÒNG NÀY
+            alignment: "center",
+            style: {
+            fontSize: "20px",   // <-- chỉnh cỡ chữ
+            fontWeight: "bold",
+            color: "#000"       // tùy chọn
+          }, 
           },
           plotArea: {
             colorPalette: ["#5CBAE6"],

@@ -27,7 +27,7 @@
         ${userRole>/feRole} === 'INVENTORY_MANAGER' ||
         ${userRole>/feRole} === 'ADMIN'
     }" />
-              <Link  text="Requistion for Quotation" class="navItem" press="onGoToRFQList" visible="{=
+              <Link  text="Request for Quotation" class="navItem" press="onGoToRFQList" visible="{=
         ${userRole>/feRole} === 'PROCUREMENT_STAFF' ||
         ${userRole>/feRole} === 'PROCUREMENT_MANAGER' ||
         ${userRole>/feRole} === 'ADMIN'
@@ -90,7 +90,7 @@
         <!--  Biểu đồ PR theo tháng -->
         <VBox class="sapUiSmallMargin">
           <HBox alignItems="Center" justifyContent="SpaceBetween">
-            <Text text="Monthly PR chart" class="sapUiTinyMarginBegin sapUiBold sapUiSmallMarginTop"/>
+            
             <!-- <Select
               id="prYearFilter"
               width="120px"
@@ -100,9 +100,12 @@
           <viz:VizFrame id="idMonthlyBarChartPR" uiConfig="{applicationSet:'fiori'}" height="500px" width="100%" />
         </VBox>
         <!-- 🔵 Biểu đồ PO hoặc RFQ theo tháng -->
-        <VBox id="monthlyPOChartSection" width="100%" class="chartFullRow sapUiSmallMarginTop">
-          <HBox alignItems="Center" justifyContent="End" class="sapUiSmallMarginBottom">
-            <Label text="Select Type:" class="sapUiSmallMarginEnd" />
+        <VBox id="monthlyPOChartSection" class="chartFullRow sapUiSmallMargin">
+          <HBox alignItems="Center" 
+                justifyContent="End" 
+                class="sapUiSmallMarginBottom">
+
+            <Label text="Select Type:" class="sapUiSmallMarginEnd "  />
             <Select id="poTypeFilter" selectedKey="F" change=".onPoTypeChange" width="180px">
               <core:Item key="F" text="Purchase Order (PO)" />
               <core:Item key="A" text="Request for Quotation (RFQ)" />
@@ -111,7 +114,7 @@
           <viz:VizFrame id="idMonthlyBarChartPO" vizType="column" width="100%" height="500px" />
         </VBox>
         <!--  Top Requester Table -->
-        <VBox id="topRequesterSection" class="topRequesterCard" width="100%">
+        <VBox id="topRequesterSection" class="topRequesterCard">
           <HBox alignItems="Center" justifyContent="SpaceBetween" class="topRequesterHeader">
             <Title text="Top Request Purchase Requisition by Employee" />
             <HBox alignItems="Center" class="sortFilterGroup">
@@ -166,7 +169,7 @@
           </Table>
         </VBox>
         <!-- 🔻 Biểu đồ PR - PO - RFQ Connected -->
-        <VBox id="connectedChartContainer" class="sapUiSmallMarginTop">
+        <VBox id="connectedChartContainer" class="sapUiSmallMargin">
           <core:Fragment fragmentName="demodashboard.fragment.ConnectedChart" type="XML" />
         </VBox>
         <!-- 🔘 Toggle checkbox cho Phase -->

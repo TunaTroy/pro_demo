@@ -26,7 +26,7 @@
         ${userRole>/feRole} === 'INVENTORY_MANAGER' ||
         ${userRole>/feRole} === 'ADMIN'
     }" />
-              <Link  text="Requistion for Quotation" class="navItem" press="onGoToRFQList" visible="{=
+              <Link  text="Request For Quotation" class="navItem" press="onGoToRFQList" visible="{=
         ${userRole>/feRole} === 'PROCUREMENT_STAFF' ||
         ${userRole>/feRole} === 'PROCUREMENT_MANAGER' ||
         ${userRole>/feRole} === 'ADMIN'
@@ -53,7 +53,7 @@
     <!-- ========= PAGE CONTENT MUST WRAP EVERYTHING ========= -->
     <content>
       <!-- ==================== FILTER BAR ==================== -->
-      <fb:FilterBar id=".poFilterBar" persistencyKey="poFilterBar" useToolbar="false" search=".onFilterSearch">
+      <fb:FilterBar id=".poFilterBar" class="customFoFilterBar" persistencyKey="poFilterBar" useToolbar="false" search=".onFilterSearch">
         <fb:filterGroupItems>
           <fb:FilterGroupItem id="_IDGenFilterGroupItem" name="Ebeln" label="PO Number" groupName="default" visibleInFilterBar="true">
             <fb:control>
@@ -103,7 +103,7 @@
             <l:layoutData>
               <l:SplitterLayoutData id="poTableLayout" size="100%" resizable="true"/>
             </l:layoutData>
-            <Table id="poTable" items="{path: 'po>/'}" mode="SingleSelectLeft" selectionChange=".onSelectPO" sticky="ColumnHeaders" growing="true" growingThreshold="150" width="100%">
+            <Table id="poTable" class="tableHeaderBorder" items="{path: 'po>/'}" mode="SingleSelectLeft" selectionChange=".onSelectPO" sticky="ColumnHeaders" growing="true" growingThreshold="150" width="100%">
               <headerToolbar>
                 <OverflowToolbar id="_IDGenOverflowToolbar">
                   <Title id="_IDGenTitle" text="PO List ({= ${po>/}.length } items)" level="H2"/>
@@ -140,7 +140,7 @@
               <items>
                 <ColumnListItem id="_IDGenColumnListItem1">
                   <cells>
-                    <Text id="_IDGenText13" text="{po>Ebeln}"/>
+                    <Link id="_IDGenText13" text="{po>Ebeln}"/>
                     <Text id="_IDGenText14" text="{po>Bsart}"/>
                     <Text id="_IDGenText12" text="{po>Ekgrp}"/>
                     <Text id="_IDGenText15" text="{po>Ernam}"/>
@@ -158,7 +158,7 @@
           <!-- RIGHT DETAIL PANEL -->
           <l:SplitPane id="poDetailPane">
             <l:layoutData>
-              <l:SplitterLayoutData id="_IDGenSplitterLayoutData1" size="40%" minSize="350px" resizable="true"/>
+              <l:SplitterLayoutData id="_IDGenSplitterLayoutData1" size="0%" resizable="true"/>
             </l:layoutData>
             <VBox id="poDetailPanel" visible="false" class="sapUiMediumMargin sapUiSizeCompact sapUiNoContentPadding sapUiResponsiveContentPadding">
               <!-- ===== HEADER CARD ===== -->
@@ -183,16 +183,31 @@
                     <ObjectStatus id="_IDGenObjectStatus1" text="{path:'detailPO>Frgke', formatter:'.formatter.formatReleaseStatusText'}" state="{path:'detailPO>Frgke', formatter:'.formatter.formatReleaseStatusState'}" icon="{path:'detailPO>Frgke', formatter:'.formatter.formatReleaseStatusIcon'}" class="sapUiTinyMarginBegin"/>
                   </HBox>
                   <HBox id="_IDGenHBox6" class="sapUiTinyMarginTop" justifyContent="End">
-                    <Button id="btnApprovePO" text="Approve PO" icon="sap-icon://accept" type="Emphasized" press=".onApprovePO" visible="{=
-                                          ${userRole>/feRole} === 'PROCUREMENT_MANAGER' ||
-                                          ${userRole>/feRole} === 'ADMIN'
-                                      }"/>
 
-                    <Button id="btnRejectPO" text="Reject PO" icon="sap-icon://decline" type="Reject" press=".onRejectPO" class="sapUiTinyMarginEnd" visible="{=
-                                          ${userRole>/feRole} === 'PROCUREMENT_MANAGER' ||
-                                          ${userRole>/feRole} === 'ADMIN'
-                                      }"/>
-                  </HBox>
+                  <!-- Nút APPROVE → thêm marginEnd để tách khỏi Reject -->
+                  <Button id="btnApprovePO"
+                          text="Approve"
+                          icon="sap-icon://accept"
+                          type="Emphasized"
+                          press=".onApprovePO"
+                          class="sapUiTinyMarginEnd"
+                          visible="{
+                              = ${userRole>/feRole} === 'PROCUREMENT_MANAGER' ||
+                                ${userRole>/feRole} === 'ADMIN'
+                          }"/>
+
+                  <!-- Nút REJECT đứng sau, không cần margin -->
+                  <Button id="btnRejectPO"
+                          text="Reject"
+                          icon="sap-icon://decline"
+                          type="Reject"
+                          press=".onRejectPO"
+                          visible="{
+                              = ${userRole>/feRole} === 'PROCUREMENT_MANAGER' ||
+                                ${userRole>/feRole} === 'ADMIN'
+                          }"/>
+              </HBox>
+
                 </VBox>
               </Panel>
               <!-- ===== ITEMS TABLE ===== -->

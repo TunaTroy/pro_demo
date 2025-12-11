@@ -8,9 +8,7 @@
   height="100%">
 
   
-  <Page id="rfqListPage"
-        showNavButton="false"
-        class="sapUiResponsiveContentPadding">
+  <Page id="rfqListPage">
 
           <!-- Modern Navigation Bar -->
 <HBox class="topNavBar" justifyContent="SpaceBetween" alignItems="Center" width="100%">
@@ -21,7 +19,7 @@
                width="90px"
                class="sapLogo"
               press="onGoToDashboard"/>
-        <Text text="Requistion of Quotation" class="dashboardTitle"/>
+        <Text text="Request For Quotation" class="dashboardTitle"/>
     </HBox>
 
     <!-- Menu -->
@@ -31,7 +29,7 @@
         ${userRole>/feRole} === 'INVENTORY_MANAGER' ||
         ${userRole>/feRole} === 'ADMIN'
     }" />
-              <Link  text="Requistion for Quotation" class="navItem" press="onGoToRFQList" visible="{=
+              <Link  text="Request For Quotation" class="navItem" press="onGoToRFQList" visible="{=
         ${userRole>/feRole} === 'PROCUREMENT_STAFF' ||
         ${userRole>/feRole} === 'PROCUREMENT_MANAGER' ||
         ${userRole>/feRole} === 'ADMIN'
@@ -50,6 +48,7 @@
     <content>
       <!-- ======== FILTER BAR - Fiori Standard ======== -->
       <fb:FilterBar id="filterBar"
+        class="customRfqFilterBar"
         persistencyKey="rfqFilterBar"
         useToolbar="false"
         search=".onFilterSearch"
@@ -155,13 +154,14 @@
                  descending: true
                }
              }"
+       
         mode="SingleSelectLeft"
         growing="true"
         growingThreshold="20"
         growingScrollToLoad="true"
         sticky="ColumnHeaders,HeaderToolbar"
         selectionChange=".onSelectionChange"
-        class="sapUiSmallMarginTop">
+        class="sapUiSmallMarginTop tableHeaderBorder">
         <headerToolbar>
           <OverflowToolbar design="Transparent">
             <Title text="Requests for Quotations ({rfq>/length})"

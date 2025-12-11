@@ -26,7 +26,7 @@
         ${userRole>/feRole} === 'INVENTORY_MANAGER' ||
         ${userRole>/feRole} === 'ADMIN'
     }" />
-              <Link  text="Requistion for Quotation" class="navItem" press="onGoToRFQList" visible="{=
+              <Link  text="Request For Quotation" class="navItem" press="onGoToRFQList" visible="{=
         ${userRole>/feRole} === 'PROCUREMENT_STAFF' ||
         ${userRole>/feRole} === 'PROCUREMENT_MANAGER' ||
         ${userRole>/feRole} === 'ADMIN'
@@ -54,7 +54,15 @@
     </headerContent>
     <content>
       <!-- ======== FILTER BAR ======== -->
-      <fb:FilterBar id="prFilterBar" useToolbar="false" search=".onGoFilter" showRestoreButton="true" showClearButton="true" showGoOnFB="true" filterBarExpanded="true">
+      <fb:FilterBar id="prFilterBar"
+                    class="customPrFilterBar"
+                    useToolbar="false"
+                    search=".onGoFilter" 
+                    showRestoreButton="true" 
+                    showClearButton="true"
+                    showGoOnFB="true" 
+                    filterBarExpanded="true" 
+                    >
         <fb:filterGroupItems>
           <!-- PR Number -->
           <fb:FilterGroupItem name="Banfn" label="Purchase Req." groupName="PR" visibleInFilterBar="true">
@@ -109,7 +117,7 @@
             <l:layoutData>
               <l:SplitterLayoutData id="layoutMaster" size="100%" resizable="true"/>
             </l:layoutData>
-            <Table id="tblPRList" items="{ path: '/groups' }" mode="SingleSelectLeft" selectionChange="onSelectPR" class="sapUiSizeCompact stickyTable" growing="true" growingThreshold="100" width="100%">
+            <Table id="tblPRList"  items="{ path: '/groups' }" mode="SingleSelectLeft" selectionChange="onSelectPR" class="sapUiSizeCompact stickyTable tableHeaderBorder" growing="true" growingThreshold="100" width="100%">
               <noData>
                 <IllustratedMessage illustrationType="sapIllus-NoData" title="No matching Purchase Requisitions found" description="Try adjusting your filters or clear all filters to see more results."/>
               </noData>

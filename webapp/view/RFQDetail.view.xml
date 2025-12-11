@@ -6,20 +6,27 @@
     xmlns:form="sap.ui.layout.form"
     displayBlock="true"
 >
-    <Page
-        id="rfqDetailPage"
-        title="📄 RFQ Detail"
-    >
-        <!-- ================================= -->
-        <!-- BACK BUTTON -->
-        <!-- ================================= -->
-        <headerContent>
-            <Button
-                icon="sap-icon://nav-back"
-                type="Transparent"
-                press=".onNavBack"
-            />
-        </headerContent>
+<Page id="rfqDetailPage" showHeader="true">
+
+    <customHeader>
+        <Bar>
+
+            <!-- LEFT: Back Button -->
+            <contentLeft>
+                <Button
+                    icon="sap-icon://nav-back"
+                    type="Transparent"
+                    press=".onNavBack"
+                />
+            </contentLeft>
+
+            <!-- CENTER: Page Title -->
+            <contentMiddle>
+                <Title text="📄 RFQ Detail" />
+            </contentMiddle>
+
+        </Bar>
+    </customHeader>
         <content>
             <!-- ================================= -->
             <!-- 1) HEADER RFQ (Avatar + RFQ info) -->
@@ -37,9 +44,9 @@
                     class="headerImageContainer"
                 >
                     <Image
-                        src="images/tuanthanden.jpg"
-                        width="140px"
-                        height="140px"
+                        src="images/doanhnhan.jpg"
+                        width="180px"
+                        height="180px"
                         decorative="false"
                         class="headerProfileImage"
                     />

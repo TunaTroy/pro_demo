@@ -5,14 +5,25 @@
     xmlns:l="sap.ui.layout"
     displayBlock="true">
 
-    <Page title="RFQ Item Detail">
-        <headerContent>
-             <Button
-        id="btnNavBackRFQList"
-        icon="sap-icon://nav-back"
-        press=".onNavBack"
-        type="Transparent" />
-        </headerContent>
+<Page id="rfqItemDetailPage" showHeader="true">
+
+    <customHeader>
+        <Bar>
+            <!-- LEFT: Back Button -->
+            <contentLeft>
+                <Button
+                    id="btnNavBackRFQList"
+                    icon="sap-icon://nav-back"
+                    press=".onNavBack"
+                    type="Transparent" />
+            </contentLeft>
+            <!-- CENTER: Title -->
+            <contentMiddle>
+                <Title text="RFQ Item Detail" />
+            </contentMiddle>
+        </Bar>
+    </customHeader>
+
 
         <content>
             <!-- HEADER: giống phần trên screenshot -->
