@@ -39,6 +39,15 @@
           <HBox id="hboxItemNumber" alignItems="Center" class="headerItemBox">
             <ObjectNumber id="objItemNumber" unit="Item" number="{Bnfpo}" emphasized="true" class="headerItemNumber" />
           </HBox>
+          <HBox
+          class="sapUiTinyMarginTop"
+          visible="{= ${ReasonId} ? true : false }">
+          <Text text="Reason:" />
+          <Text
+            text="{path:'ReasonId', formatter:'.formatter.reasonText'}"
+            class="sapUiTinyMarginBegin" />
+        </HBox>
+
         </VBox>
       </HBox>
       <!-- GRID: TWO COLUMN LAYOUT -->
@@ -80,9 +89,8 @@
               <Label text="Quantity Requested:" />
               <Text text="{path:'Menge', formatter:'.formatter.quantityFormat'} {Meins}" />
               <Label text="Release Status:" />
-              <ObjectStatus
-                text="{path: 'Frgkz', formatter: '.getReleaseStatus'}"
-                state="{= ${Frgkz} === 'R' ? 'Success' : ${Frgkz} === 'X' ? 'Error' : 'None' }" />
+              <ObjectStatus text="{parts:[{path:'Frgkz'}, {path:'ReasonId'}], formatter:'.formatter.statusTextt'}" 
+                            state="{parts:[{path:'Frgkz'}, {path:'ReasonId'}], formatter:'.formatter.statusStatee'}"/>
             </VBox>
           </HBox>
         </Panel>

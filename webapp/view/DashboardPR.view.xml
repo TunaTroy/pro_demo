@@ -116,7 +116,7 @@
         <!--  Top Requester Table -->
         <VBox id="topRequesterSection" class="topRequesterCard">
           <HBox alignItems="Center" justifyContent="SpaceBetween" class="topRequesterHeader">
-            <Title text="Top Request Purchase Requisition by Employee" />
+            <Title text="Top PR by Employee" />
             <HBox alignItems="Center" class="sortFilterGroup">
               <Label text="Sort by:" class="sortLabel" />
               <Select id="requesterSortFilter" selectedKey="totalPR" change=".onRequesterSortChange" width="180px">
@@ -148,9 +148,9 @@
               <Column>
                 <Text text="Last Created Date" />
               </Column>
-              <Column>
+              <!-- <Column>
                 <Text text="Avg Time Approval" />
-              </Column>
+              </Column> -->
             </columns>
             <items>
               <ColumnListItem>
@@ -162,7 +162,7 @@
                   <Text text="{topRequesterModel>ApprovalRate}" />
                   <Text text="{topRequesterModel>PendingPR}" />
                   <Text text="{topRequesterModel>LastCreatedDate}" />
-                  <ObjectNumber number="{topRequesterModel>AvgApprovalDays}" unit="days" />
+                  <!-- <ObjectNumber number="{topRequesterModel>AvgApprovalDays}" unit="days" /> -->
                 </cells>
               </ColumnListItem>
             </items>

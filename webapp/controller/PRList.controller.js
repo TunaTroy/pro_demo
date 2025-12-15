@@ -32,15 +32,15 @@ sap.ui.define(
       formatter: {
         statusText: function (sFrgkz, sReason) {
           // ⭐ Reject logic: C + có ReasonId => Rejected
-          if (sFrgkz === "C" && sReason) return "Rejected";
+          if (sFrgkz === "C" && sReason) return "Changeable";
 
           switch (sFrgkz) {
             case "R":
-              return "Approved";
+              return "Release";
             case "C":
-              return "Pending";
+              return "Changeable";
             case "X":
-              return "Rejected";
+              return "Changeable";
             default:
               return "";
           }
@@ -362,6 +362,29 @@ sap.ui.define(
                 g.Items.push(r);
             });
 
+
+            groups.forEach((g) => {
+              g.ItemCount = g.Items.length;
+
+              const oRejected = g.Items.find(
+                (it) => it.Frgkz === "C" && it.ReasonId
+              );
+              const oApproved = g.Items.find((it) => it.Frgkz === "R");
+
+              if (oRejected) {
+                g.Frgkz = "C";
+                g.ReasonId = oRejected.ReasonId;
+              } else if (oApproved) {
+                g.Frgkz = "R";
+                g.ReasonId = "";
+              } else {
+                g.Frgkz = "C";
+                g.ReasonId = "";
+              }
+            });
+
+            
+
             // ============================
             // 6. COMPUTE HEADER STATUS
             // ============================
@@ -401,6 +424,12 @@ sap.ui.define(
 
             sap.m.MessageToast.show(`${groupsFiltered.length} PR found`);
         },
+
+
+        
+
+
+
 
         error: () => {
             sap.ui.core.BusyIndicator.hide();

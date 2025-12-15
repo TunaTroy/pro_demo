@@ -10,6 +10,40 @@ sap.ui.define(
     return Controller.extend("demodashboard.controller.PRItemDetail", {
       // ✅ THÊM FORMATTER OBJECT
       formatter: {
+
+
+         statusTextt: function (sFrgkz, sReason) {
+          // ⭐ Reject logic: C + có ReasonId => Rejected
+          if (sFrgkz === "C" && sReason) return "Changeable";
+
+          switch (sFrgkz) {
+            case "R":
+              return "Release";
+            case "C":
+              return "Changeable";
+            case "X":
+              return "Rejectd";
+            default:
+              return "";
+          }
+        },
+
+        statusStatee: function (sFrgkz, sReason) {
+          // ⭐ C + ReasonId => Error (đỏ)
+          if (sFrgkz === "C" && sReason) return "Error";
+
+          switch (sFrgkz) {
+            case "R":
+              return "Success";
+            case "C":
+              return "None";
+            case "X":
+              return "Error";
+            default:
+              return "None";
+          }
+        },
+
         dateFormat: function (sDate) {
           if (!sDate) return "";
           const oDate = new Date(sDate);
@@ -122,9 +156,9 @@ sap.ui.define(
 
         const mFrgkzTexts = {
           // ✅ TÊN ĐÚNG
-          X: "Rejected",
-          C: "Pending", // ✅ SỬA CHÍNH TẢ
-          R: "Approved", // ✅ BỎ DẤU CHẤM
+          X: "Changeable",
+          C: "Changeable", // ✅ SỬA CHÍNH TẢ
+          R: "Released", // ✅ BỎ DẤU CHẤM
         };
 
         return mFrgkzTexts[sFrgkz] || "Other"; // ✅ DÙNG ĐÚNG TÊN

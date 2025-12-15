@@ -9,6 +9,8 @@
 
     <customHeader>
         <Bar>
+
+
             <!-- LEFT: Back Button -->
             <contentLeft>
                 <Button
@@ -26,21 +28,40 @@
 
 
         <content>
-            <!-- HEADER: giống phần trên screenshot -->
+
+        <HBox id="rfqItemHeaderBox" class="headerItemBox">
+                     <VBox
+                    width="25%"
+                    alignItems="Center"
+                    class="headerImageContainer" >
+                    <Image
+                        src="images/doanhnhan.jpg"
+                        width="180px"
+                        height="180px"
+                        decorative="false"
+                        class="headerProfileImage"
+                    />
+                </VBox>
+           
            <ObjectHeader
-    title="{item>/Txz01}"
-    intro="{= 'Item ' + ${item>/Ebelp} }">
+            title="{item>/Txz01}"
+            intro="{= 'Item ' + ${item>/Ebelp} }"
+            style="margin-left: -133px">
 
-    <attributes>
-        <ObjectAttribute
-            title="Requested Quantity"
-            text="{item>/Menge}" />
+            <attributes>
+                <ObjectAttribute
+                    title="Requested Quantity"
+                    text="{item>/Menge}" />
 
-        <ObjectAttribute
-            title="Unit"
-            text="{item>/Meins}" />
-    </attributes>
-</ObjectHeader>
+                <ObjectAttribute
+                    title="Unit"
+                    text="{item>/Meins}" />
+            </attributes>
+        </ObjectHeader>
+        
+        
+        </HBox>  
+  
 
 
             <!-- ICON TAB BAR -->
@@ -82,14 +103,14 @@
                                 <Text text="Storage Location:" class="sapUiSmallMarginTop"/>
                                 <Text text="{item>/Lgort}"/>
 
-                                <Text text="Deadline Date:" class="sapUiSmallMarginTop"/>
+                                <Text text="Quot. Deadline:" class="sapUiSmallMarginTop"/>
                                 <Text text="{ path:'item>/Agdat', formatter:'.formatter.dateFormat'}"/>
                             </VBox>
 
                         </l:Grid>
                     </IconTabFilter>
 
-                    <!-- TAB 2: DELIVERY ADDRESS -->
+                    <!-- TAB 2: DELIVERY ADDRESS
                     <IconTabFilter text="Delivery Address" key="address">
                         <VBox class="sapUiSmallMargin">
                             <Text text="Name:"/>
@@ -107,7 +128,7 @@
                             <Text text="Country:" class="sapUiSmallMarginTop"/>
                             <Text text="{item>/Land1}"/>
                         </VBox>
-                    </IconTabFilter>
+                    </IconTabFilter> -->
 
                 
 
