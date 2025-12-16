@@ -71,10 +71,8 @@
             <VBox id="vboxBasicLeft" width="48%" class="sapUiSmallMarginEnd">
               <Label text="Item Category:" />
               <Text text="{path: 'Pstyp', formatter: '.getItemCategoryText'}" />
-              <Label text="Requested By:" />
-              <Text text="{Ernam}" />
               <Label text="Material:" />
-              <Link text="{Matnr}" press=".onMaterialPress" />
+              <Text text="{Matnr}" />
               <Label text="Short Text:" />
               <Text text="{Txz01}" />
               <Label text="Material Group:" />
@@ -82,15 +80,17 @@
             </VBox>
             <!-- RIGHT BOX -->
             <VBox id="vboxBasicRight" width="48%">
+              <Label text="Requested By:" />
+              <Text text="{Ernam}" />
               <Label text="Valuation Price:" />
               <Text text="{Preis} {Waers}" />
               <Label text="Price Unit:" />
               <Text text="{Peinh} EA" />
               <Label text="Quantity Requested:" />
               <Text text="{path:'Menge', formatter:'.formatter.quantityFormat'} {Meins}" />
-              <Label text="Release Status:" />
-              <ObjectStatus text="{parts:[{path:'Frgkz'}, {path:'ReasonId'}], formatter:'.formatter.statusTextt'}" 
-                            state="{parts:[{path:'Frgkz'}, {path:'ReasonId'}], formatter:'.formatter.statusStatee'}"/>
+              <!-- <Label text="Release Status:" /> -->
+              <!-- <ObjectStatus text="{parts:[{path:'Frgkz'}, {path:'ReasonId'}], formatter:'.formatter.statusTextt'}" 
+                            state="{parts:[{path:'Frgkz'}, {path:'ReasonId'}], formatter:'.formatter.statusStatee'}"/> -->
             </VBox>
           </HBox>
         </Panel>

@@ -12,9 +12,9 @@ sap.ui.define(
       formatter: {
 
 
-         statusTextt: function (sFrgkz, sReason) {
+         statusTextt: function (sFrgkz) {
           // ⭐ Reject logic: C + có ReasonId => Rejected
-          if (sFrgkz === "C" && sReason) return "Changeable";
+         
 
           switch (sFrgkz) {
             case "R":
@@ -28,9 +28,9 @@ sap.ui.define(
           }
         },
 
-        statusStatee: function (sFrgkz, sReason) {
-          // ⭐ C + ReasonId => Error (đỏ)
-          if (sFrgkz === "C" && sReason) return "Error";
+        statusStatee: function (sFrgkz) {
+         
+        
 
           switch (sFrgkz) {
             case "R":
