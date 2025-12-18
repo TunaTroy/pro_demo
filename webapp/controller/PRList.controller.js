@@ -121,11 +121,10 @@ sap.ui.define(
             "07": "Missing technical specification",
             "08": "Vendor issue or restriction",
             "09": "Request requires further review",
-            "12": "None"
+            12: "None",
           };
           return sReason + " – " + (map[sReason] || "");
-      }
-
+        },
       },
 
       // ⭐ Danh sách lý do reject (demo – bạn chỉnh theo master data của bạn)
@@ -281,60 +280,75 @@ sap.ui.define(
       // FILTER + GROUP
       // =========================================================
       onGoFilter: function () {
-    const oView = this.getView();
-    const oModel = oView.getModel();
-    const oTable = oView.byId("tblPRList");
-    let aFilters = [];
+        const oView = this.getView();
+        const oModel = oView.getModel();
+        const oTable = oView.byId("tblPRList");
+        let aFilters = [];
 
-    // ============================
-    // 1. HANDLE TOKEN FILTERS
-    // ============================
-    function handleTokenInput(id, field) {
-        const oInput = oView.byId(id);
-        const typed = oInput.getValue().trim();
-        if (typed) {
+        // ============================
+        // 1. HANDLE TOKEN FILTERS
+        // ============================
+        function handleTokenInput(id, field) {
+          const oInput = oView.byId(id);
+          const typed = oInput.getValue().trim();
+          if (typed) {
             oInput.addToken(new sap.m.Token({ key: typed, text: typed }));
             oInput.setValue("");
-        }
-        const tokens = oInput.getTokens()
-            .map(t => new sap.ui.model.Filter(field, sap.ui.model.FilterOperator.EQ, t.getKey()));
+          }
+          const tokens = oInput
+            .getTokens()
+            .map(
+              (t) =>
+                new sap.ui.model.Filter(
+                  field,
+                  sap.ui.model.FilterOperator.EQ,
+                  t.getKey()
+                )
+            );
 
-        if (tokens.length) {
+          if (tokens.length) {
             aFilters.push(new sap.ui.model.Filter(tokens, false)); // OR group
+          }
         }
-    }
 
-    handleTokenInput("inpBanfn", "Banfn");
-    handleTokenInput("inpBsart", "Bsart");
-    handleTokenInput("inpEkgrp", "Ekgrp");
-    handleTokenInput("inpErnam", "Ernam");
+        handleTokenInput("inpBanfn", "Banfn");
+        handleTokenInput("inpBsart", "Bsart");
+        handleTokenInput("inpEkgrp", "Ekgrp");
+        handleTokenInput("inpErnam", "Ernam");
 
-    // ============================
-    // 2. DATE RANGE
-    // ============================
-    const oDR = oView.byId("inpDateRange");
-    const dFrom = oDR.getDateValue();
-    const dTo = oDR.getSecondDateValue();
+        // ============================
+        // 2. DATE RANGE
+        // ============================
+        const oDR = oView.byId("inpDateRange");
+        const dFrom = oDR.getDateValue();
+        const dTo = oDR.getSecondDateValue();
 
-    if (dFrom && dTo) {
-        aFilters.push(new sap.ui.model.Filter("Badat", sap.ui.model.FilterOperator.BT, dFrom, dTo));
-    }
+        if (dFrom && dTo) {
+          aFilters.push(
+            new sap.ui.model.Filter(
+              "Badat",
+              sap.ui.model.FilterOperator.BT,
+              dFrom,
+              dTo
+            )
+          );
+        }
 
-    // ============================
-    // 3. READ STATUS KEY
-    // (R, C, X)
-    // ============================
-    const sStatus = this.byId("inpStatus").getSelectedKey();
+        // ============================
+        // 3. READ STATUS KEY
+        // (R, C, X)
+        // ============================
+        const sStatus = this.byId("inpStatus").getSelectedKey();
 
-    sap.ui.core.BusyIndicator.show(0);
+        sap.ui.core.BusyIndicator.show(0);
 
-    // ============================
-    // 4. LOAD RAW PR LIST
-    // ============================
-    oModel.read("/PRSet", {
-        filters: aFilters,
-        urlParameters: { $top: 10000 },
-        success: (data) => {
+        // ============================
+        // 4. LOAD RAW PR LIST
+        // ============================
+        oModel.read("/PRSet", {
+          filters: aFilters,
+          urlParameters: { $top: 10000 },
+          success: (data) => {
             sap.ui.core.BusyIndicator.hide();
 
             const groups = [];
@@ -342,41 +356,43 @@ sap.ui.define(
             // ============================
             // 5. GROUP BY BANFN
             // ============================
-            data.results.forEach(r => {
-                r.ReasonId = (r.REASON_ID && r.REASON_ID.trim() !== "") ? r.REASON_ID : "";
+            data.results.forEach((r) => {
+              r.ReasonId =
+                r.REASON_ID && r.REASON_ID.trim() !== "" ? r.REASON_ID : "";
 
-                let g = groups.find(e => e.Banfn === r.Banfn);
-                if (!g) {
-                    g = {
-                        Banfn: r.Banfn,
-                        Bsart: r.Bsart,
-                        Ekgrp: r.Ekgrp,
-                        Ernam: r.Ernam,
-                        Badat: r.Badat,
-                        Frgkz: r.Frgkz,
-                        ReasonId: "",
-                        Items: []
-                    };
-                    groups.push(g);
-                }
-                g.Items.push(r);
+              let g = groups.find((e) => e.Banfn === r.Banfn);
+              if (!g) {
+                g = {
+                  Banfn: r.Banfn,
+                  Bsart: r.Bsart,
+                  Ekgrp: r.Ekgrp,
+                  Ernam: r.Ernam,
+                  Badat: r.Badat,
+                  Frgkz: r.Frgkz,
+                  ReasonId: "",
+                  Items: [],
+                };
+                groups.push(g);
+              }
+              g.Items.push(r);
             });
 
             // ============================
             // 6. COMPUTE HEADER STATUS
             // ============================
-            groups.forEach(g => {
+            groups.forEach((g) => {
+              const hasRejected = g.Items.some(
+                (it) => it.Frgkz === "C" && it.ReasonId
+              );
+              const hasApproved = g.Items.some((it) => it.Frgkz === "R");
 
-                const hasRejected = g.Items.some(it => it.Frgkz === "C" && it.ReasonId);
-                const hasApproved = g.Items.some(it => it.Frgkz === "R");
-
-                if (hasRejected) {
-                    g.Frgkz = "X";        // UI REJECTED
-                } else if (hasApproved) {
-                    g.Frgkz = "R";        // APPROVED
-                } else {
-                    g.Frgkz = "C";        // PENDING
-                }
+              if (hasRejected) {
+                g.Frgkz = "X"; // UI REJECTED
+              } else if (hasApproved) {
+                g.Frgkz = "R"; // APPROVED
+              } else {
+                g.Frgkz = "C"; // PENDING
+              }
             });
 
             // ============================
@@ -385,30 +401,29 @@ sap.ui.define(
             let groupsFiltered = groups;
 
             if (sStatus === "R") {
-                groupsFiltered = groups.filter(g => g.Frgkz === "R");
-            }
-            else if (sStatus === "C") {
-                groupsFiltered = groups.filter(g => g.Frgkz === "C");
-            }
-            else if (sStatus === "X") {
-                groupsFiltered = groups.filter(g => g.Frgkz === "X");
+              groupsFiltered = groups.filter((g) => g.Frgkz === "R");
+            } else if (sStatus === "C") {
+              groupsFiltered = groups.filter((g) => g.Frgkz === "C");
+            } else if (sStatus === "X") {
+              groupsFiltered = groups.filter((g) => g.Frgkz === "X");
             }
 
             // ============================
             // 8. SET MODEL TO TABLE
             // ============================
-            oTable.setModel(new sap.ui.model.json.JSONModel({ groups: groupsFiltered }));
+            oTable.setModel(
+              new sap.ui.model.json.JSONModel({ groups: groupsFiltered })
+            );
 
             sap.m.MessageToast.show(`${groupsFiltered.length} PR found`);
-        },
+          },
 
-        error: () => {
+          error: () => {
             sap.ui.core.BusyIndicator.hide();
             sap.m.MessageToast.show("⚠️ Error loading data");
-        }
-    });
-},
-
+          },
+        });
+      },
 
       // =========================================================
       // CLEAR FILTER
@@ -581,8 +596,6 @@ sap.ui.define(
         });
       },
 
-
-
       // =========================================================
       // APPROVE ALL PENDING ITEMS
       // =========================================================
@@ -597,7 +610,20 @@ sap.ui.define(
         }
 
         // chỉ approve được trạng thái C (dù có ReasonId hay không)
-        const aPendingItems = aItems.filter((it) => it.Frgkz === "C");
+        // chỉ approve được trạng thái C VÀ CHƯA TỪNG REJECT (ReasonId rỗng)
+        const aPendingItems = aItems.filter(
+          (it) => it.Frgkz === "C" && (!it.ReasonId || it.ReasonId === "")
+        );
+
+        const aRejectedItems = aItems.filter(
+          (it) => it.Frgkz === "C" && it.ReasonId
+        );
+
+        if (aRejectedItems.length > 0) {
+          MessageToast.show(
+            "Some items were previously rejected and cannot be approved again."
+          );
+        }
 
         const aLockedItems = aItems.filter((it) => it.Frgkz !== "C");
 
@@ -1047,19 +1073,18 @@ sap.ui.define(
       // NAVIGATION
       // =========================================================
       onNavHome: function () {
-    const oRouter = this.getOwnerComponent().getRouter();
+        const oRouter = this.getOwnerComponent().getRouter();
 
-    // Reset UI
-    this._resetDetailPanel();
-    const oTable = this.byId("tblPRList");
-    if (oTable) {
-        oTable.removeSelections(true);
-    }
+        // Reset UI
+        this._resetDetailPanel();
+        const oTable = this.byId("tblPRList");
+        if (oTable) {
+          oTable.removeSelections(true);
+        }
 
-    // Điều hướng về Dashboard
-    oRouter.navTo("DashboardPR", {}, true); // replace history
-},
-
+        // Điều hướng về Dashboard
+        oRouter.navTo("DashboardPR", {}, true); // replace history
+      },
 
       // Khi manager ấn nút Edit
       onEditNote: function () {
@@ -1129,17 +1154,16 @@ sap.ui.define(
       },
 
       _resetDetailPanel: function () {
-    const oDetail = this.byId("detailPanel");
-    if (oDetail) {
-        oDetail.setVisible(false);
-    }
+        const oDetail = this.byId("detailPanel");
+        if (oDetail) {
+          oDetail.setVisible(false);
+        }
 
-    const oLayout = this.byId("layoutMaster");
-    if (oLayout) {
-        oLayout.setSize("100%");
-    }
-   },
-
+        const oLayout = this.byId("layoutMaster");
+        if (oLayout) {
+          oLayout.setSize("100%");
+        }
+      },
 
       _loadPRNote: function (sBanfn) {
         console.log("📡 Calling OData path:", `/PRNoteSet(Banfn='${sBanfn}')`);
@@ -1183,9 +1207,8 @@ sap.ui.define(
       },
 
       onGoToDashboard: function () {
-    sap.ui.core.UIComponent.getRouterFor(this).navTo("DashboardPR");
+        sap.ui.core.UIComponent.getRouterFor(this).navTo("DashboardPR");
       },
- 
 
       onGoToRFQList: function () {
         sap.ui.core.UIComponent.getRouterFor(this).navTo("RFQList");
