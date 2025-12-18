@@ -4,46 +4,35 @@
   xmlns:l="sap.ui.layout"
   xmlns:core="sap.ui.core"
   xmlns:fb="sap.ui.comp.filterbar"
-  xmlns:table="sap.ui.table"
-  displayBlock="true">
+  xmlns:table="sap.ui.table" displayBlock="true">
   <Page id="pagePRList">
-            <!-- Modern Navigation Bar -->
-      <HBox class="topNavBar" justifyContent="SpaceBetween" alignItems="Center" width="100%">
-          
-          <!-- Logo SAP -->
-          <HBox alignItems="Center">
-              <Image src="https://upload.wikimedia.org/wikipedia/commons/5/59/SAP_2011_logo.svg"
-                    width="90px" 
-                    class="sapLogo"
-                    press="onGoToDashboard"/>
-              <Text text="Purchase Requistion" class="dashboardTitle"/>
-          </HBox>
-
-          <!-- Menu -->
-         <HBox class="navMenu" alignItems="Center" justifyContent="Center">
-              <Link  text="Purchase Requisiton"  class="navItem" press="onGoToPRList" visible="{=
+    <!-- Modern Navigation Bar -->
+    <HBox class="topNavBar" justifyContent="SpaceBetween" alignItems="Center" width="100%">
+      <!-- Logo SAP -->
+      <HBox alignItems="Center">
+        <Image src="https://upload.wikimedia.org/wikipedia/commons/5/59/SAP_2011_logo.svg" width="90px" class="sapLogo" press="onGoToDashboard"/>
+        <Text text="Purchase Requistion" class="dashboardTitle"/>
+      </HBox>
+      <!-- Menu -->
+      <HBox class="navMenu" alignItems="Center" justifyContent="Center">
+        <Link text="Purchase Requisiton" class="navItem" press="onGoToPRList" visible="{=
         ${userRole>/feRole} === 'INVENTORY_STAFF' ||
         ${userRole>/feRole} === 'INVENTORY_MANAGER' ||
+        ${userRole>/feRole} === 'PROCUREMENT_STAFF' ||
         ${userRole>/feRole} === 'ADMIN'
     }" />
-              <Link  text="Request For Quotation" class="navItem" press="onGoToRFQList" visible="{=
+        <Link text="Request For Quotation" class="navItem" press="onGoToRFQList" visible="{=
         ${userRole>/feRole} === 'PROCUREMENT_STAFF' ||
         ${userRole>/feRole} === 'PROCUREMENT_MANAGER' ||
         ${userRole>/feRole} === 'ADMIN'
     }" />
-              <Link  text="Purchase Order" class="navItem" press="onGoToPOList" visible="{=
+        <Link text="Purchase Order" class="navItem" press="onGoToPOList" visible="{=
         ${userRole>/feRole} === 'PROCUREMENT_STAFF' ||
         ${userRole>/feRole} === 'PROCUREMENT_MANAGER' ||
         ${userRole>/feRole} === 'ADMIN'
     }" />
-          </HBox>
-
-        </HBox>
-
-
-
-  
-  
+      </HBox>
+    </HBox>
     <!-- ===== HEADER BUTTONS ===== -->
     <headerContent>
       <HBox alignItems="Center" justifyContent="End" class="sapUiTinyMarginEnd sapUiTinyMarginTop">
@@ -54,15 +43,7 @@
     </headerContent>
     <content>
       <!-- ======== FILTER BAR ======== -->
-      <fb:FilterBar id="prFilterBar"
-                    class="customPrFilterBar"
-                    useToolbar="false"
-                    search=".onGoFilter" 
-                    showRestoreButton="true" 
-                    showClearButton="true"
-                    showGoOnFB="true" 
-                    filterBarExpanded="true" 
-                    >
+      <fb:FilterBar id="prFilterBar" class="customPrFilterBar" useToolbar="false" search=".onGoFilter" showRestoreButton="true" showClearButton="true" showGoOnFB="true" filterBarExpanded="true">
         <fb:filterGroupItems>
           <!-- PR Number -->
           <fb:FilterGroupItem name="Banfn" label="Purchase Req." groupName="PR" visibleInFilterBar="true">
@@ -97,9 +78,7 @@
           <!-- Status -->
           <fb:FilterGroupItem name="Frgkz" label="Status" groupName="PR" visibleInFilterBar="true">
             <fb:control>
-              <Select id="inpStatus"
-                      class="prStatusSelect"
-                       >
+              <Select id="inpStatus" class="prStatusSelect">
                 <items>
                   <core:Item key="" text="All"/>
                   <core:Item key="R" text="Release" />
@@ -119,7 +98,7 @@
             <l:layoutData>
               <l:SplitterLayoutData id="layoutMaster" size="100%" resizable="true"/>
             </l:layoutData>
-            <Table id="tblPRList"  items="{ path: '/groups' }" mode="SingleSelectLeft" selectionChange="onSelectPR" class="sapUiSizeCompact stickyTable tableHeaderBorder" growing="true" growingThreshold="100" width="100%">
+            <Table id="tblPRList" items="{ path: '/groups' }" mode="SingleSelectLeft" selectionChange="onSelectPR" class="sapUiSizeCompact stickyTable tableHeaderBorder" growing="true" growingThreshold="100" width="100%">
               <noData>
                 <IllustratedMessage illustrationType="sapIllus-NoData" title="No matching Purchase Requisitions found" description="Try adjusting your filters or clear all filters to see more results."/>
               </noData>
@@ -174,33 +153,30 @@
                   </HBox>
                   <Text id="txtBsartDetail" text="{Bsart}" class="prHeaderSubTitle"/>
                   <HBox class="sapUiTinyMarginTop" wrap="Wrap">
-                    <Text id="txtDetailMeta" 
-                          text="{= 'Group: ' + ${Ekgrp} + ' • Created By: ' + ${Ernam} + ' • Req. Date: ' + ${path:'Badat', formatter:'.formatter.dateFormat'} }"/>
+                    <Text id="txtDetailMeta" text="{= 'Group: ' + ${Ekgrp} + ' • Created By: ' + ${Ernam} + ' • Req. Date: ' + ${path:'Badat', formatter:'.formatter.dateFormat'} }"/>
                   </HBox>
                   <HBox class="sapUiTinyMarginTop" alignItems="Center">
                     <Text text="Status:"/>
                     <!-- ⭐ FIX 2: Detail Status sử dụng ReasonId -->
-                    <ObjectStatus id="statusDetail" 
-                                  text="{parts:[{path:'Frgkz'}, {path:'ReasonId'}], formatter:'.formatter.statusText'}" 
-                                  state="{parts:[{path:'Frgkz'}, {path:'ReasonId'}], formatter:'.formatter.statusState'}" 
-                                  class="sapUiTinyMarginBegin"/>
+                    <ObjectStatus id="statusDetail" text="{parts:[{path:'Frgkz'}, {path:'ReasonId'}], formatter:'.formatter.statusText'}" state="{parts:[{path:'Frgkz'}, {path:'ReasonId'}], formatter:'.formatter.statusState'}" class="sapUiTinyMarginBegin"/>
                   </HBox>
                   <!-- Only show Reason if rejected -->
                   <HBox class="sapUiTinyMarginTop" visible="{= ${ReasonId} ? true : false }">
                     <Text text="Reason:"/>
                     <Text text="{path:'ReasonId', formatter:'.formatter.reasonText'}" class="sapUiTinyMarginBegin"/>
-                </HBox>
-
+                  </HBox>
                 </VBox>
               </Panel>
               <!-- ACTION BUTTONS -->
               <HBox class="sapUiTinyMarginBottom" justifyContent="End">
                 <Button icon="sap-icon://accept" text="Approve" type="Emphasized" press="onApprovePR" visible="{=
         ${userRole>/feRole} === 'INVENTORY_MANAGER' ||
+        ${userRole>/feRole} === 'PROCUREMENT_STAFF' ||
         ${userRole>/feRole} === 'ADMIN'
     }" />
                 <Button icon="sap-icon://decline" text="Reject" type="Reject" press="onRejectPR" class="sapUiTinyMarginBegin" visible="{=
         ${userRole>/feRole} === 'INVENTORY_MANAGER' ||
+        ${userRole>/feRole} === 'PROCUREMENT_STAFF' ||
         ${userRole>/feRole} === 'ADMIN'
     }" />
               </HBox>

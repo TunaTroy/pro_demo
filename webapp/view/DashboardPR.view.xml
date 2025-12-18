@@ -25,6 +25,7 @@
               <Link  text="Purchase Requisiton"  class="navItem" press="onGoToPRList" visible="{=
         ${userRole>/feRole} === 'INVENTORY_STAFF' ||
         ${userRole>/feRole} === 'INVENTORY_MANAGER' ||
+        ${userRole>/feRole} === 'PROCUREMENT_STAFF' ||
         ${userRole>/feRole} === 'ADMIN'
     }" />
               <Link  text="Request for Quotation" class="navItem" press="onGoToRFQList" visible="{=
