@@ -867,7 +867,7 @@ sap.ui.define(
 
         this.oOData.read("/PRSet", {
           urlParameters: {
-            $select: "Banfn,Ernam,Badat,Frgkz,Frgdt",
+            $select: "Banfn,Ernam,Badat,Frgkz",
             $top: "2000",
           },
           success: (oData) => {
@@ -1871,14 +1871,14 @@ sap.ui.define(
         // ✅ Chuẩn hóa dữ liệu cho hiển thị đẹp (chuyển sang triệu hoặc tỷ)
         const aFormatted = aProcessed.map((item) => {
           let displayAmount = item.Amount;
-          let unit = "USD";
+          let unit = "VND";
 
           if (displayAmount >= 1_000_000_000) {
             displayAmount = displayAmount / 1_000_000_000;
-            unit = "Billion USD";
+            unit = "Billion VND";
           } else if (displayAmount >= 1_000_000) {
             displayAmount = displayAmount / 1_000_000;
-            unit = "Million USD";
+            unit = "Million VND";
           }
 
           return {
@@ -1937,7 +1937,7 @@ sap.ui.define(
         oVizFrame.setVizType("line");
 
         // ✅ Lấy đơn vị lớn nhất để đặt trục tung
-        const firstUnit = aFormatted.length > 0 ? aFormatted[0].Unit : "USD";
+        const firstUnit = aFormatted.length > 0 ? aFormatted[0].Unit : "VND";
 
         // ✅ Hiển thị đẹp như PR chart
         oVizFrame.setVizProperties({
@@ -2263,7 +2263,7 @@ sap.ui.define(
         // Optional: Giữ lại các vizProperties nếu muốn
         oVizFrame.setVizProperties({
           title: {
-            text: "PR / RFQ / PO value by time (USD)",
+            text: "PR / RFQ / PO value by time (VND)",
             visible: true,
             alignment: "center",
           },
@@ -2273,7 +2273,7 @@ sap.ui.define(
             colorPalette: ["#1976D2", "#F57C00", "#388E3C"],
           },
           valueAxis: {
-            title: { visible: true, text: "Value (USD)" },
+            title: { visible: true, text: "Value (VND)" },
           },
           categoryAxis: {
             title: { visible: true, text: "Timeline (Month/Year)" },

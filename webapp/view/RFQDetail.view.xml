@@ -70,8 +70,7 @@
                     <!-- STATUS USING SAME FORMATTER AS LIST -->
                     <HBox
                         alignItems="Center"
-                        class="headerItemBox"
-                    >
+                        class="headerItemBox" >
                         <ObjectStatus
                             text="{ path:'rfq>/Statu', formatter:'.formatter.statusText' }"
                             state="{ path:'rfq>/Statu', formatter:'.formatter.statusState' }"

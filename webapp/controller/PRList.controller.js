@@ -32,15 +32,15 @@ sap.ui.define(
       formatter: {
         statusText: function (sFrgkz, sReason) {
           // ⭐ Reject logic: C + có ReasonId => Rejected
-          if (sFrgkz === "C" && sReason) return "Rejected";
+          if (sFrgkz === "C" && sReason) return "Changeable";
 
           switch (sFrgkz) {
             case "R":
-              return "Approved";
+              return "Release";
             case "C":
-              return "Pending";
+              return "Changeable";
             case "X":
-              return "Rejected";
+              return "Changeable";
             default:
               return "";
           }
@@ -161,6 +161,8 @@ sap.ui.define(
         oRouter
           .getRoute("PRList")
           .attachPatternMatched(this._onRouteMatched, this);
+
+        
         this.onGoFilter();
       },
 
@@ -276,6 +278,8 @@ sap.ui.define(
         oVH.open();
       },
 
+      
+
       // =========================================================
       // FILTER + GROUP
       // =========================================================
@@ -377,6 +381,29 @@ sap.ui.define(
               g.Items.push(r);
             });
 
+
+            groups.forEach((g) => {
+              g.ItemCount = g.Items.length;
+
+              const oRejected = g.Items.find(
+                (it) => it.Frgkz === "C" && it.ReasonId
+              );
+              const oApproved = g.Items.find((it) => it.Frgkz === "R");
+
+              if (oRejected) {
+                g.Frgkz = "C";
+                g.ReasonId = oRejected.ReasonId;
+              } else if (oApproved) {
+                g.Frgkz = "R";
+                g.ReasonId = "";
+              } else {
+                g.Frgkz = "C";
+                g.ReasonId = "";
+              }
+            });
+
+            
+
             // ============================
             // 6. COMPUTE HEADER STATUS
             // ============================
@@ -416,7 +443,7 @@ sap.ui.define(
             );
 
             sap.m.MessageToast.show(`${groupsFiltered.length} PR found`);
-          },
+        },
 
           error: () => {
             sap.ui.core.BusyIndicator.hide();
@@ -610,20 +637,7 @@ sap.ui.define(
         }
 
         // chỉ approve được trạng thái C (dù có ReasonId hay không)
-        // chỉ approve được trạng thái C VÀ CHƯA TỪNG REJECT (ReasonId rỗng)
-        const aPendingItems = aItems.filter(
-          (it) => it.Frgkz === "C" && (!it.ReasonId || it.ReasonId === "")
-        );
-
-        const aRejectedItems = aItems.filter(
-          (it) => it.Frgkz === "C" && it.ReasonId
-        );
-
-        if (aRejectedItems.length > 0) {
-          MessageToast.show(
-            "Some items were previously rejected and cannot be approved again."
-          );
-        }
+        const aPendingItems = aItems.filter((it) => it.Frgkz === "C");
 
         const aLockedItems = aItems.filter((it) => it.Frgkz !== "C");
 
@@ -658,9 +672,7 @@ sap.ui.define(
                 if (index >= items.length) {
                   sap.ui.core.BusyIndicator.hide();
                   let sMsg = "Approved " + iSuccess + " item(s).";
-                  if (iFail > 0) {
-                    sMsg += " " + iFail + " failed.";
-                  }
+                
                   if (aLockedItems.length > 0) {
                     sMsg += " Skipped " + aLockedItems.length + " locked.";
                   }
