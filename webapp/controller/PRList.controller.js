@@ -162,6 +162,8 @@ sap.ui.define(
         oRouter
           .getRoute("PRList")
           .attachPatternMatched(this._onRouteMatched, this);
+
+        
         this.onGoFilter();
       },
 
@@ -276,6 +278,8 @@ sap.ui.define(
         oVH.setTable(oTable);
         oVH.open();
       },
+
+      
 
       // =========================================================
       // FILTER + GROUP
@@ -626,7 +630,9 @@ sap.ui.define(
         }
 
         // chỉ approve được trạng thái C (dù có ReasonId hay không)
-        const aPendingItems = aItems.filter((it) => it.Frgkz === "C");
+        const aPendingItems = aItems.filter(
+  (it) => it.Frgkz === "C" && (!it.ReasonId || it.ReasonId === "")
+         );
 
         const aLockedItems = aItems.filter((it) => it.Frgkz !== "C");
 
@@ -661,9 +667,7 @@ sap.ui.define(
                 if (index >= items.length) {
                   sap.ui.core.BusyIndicator.hide();
                   let sMsg = "Approved " + iSuccess + " item(s).";
-                  if (iFail > 0) {
-                    sMsg += " " + iFail + " failed.";
-                  }
+                
                   if (aLockedItems.length > 0) {
                     sMsg += " Skipped " + aLockedItems.length + " locked.";
                   }

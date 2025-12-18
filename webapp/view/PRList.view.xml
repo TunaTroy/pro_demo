@@ -97,12 +97,14 @@
           <!-- Status -->
           <fb:FilterGroupItem name="Frgkz" label="Status" groupName="PR" visibleInFilterBar="true">
             <fb:control>
-              <Select id="inpStatus">
+              <Select id="inpStatus"
+                      class="prStatusSelect"
+                       >
                 <items>
                   <core:Item key="" text="All"/>
-                  <core:Item key="R" text="● Release" />
-                  <core:Item key="C" text="● Changeable" />
-                  <core:Item key="X" text="● Changeable" />
+                  <core:Item key="R" text="Release" />
+                  <core:Item key="C" text=" Changeable" />
+                  <core:Item key="X" text=" Changeable" />
                 </items>
               </Select>
             </fb:control>
