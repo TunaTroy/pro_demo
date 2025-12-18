@@ -91,6 +91,11 @@ sap.ui.define(
               return "sap-icon://document";
           }
         },
+
+        displayEbelp: function (sEbelp) {
+          if (!sEbelp) return "";
+          return parseInt(sEbelp, 10).toString();
+        }
       },
 
       // ============================
@@ -438,15 +443,10 @@ sap.ui.define(
     },
 
     onRefresh: function () {
-    const oTable = this.byId("poTable");
-    const oBinding = oTable.getBinding("items");
-
-    if (oBinding) {
-        oBinding.refresh();
-    }
-
-    MessageToast.show("🔄 Data refreshed");
+  MessageToast.show("🔄 Reloading PO list...");
+  this._loadPOList();   // ⭐ GỌI LẠI LOGIC LOAD THẬT
 },
+
       onNavHome: function () {
     const oRouter = this.getOwnerComponent().getRouter();
 

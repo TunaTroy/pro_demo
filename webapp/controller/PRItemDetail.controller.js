@@ -56,6 +56,12 @@ sap.ui.define(
           if (isNaN(num)) return value;
           return num % 1 === 0 ? num.toString() : num.toFixed(3);
         },
+
+        itemNumberText: function (sBnfpo) {
+          if (!sBnfpo) return "";
+          return parseInt(sBnfpo, 10).toString();
+        }
+
       },
 
       onInit: function () {

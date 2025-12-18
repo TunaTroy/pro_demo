@@ -124,7 +124,13 @@ sap.ui.define(
             "12": "None"
           };
           return sReason + " – " + (map[sReason] || "");
-      }
+      },
+
+      itemNumberText: function (sBnfpo) {
+    if (!sBnfpo) return "";
+    return parseInt(sBnfpo, 10).toString();
+  }
+
 
       },
 
@@ -666,7 +672,7 @@ sap.ui.define(
               const processItems = function (items, index) {
                 if (index >= items.length) {
                   sap.ui.core.BusyIndicator.hide();
-                  let sMsg = "Approved " + iSuccess + " item(s).";
+                  let sMsg = "Approved " + "all item(s).";
                 
                   if (aLockedItems.length > 0) {
                     sMsg += " Skipped " + aLockedItems.length + " locked.";
@@ -821,9 +827,9 @@ sap.ui.define(
           if (index >= items.length) {
             sap.ui.core.BusyIndicator.hide();
 
-            let sMsg = "Rejected " + iSuccess + " item(s).";
+            let sMsg = "Rejected " + "all item(s).";
             if (iFail > 0) {
-              sMsg += " " + iFail + " failed.";
+              sMsg += " " ;
             }
             if (aLockedItems.length > 0) {
               sMsg += " Skipped " + aLockedItems.length + " locked.";

@@ -69,7 +69,7 @@
             <ObjectNumber
               id="objItemNumberPo"
               unit="Item"
-              number="{Ebelp}"
+              number="{path: 'Ebelp', formatter: '.formatter.displayEbelp'}"
               emphasized="true"
               class="headerItemNumber" />
           </HBox>
