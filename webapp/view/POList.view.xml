@@ -233,7 +233,11 @@
                   <items>
                     <ColumnListItem id="_IDGenColumnListItem">
                       <cells>
-                        <Text id="_IDGenText29" text="{detailPO>Ebelp}"/>
+                        <Text id="_IDGenText29"
+                              text="{
+                                path: 'detailPO>Ebelp',
+                                formatter: '.formatter.displayEbelp'
+                              }"/>
                         <Text id="_IDGenText30" text="{detailPO>Matnr}"/>
                         <Text id="_IDGenText28" text="{detailPO>Menge}"/>
                         <Text id="_IDGenText31" text="{detailPO>Netpr}"/>

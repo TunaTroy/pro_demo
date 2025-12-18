@@ -91,6 +91,11 @@ sap.ui.define(
               return "sap-icon://document";
           }
         },
+
+        displayEbelp: function (sEbelp) {
+          if (!sEbelp) return "";
+          return parseInt(sEbelp, 10).toString();
+        }
       },
 
       // ============================
@@ -437,16 +442,16 @@ sap.ui.define(
           .finally(() => oSheet.destroy());
       },
 
-      onRefresh: function () {
-        const oTable = this.byId("poTable");
-        const oBinding = oTable.getBinding("items");
+    onRefresh: function () {
+    const oTable = this.byId("poTable");
+    const oBinding = oTable.getBinding("items");
 
-        if (oBinding) {
-          oBinding.refresh();
-        }
+    if (oBinding) {
+        oBinding.refresh();
+    }
 
-        MessageToast.show("🔄 Data refreshed");
-      },
+    MessageToast.show("🔄 Data refreshed");
+},
       onNavHome: function () {
         const oRouter = this.getOwnerComponent().getRouter();
 

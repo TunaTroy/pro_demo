@@ -37,7 +37,11 @@
           <Text id="txtHeaderDesc" text="{Txz01}" class="headerIntroText" />
           <Title id="txtHeaderTitle" text="{= 'PR ' + ${Banfn}}" level="H2" class="headerTitleText" />
           <HBox id="hboxItemNumber" alignItems="Center" class="headerItemBox">
-            <ObjectNumber id="objItemNumber" unit="Item" number="{Bnfpo}" emphasized="true" class="headerItemNumber" />
+            <ObjectNumber id="objItemNumber" 
+                          unit="Item" 
+                          number="{path: 'Bnfpo', formatter: '.formatter.itemNumberText'}"
+                          emphasized="true" 
+                          class="headerItemNumber" />
           </HBox>
           <HBox
           class="sapUiTinyMarginTop"
@@ -69,8 +73,6 @@
             justifyContent="SpaceBetween">
             <!-- LEFT BOX -->
             <VBox id="vboxBasicLeft" width="48%" class="sapUiSmallMarginEnd">
-              <Label text="Item Category:" />
-              <Text text="{path: 'Pstyp', formatter: '.getItemCategoryText'}" />
               <Label text="Material:" />
               <Text text="{Matnr}" />
               <Label text="Short Text:" />

@@ -14,6 +14,11 @@ sap.ui.define(
           const oDate = new Date(sDate);
           return oDate.toLocaleDateString("en-GB");
         },
+
+        displayEbelp: function (sEbelp) {
+          if (!sEbelp) return "";
+          return parseInt(sEbelp, 10).toString();
+        }
       },
 
       onInit: function () {

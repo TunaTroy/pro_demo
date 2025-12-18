@@ -148,7 +148,7 @@
               <Panel id="panelDetailHeader" class="sapUiNoContentPadding sapUiResponsiveContentPadding sapUiSizeCompact sapUiMediumMarginBottom" width="100%">
                 <VBox class="sapUiSmallMargin sapUiSizeCompact">
                   <HBox justifyContent="SpaceBetween" alignItems="Center" class="sapUiTinyMarginBottom">
-                    <Text id="txtBanfnDetail" text="{Banfn}"/>
+                    <Text id="txtBanfnDetail" text="{Banfn}" class=" sapMTitle sapMTitleStyleH4 "/>
                     <Button id="btnCloseDetail" icon="sap-icon://decline" press="onCloseDetail" type="Transparent"/>
                   </HBox>
                   <Text id="txtBsartDetail" text="{Bsart}" class="prHeaderSubTitle"/>
@@ -203,7 +203,12 @@
                   <items>
                     <ColumnListItem>
                       <cells>
-                        <Text text="{Bnfpo}"/>
+                        <Text text="{
+                                path: 'Bnfpo',
+                                formatter: '.formatter.itemNumberText'
+                              }"
+                            />
+
                         <Text text="{Txz01}"/>
                         <Text text="{path:'Menge', formatter:'.formatter.quantityFormat'}" textAlign="End"/>
                         <Text text="{path:'Badat', formatter:'.formatter.dateFormat'}"/>
