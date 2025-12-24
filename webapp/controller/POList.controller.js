@@ -31,71 +31,31 @@ sap.ui.define(
           return oDate.toLocaleDateString("en-GB");
         },
 
-        formatReleaseStatusText: function (s) {
-          switch (s) {
-            // Approved
-            case "R": // Released, no changes
-            case "T": // PO Changeable
-              return "Approved";
-
-            // Pending
-            case "0": // Changeable
-            case "C": // Processing/Changeable
-              return "Pending";
-
-            // Rejected
-            case "A":
-              return "Rejected";
-
-            // Others
-            case "B": // Blocked, no changes
-            case "G": // Blocked, no changes
-            case "X": // Blocked
-            default:
-              return "Others";
-          }
+        formatReleaseStatusText: function (frgke, hasRejected) {
+          if (frgke === "R") return "Approved";
+          if (frgke === "C" && hasRejected) return "Rejected";
+          if (frgke === "C") return "Pending";
+          return "Unknown";
         },
 
-        formatReleaseStatusState: function (s) {
-          switch (s) {
-            case "R":
-            case "T":
-              return "Success"; // Green
-
-            case "0":
-            case "C":
-              return "Warning"; // Orange
-
-            case "A":
-              return "Error"; // Red
-
-            default:
-              return "None"; // Grey
-          }
+        formatReleaseStatusState: function (frgke, hasRejected) {
+          if (frgke === "R") return "Success";
+          if (frgke === "C" && hasRejected) return "Error";
+          if (frgke === "C") return "Warning";
+          return "None";
         },
 
-        formatReleaseStatusIcon: function (s) {
-          switch (s) {
-            case "R":
-            case "T":
-              return "sap-icon://accept";
-
-            case "0":
-            case "C":
-              return "sap-icon://pending";
-
-            case "A":
-              return "sap-icon://decline";
-
-            default:
-              return "sap-icon://document";
-          }
+        formatReleaseStatusIcon: function (frgke, hasRejected) {
+          if (frgke === "R") return "sap-icon://accept";
+          if (frgke === "C" && hasRejected) return "sap-icon://decline";
+          if (frgke === "C") return "sap-icon://pending";
+          return "sap-icon://question-mark";
         },
 
         displayEbelp: function (sEbelp) {
           if (!sEbelp) return "";
           return parseInt(sEbelp, 10).toString();
-        }
+        },
       },
 
       // ============================
@@ -176,51 +136,46 @@ sap.ui.define(
       // SELECT PO HEADER
       // ============================
       onSelectPO: function (oEvent) {
-    const oSelectedItem = oEvent.getParameter("listItem");
+        const oSelectedItem = oEvent.getParameter("listItem");
 
-    if (!oSelectedItem) {
-        this.onCloseDetail();
-        return;
-    }
+        if (!oSelectedItem) {
+          this.onCloseDetail();
+          return;
+        }
 
-    const oPOData = oSelectedItem.getBindingContext("po").getObject();
-    this.getView().getModel("detailPO").setData(oPOData);
+        const oPOData = oSelectedItem.getBindingContext("po").getObject();
+        this.getView().getModel("detailPO").setData(oPOData);
 
-    this.byId("poDetailPanel").bindElement("detailPO>/");
-    this.byId("poDetailPanel").setVisible(true);
+        this.byId("poDetailPanel").bindElement("detailPO>/");
+        this.byId("poDetailPanel").setVisible(true);
 
-    // LEFT 60%
-    this.byId("poTableLayout").setSize("75%");
-    // RIGHT 40%
-    this.byId("_IDGenSplitterLayoutData1").setSize("25%");
+        // LEFT 60%
+        this.byId("poTableLayout").setSize("75%");
+        // RIGHT 40%
+        this.byId("_IDGenSplitterLayoutData1").setSize("25%");
 
-    const oItemTable = this.byId("tblPOItems");
-    if (oItemTable) {
-        oItemTable.removeSelections(true);
-    }
+        const oItemTable = this.byId("tblPOItems");
+        if (oItemTable) {
+          oItemTable.removeSelections(true);
+        }
 
-    this._loadPONote(oPOData.Ebeln);
-},
-
+        this._loadPONote(oPOData.Ebeln);
+      },
 
       onCloseDetail: function () {
+        // Ẩn panel bên trong
+        this.byId("poDetailPanel").setVisible(false);
 
-    // Ẩn panel bên trong
-    this.byId("poDetailPanel").setVisible(false);
+        // LEFT FULL WIDTH
+        this.byId("poTableLayout").setSize("100%");
 
-    // LEFT FULL WIDTH
-    this.byId("poTableLayout").setSize("100%");
+        // RIGHT PANE WIDTH = 0% (rất quan trọng)
+        this.byId("_IDGenSplitterLayoutData1").setSize("0%");
 
-    // RIGHT PANE WIDTH = 0% (rất quan trọng)
-    this.byId("_IDGenSplitterLayoutData1").setSize("0%");
-
-    // Reset chọn
-    const oTable = this.byId("poTable");
-    if (oTable) oTable.removeSelections(true);
-},
-
-
-
+        // Reset chọn
+        const oTable = this.byId("poTable");
+        if (oTable) oTable.removeSelections(true);
+      },
 
       // ============================
       // ITEM CLICK (to detail screen)
@@ -345,41 +300,30 @@ sap.ui.define(
           );
         }
 
-        // ====== STATUS ======
+        // ====== STATUS (UI-LEVEL FILTER, MATCH BACKEND) ======
         const sStatus = this.byId("statusFilter").getSelectedKey();
+        let aFilteredData = this._originalPOData || [];
 
         if (sStatus && sStatus !== "ALL") {
-          let aStatusValues = [];
+          aFilteredData = aFilteredData.filter((h) => {
+            switch (sStatus) {
+              case "Approved":
+                return h.Frgke === "R";
 
-          switch (sStatus) {
-            case "Approved":
-              aStatusValues = ["R", "T"];
-              break;
+              case "Pending":
+                return h.Frgke === "C" && !h.HasRejected;
 
-            case "Pending":
-              aStatusValues = ["0", "C"];
-              break;
+              case "Rejected":
+                return h.Frgke === "C" && h.HasRejected;
 
-            case "Rejected":
-              aStatusValues = ["A"];
-              break;
-
-            case "Others":
-              aStatusValues = ["B", "G", "X"];
-              break;
-          }
-
-          if (aStatusValues.length > 0) {
-            aFilters.push(
-              new sap.ui.model.Filter(
-                aStatusValues.map(
-                  (v) => new sap.ui.model.Filter("Frgke", FilterOperator.EQ, v)
-                ),
-                false // OR
-              )
-            );
-          }
+              default:
+                return true;
+            }
+          });
         }
+
+        // APPLY FILTER RESULT
+        this.getView().setModel(new JSONModel(aFilteredData), "po");
 
         // ===== APPLY TO TABLE ======
         oTable.getBinding("items").filter(aFilters);
@@ -442,16 +386,16 @@ sap.ui.define(
           .finally(() => oSheet.destroy());
       },
 
-    onRefresh: function () {
-    const oTable = this.byId("poTable");
-    const oBinding = oTable.getBinding("items");
+      onRefresh: function () {
+        const oTable = this.byId("poTable");
+        const oBinding = oTable.getBinding("items");
 
-    if (oBinding) {
-        oBinding.refresh();
-    }
+        if (oBinding) {
+          oBinding.refresh();
+        }
 
-    MessageToast.show("🔄 Data refreshed");
-},
+        MessageToast.show("🔄 Data refreshed");
+      },
       onNavHome: function () {
         const oRouter = this.getOwnerComponent().getRouter();
 
@@ -554,14 +498,41 @@ sap.ui.define(
               mapItems[it.Ebeln].push(it);
             });
 
+            // ===============================
+            // 🔥 LOAD REJECT FLAG FROM ZPO_NOTE
+            // ===============================
+            const pRejectChecks = aHeader.map((h) => {
+              return new Promise((resolve) => {
+                const sEbeln = String(h.Ebeln).padStart(10, "0");
+
+                oModel.read(`/PONoteSet(Ebeln='${sEbeln}')`, {
+                  success: (d) => {
+                    h.HasRejected = !!(d.Note && d.Note.startsWith("REJECT:"));
+                    resolve();
+                  },
+                  error: () => {
+                    h.HasRejected = false;
+                    resolve();
+                  },
+                });
+              });
+            });
+
+            Promise.all(pRejectChecks).then(() => {
+              this.getView().getModel("po").refresh(true);
+            });
+
             // Enrich header: Items, ItemCount, TotalNetValue
             aHeader.forEach((h) => {
               const aIt = mapItems[h.Ebeln] || [];
               h.Items = aIt;
               h.ItemCount = aIt.length;
-              h.TotalNetValue = aIt
-                .reduce((s, it) => s + (parseFloat(it.Netwr) || 0), 0)
-                .toFixed(2);
+
+              // 🔥 DERIVE REJECT FLAG (MATCH BACKEND)
+              h.HasRejected = false;
+              if (h.Note && h.Note.startsWith("REJECT:")) {
+                h.HasRejected = true;
+              }
             });
 
             // Gán model cho view "po" (binding hiện tại của bạn)
@@ -829,7 +800,7 @@ sap.ui.define(
 
             const oPayload = {
               Ebeln: sEbeln,
-              Frgke: "A", // ❌ Rejected
+              Frgke: "C", // ❌ Rejected
             };
 
             oModel.update(sPath, oPayload, {
