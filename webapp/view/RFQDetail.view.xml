@@ -54,21 +54,18 @@
                 <!-- RIGHT: RFQ Information -->
                 <VBox
                     width="75%"
-                    class="headerInfoContainer"
-                >
+                    class="headerInfoContainer" >
                     <!-- DESCRIPTION (Txz01) -->
                     <Text
                         text="{rfq>/Txz01}"
-                        class="headerIntroText"
-                    />
+                        class="headerIntroText" />
                     <!-- RFQ NUMBER (Value only) -->
                     <Title
                         text="{rfq>/Ebeln}"
                         level="H2"
-                        class="headerTitleText"
-                    />
+                        class="headerTitleText" />
                     <!-- STATUS USING SAME FORMATTER AS LIST -->
-                    <HBox
+                    <!-- <HBox
                         alignItems="Center"
                         class="headerItemBox" >
                         <ObjectStatus
@@ -76,7 +73,7 @@
                             state="{ path:'rfq>/Statu', formatter:'.formatter.statusState' }"
                             inverted="false"
                         />
-                    </HBox>
+                    </HBox> -->
                 </VBox>
             </HBox>
             <!-- ================================= -->
@@ -172,7 +169,11 @@
                         <ColumnListItem>
                             <cells>
                                 <!-- Item number -->
-                                <Text text="{rfq>Ebelp}" />
+                                <Text text="{
+                                        path: 'rfq>Ebelp',
+                                        formatter: '.formatter.formatItemNumber'
+                                        }" />
+
                                 <!-- Material number -->
                                 <Text text="{rfq>Matnr}" />
                                 <!-- Material Group -->

@@ -177,7 +177,7 @@
         <HBox alignItems="Center" class="sapUiSmallMarginBottom">
           <CheckBox text="PR" selected="true" select=".onTogglePhase" />
           <CheckBox text="PO" selected="true" select=".onTogglePhase" />
-          <CheckBox text="RFQ" selected="true" select=".onTogglePhase" />
+          <!-- <CheckBox text="RFQ" selected="true" select=".onTogglePhase" /> -->
         </HBox>
         
       </VBox>

@@ -81,9 +81,9 @@
               <Select id="inpStatus" class="prStatusSelect">
                 <items>
                   <core:Item key="" text="All"/>
-                  <core:Item key="R" text="Release" />
-                  <core:Item key="C" text=" Changeable" />
-                  <core:Item key="X" text=" Changeable" />
+                  <core:Item key="R" text="Released" />
+                  <core:Item key="C" text=" Processing" />
+                  <core:Item key="X" text=" Processing (Reason Reject)" />
                 </items>
               </Select>
             </fb:control>

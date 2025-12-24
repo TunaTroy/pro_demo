@@ -10,6 +10,18 @@ sap.ui.define(
           const oDate = new Date(sDate);
           return oDate.toLocaleDateString("en-GB");
         },
+
+        netPriceX100: function (v) {
+          const n = Number(v);
+          if (isNaN(n)) return "";
+          return (n * 100).toLocaleString("en-US");
+        },
+
+         formatItemIntro: function (sEbelp) {
+            if (!sEbelp) return "";
+            return "Item " + parseInt(sEbelp, 10);
+          }
+
       },
 
       onInit: function () {

@@ -31,11 +31,29 @@ sap.ui.define(
           return oDate.toLocaleDateString("en-GB");
         },
 
-        formatReleaseStatusText: function (frgke, hasRejected) {
-          if (frgke === "R") return "Approved";
-          if (frgke === "C" && hasRejected) return "Rejected";
-          if (frgke === "C") return "Pending";
-          return "Unknown";
+        formatReleaseStatusText: function (s) {
+          switch (s) {
+            // Approved
+            case "R": // Released, no changes
+            case "T": // PO Changeable
+              return "Approved";
+
+            // Pending
+            case "0": // Changeable
+            case "C": // Processing/Changeable
+              return "Pending";
+
+            // Rejected
+            case "A":
+              return "Rejected";
+
+            // Others
+            case "B": // Blocked, no changes
+            case "G": // Blocked, no changes
+            case "X": // Blocked
+            default:
+              return "Others";
+          }
         },
 
         formatReleaseStatusState: function (frgke, hasRejected) {
@@ -313,17 +331,26 @@ sap.ui.define(
               case "Pending":
                 return h.Frgke === "C" && !h.HasRejected;
 
-              case "Rejected":
-                return h.Frgke === "C" && h.HasRejected;
+            case "Rejected":
+              aStatusValues = ["A"];
+              break;
 
-              default:
-                return true;
-            }
-          });
+            case "Others":
+              aStatusValues = ["B", "G", "X"];
+              break;
+          }
+
+          if (aStatusValues.length > 0) {
+            aFilters.push(
+              new sap.ui.model.Filter(
+                aStatusValues.map(
+                  (v) => new sap.ui.model.Filter("Frgke", FilterOperator.EQ, v)
+                ),
+                false // OR
+              )
+            );
+          }
         }
-
-        // APPLY FILTER RESULT
-        this.getView().setModel(new JSONModel(aFilteredData), "po");
 
         // ===== APPLY TO TABLE ======
         oTable.getBinding("items").filter(aFilters);
@@ -553,6 +580,8 @@ sap.ui.define(
             sap.m.MessageBox.error("Failed to load PO list (EKET-based).");
           });
       },
+
+      
 
       _createSimpleValueHelp: function (oEvent, sTitle, sKey, aValues) {
         // Convert values -> [{ key: "..."}]

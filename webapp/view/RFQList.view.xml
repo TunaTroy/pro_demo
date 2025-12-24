@@ -59,7 +59,7 @@
         <fb:filterGroupItems>
           <!-- RFQ No. -->
           <fb:FilterGroupItem name="Ebeln"
-    label="RFQ No."
+    label="RFQ No"
     groupName="__$INTERNAL$"
     visibleInFilterBar="true"
     partOfCurrentVariant="true">
@@ -173,10 +173,7 @@
               press=".onExport"
               type="Transparent"
               tooltip="Export to Excel" />
-            <Button icon="sap-icon://action-settings"
-              press=".onTableSettings"
-              type="Transparent"
-              tooltip="Settings" />
+           
           </OverflowToolbar>
         </headerToolbar>
         <columns>
@@ -196,7 +193,7 @@
             demandPopin="true"
             hAlign="Begin"
             visible="{view>/columnSettings/description}">
-            <Text text="RFQ Description" />
+            <Text text="Material Description" />
           </Column>
           <!-- Column 3: Company Code -->
           <Column
@@ -246,7 +243,7 @@
                   </Link>
                 </HBox>
                 <!-- Target Value -->
-                <HBox class="sapUiTinyMarginTop" visible="{view>/fieldSettings/targetValue}">
+                <!-- <HBox class="sapUiTinyMarginTop" visible="{view>/fieldSettings/targetValue}">
                   <Label text="Target Value: " class="sapUiTinyMarginEnd" />
                   <ObjectNumber
                     number="{
@@ -255,7 +252,7 @@
                     }"
                     unit="{rfq>Waers}"
                     emphasized="false" />
-                </HBox>
+                </HBox> -->
                 <!-- Quotation Deadline -->
                 <HBox class="sapUiTinyMarginTop" visible="{view>/fieldSettings/deadline}">
                   <Label text="Quotation Deadline: " class="sapUiTinyMarginEnd" />
@@ -265,18 +262,10 @@
                   }" />
                 </HBox>
                 <!-- Status -->
-                <!-- <HBox class="sapUiTinyMarginTop" visible="{view>/fieldSettings/status}">
-                  <Label text="Status: " class="sapUiTinyMarginEnd" />
-                  <ObjectStatus
-                    text="{
-                      path: 'rfq>Statu',
-                      formatter: '.formatter.statusText'
-                    }"
-                    state="{
-                      path: 'rfq>Statu',
-                      formatter: '.formatter.statusState'
-                    }" />
-                </HBox> -->
+                <HBox class="sapUiTinyMarginTop" visible="{view>/fieldSettings/Lifnr}">
+                  <Label text="Supplier: " class="sapUiTinyMarginEnd" />
+                  <Text text="{rfq>Lifnr}" />
+                </HBox>
                 <!-- Created On -->
                 <HBox class="sapUiTinyMarginTop" visible="{view>/fieldSettings/createdOn}">
                   <Label text="Created On: " class="sapUiTinyMarginEnd" />
