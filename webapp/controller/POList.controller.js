@@ -36,23 +36,18 @@ sap.ui.define(
             // Approved
             case "R": // Released, no changes
             case "T": // PO Changeable
-              return "Approved";
+              return "Release";
 
             // Pending
             case "0": // Changeable
             case "C": // Processing/Changeable
-              return "Pending";
+              return "Processing";
 
             // Rejected
             case "A":
-              return "Rejected";
+              return "Processing";
 
-            // Others
-            case "B": // Blocked, no changes
-            case "G": // Blocked, no changes
-            case "X": // Blocked
-            default:
-              return "Others";
+
           }
         },
 
@@ -365,9 +360,6 @@ sap.ui.define(
               aStatusValues = ["A"];
               break;
 
-            case "Others":
-              aStatusValues = ["B", "G", "X"];
-              break;
           }
 
           if (aStatusValues.length > 0) {
@@ -581,6 +573,8 @@ sap.ui.define(
             sap.m.MessageBox.error("Failed to load PO list (EKET-based).");
           });
       },
+
+      
 
       _createSimpleValueHelp: function (oEvent, sTitle, sKey, aValues) {
         // Convert values -> [{ key: "..."}]

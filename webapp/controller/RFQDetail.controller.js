@@ -68,6 +68,16 @@ sap.ui.define(
           };
           return map[bsart] || bsart;
         },
+
+        formatItemNumber: function (sEbelp) {
+          if (!sEbelp) return "";
+
+          // Chuyển sang number để bỏ leading zero
+          return parseInt(sEbelp, 10).toString();
+        }
+
+
+
       },
 
       onInit: function () {
@@ -124,37 +134,38 @@ sap.ui.define(
           });
       },
 
-      _loadItems: function (sEbeln) {      
-        this.getOwnerComponent()
-          .getModel()
-          .read("/ProcurementHeaderSet('" + sEbeln + "')/NP_RFQDetails", {
-            success: (oData) => {
-              const aItems = oData.results || [];
+      _loadItems: function (sEbeln) {
+  const oModel = this.getOwnerComponent().getModel();
 
-              // Gán Items vào model
-              this.getView().getModel("rfq").setProperty("/Items", aItems);
+  oModel.read("/ProcurementItemSet", {
+    filters: [
+      new sap.ui.model.Filter("Ebeln", sap.ui.model.FilterOperator.EQ, sEbeln)
+    ],
+    success: (oData) => {
+      const aItems = oData.results || [];
 
-              // Nếu có item → lấy Txz01 từ item đầu tiên
-              if (aItems.length > 0) {
-                this.getView()
-                  .getModel("rfq")
-                  .setProperty("/Txz01", aItems[0].Txz01);
-              } else {
-                this.getView().getModel("rfq").setProperty("/Txz01", "");
-              }
+      // Gán item cho RFQ
+      this.getView().getModel("rfq").setProperty("/Items", aItems);
 
-              console.log(
-                "TXZ01 header:",
-                this.getView().getModel("rfq").getProperty("/Txz01")
-              );
-            },
-            error: (oError) => {
-              console.error("❌ Error loading items:", oError);
-              this.getView().getModel("rfq").setProperty("/Items", []);
-              this.getView().getModel("rfq").setProperty("/Txz01", "");
-            },
-          });
-      },
+      // Lấy description từ item đầu tiên (nếu cần)
+      if (aItems.length > 0) {
+        this.getView()
+          .getModel("rfq")
+          .setProperty("/Txz01", aItems[0].Txz01 || "");
+      } else {
+        this.getView().getModel("rfq").setProperty("/Txz01", "");
+      }
+
+      console.log("✅ RFQ Items loaded:", aItems.length);
+    },
+    error: (oError) => {
+      console.error("❌ Error loading RFQ items:", oError);
+      this.getView().getModel("rfq").setProperty("/Items", []);
+      this.getView().getModel("rfq").setProperty("/Txz01", "");
+    }
+  });
+},
+
 
       // _loadNote: function (sEbeln) {
       //   this.getOwnerComponent()

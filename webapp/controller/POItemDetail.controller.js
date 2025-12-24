@@ -18,7 +18,20 @@ sap.ui.define(
         displayEbelp: function (sEbelp) {
           if (!sEbelp) return "";
           return parseInt(sEbelp, 10).toString();
+        },
+
+        currencyMultiply100: function (v, waers) {
+          const n = Number(v);
+          if (isNaN(n)) return "";
+
+          const realValue = n * 100;
+
+          return realValue.toLocaleString("en-US", {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+          }) + (waers ? ` ${waers}` : "");
         }
+
       },
 
       onInit: function () {

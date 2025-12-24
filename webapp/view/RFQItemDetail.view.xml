@@ -45,13 +45,17 @@
            
            <ObjectHeader
             title="{item>/Txz01}"
-            intro="{= 'Item ' + ${item>/Ebelp} }"
+            intro="{
+                    path: 'item>/Ebelp',
+                    formatter: '.formatter.formatItemIntro'
+                    }"
+
             style="margin-left: -133px">
 
             <attributes>
-                <ObjectAttribute
+                <!-- <ObjectAttribute
                     title="Requested Quantity"
-                    text="{item>/Menge}" />
+                    text="{item>/Menge}" /> -->
 
                 <ObjectAttribute
                     title="Unit"
@@ -86,7 +90,8 @@
                                 <Text text="{item>/Txz01}"/>
 
                                 <Text text="Net Price:" class="sapUiSmallMarginTop"/>
-                                <Text text="{item>/Netpr}"/>
+                                <Text text="{ path: 'item>/Netpr', formatter: '.formatter.netPriceX100' }"/>
+
 
                                 <Text text="Unit:" class="sapUiSmallMarginTop"/>
                                 <Text text="{item>/Meins}"/>
@@ -97,8 +102,8 @@
                                 <Text text="Plant:"/>
                                 <Text text="{item>/Werks}"/>
 
-                                <Text text="Requested Quantity:" class="sapUiSmallMarginTop"/>
-                                <Text text="{item>/Menge}"/>
+                                <!-- <Text text="Requested Quantity:" class="sapUiSmallMarginTop"/>
+                                <Text text="{item>/Menge}"/> -->
 
                                 <Text text="Storage Location:" class="sapUiSmallMarginTop"/>
                                 <Text text="{item>/Lgort}"/>

@@ -57,7 +57,7 @@ sap.ui.define(
         const currentYear = new Date().getFullYear();
         const aYears = [];
         for (let y = currentYear; y >= 2020; y--) {
-          aYears.push({ key: y.toString(), text: `Năm ${y}` });
+          aYears.push({ key: y.toString(), text: `${y}` });
         }
 
         // 🔹 Tạo model lưu năm được chọn riêng cho PR
@@ -445,7 +445,7 @@ sap.ui.define(
           });
       },
 
-      // ====== Load Status Donut Chart (PR) ======
+      
       // ====== Load Status Donut Chart (PR) - FIX CHUẨN NHẤT ======
       _loadStatusDonutChart: function (sPeriodKey) {
         BusyIndicator.show(0);
@@ -506,42 +506,41 @@ sap.ui.define(
             // =====================================================
             //   ⭐⭐ 2. TÍNH STATUS CHO TỪNG PR (HEADER) ⭐⭐
             // =====================================================
-            let iApproved = 0,
-              iPending = 0,
-              iRejected = 0;
+           let iReleased = 0,
+              iProcessing = 0,
+              iProcessingReason = 0;
 
-            Object.values(mGroup).forEach(function (g) {
-              const aItems = g.Items;
+          Object.values(mGroup).forEach(function (g) {
+            const aItems = g.Items;
 
-              const oRejected = aItems.find(
-                (it) => it.Frgkz === "C" && it.ReasonId
-              );
-              const oApproved = aItems.find((it) => it.Frgkz === "R");
+            const hasReleased = aItems.some(it => it.Frgkz === "R");
+            const hasRejectedWithReason = aItems.some(
+              it => it.Frgkz === "C" && it.ReasonId
+            );
 
-              if (oRejected) {
-                // ❗ Chỉ cần 1 item reject => PR reject
-                iRejected++;
-              } else if (oApproved) {
-                // ✔ Có item R ⇒ Approved
-                iApproved++;
-              } else {
-                // ✔ Còn lại ⇒ Pending (C và không có reason)
-                iPending++;
-              }
-            });
+            if (hasReleased) {
+              iReleased++;
+            } else if (hasRejectedWithReason) {
+              iProcessingReason++;
+            } else {
+              iProcessing++;
+            }
+          });
+
 
             // =====================================================
             //   ⭐⭐ 3. DATA CHO DONUT CHART ⭐⭐
             // =====================================================
             let aChartData = [
-              { Status: "Approved", Count: iApproved },
-              { Status: "Pending", Count: iPending },
-              { Status: "Rejected", Count: iRejected },
-            ].filter((item) => item.Count > 0);
+              { Status: "Released", Count: iReleased },
+              { Status: "Processing", Count: iProcessing },
+              { Status: "Processing (Reason ID)", Count: iProcessingReason }
+            ].filter(item => item.Count > 0);
 
             if (aChartData.length === 0) {
               aChartData = [{ Status: "No Data", Count: 1 }];
             }
+
 
             // Render Donut Chart
             this._displayStatusDonutChart(aChartData);
@@ -807,7 +806,7 @@ sap.ui.define(
                 const aChartData = [];
                 for (let year = minYear; year <= maxYear; year++) {
                   aChartData.push({
-                    Month: `Năm ${year}`,
+                    Month: `${year}`,
                     Count: yearCountMap[year] || 0,
                   });
                 }
@@ -835,7 +834,7 @@ sap.ui.define(
                 });
 
                 const aChartData = monthlyCount.map((count, i) => ({
-                  Month: `Tháng ${i + 1}`,
+                  Month: `Month ${i + 1}`,
                   Count: count,
                 }));
 
@@ -1089,11 +1088,43 @@ sap.ui.define(
                 }
               });
 
-              console.log("📈 Monthly RFQ counts:", monthly);
+              if (sPeriodKey === "thisAll") {
+                const yearCountMap = {};
+                const uniqueSet = new Set();
 
+                aRFQ.forEach((r) => {
+                  if (r.Aedat instanceof Date) {
+                    const y = r.Aedat.getFullYear();
+                    const key = `${r.Ebeln}-${y}`;
+
+                    if (!uniqueSet.has(key)) {
+                      uniqueSet.add(key);
+                      yearCountMap[y] = (yearCountMap[y] || 0) + 1;
+                    }
+                  }
+                });
+
+                const minYear = Math.min(...Object.keys(yearCountMap).map(Number));
+                const maxYear = new Date().getFullYear();
+
+                const aChartData = [];
+                for (let y = minYear; y <= maxYear; y++) {
+                  aChartData.push({
+                    Month: `${y}`,   // dùng chung field Month
+                    Count: yearCountMap[y] || 0
+                  });
+                }
+
+                this._displayMonthlyPOBarChart(aChartData);
+                return resolve();
+              }
+
+
+              console.log("📈 Monthly RFQ counts:", monthly);
+              
               // 🔥 STEP 6: Tạo dữ liệu chart
               const aChartData = monthly.map((count, i) => ({
-                Month: `Tháng ${i + 1}`,
+                Month: `Month ${i + 1}`,
                 Count: count,
               }));
 
@@ -1186,11 +1217,43 @@ sap.ui.define(
                 }
               });
 
+              if (sPeriodKey === "thisAll") {
+                  const yearCountMap = {};
+                  const uniqueSet = new Set();
+
+                  aPO.forEach((r) => {
+                    if (r.Aedat instanceof Date) {
+                      const y = r.Aedat.getFullYear();
+                      const key = `${r.Ebeln}-${y}`;
+
+                      if (!uniqueSet.has(key)) {
+                        uniqueSet.add(key);
+                        yearCountMap[y] = (yearCountMap[y] || 0) + 1;
+                      }
+                    }
+                  });
+
+                  const minYear = Math.min(...Object.keys(yearCountMap).map(Number));
+                  const maxYear = new Date().getFullYear();
+
+                  const aChartData = [];
+                  for (let y = minYear; y <= maxYear; y++) {
+                    aChartData.push({
+                      Month: `${y}`,   // dùng chung field Month
+                      Count: yearCountMap[y] || 0
+                    });
+                  }
+
+                  this._displayMonthlyPOBarChart(aChartData);
+                  return resolve();
+                }
+
+
               console.log("📈 Monthly PO counts:", monthly);
 
               // 🔥 STEP 6: Tạo dữ liệu chart
               const aChartData = monthly.map((count, i) => ({
-                Month: `Tháng ${i + 1}`,
+                Month: `Month ${i + 1}`,
                 Count: count,
               }));
 
@@ -1207,128 +1270,162 @@ sap.ui.define(
       },
 
       /* ===== Load Connected Scatter Chart (Ổn định, không thay đổi dữ liệu lịch sử) ===== */
-      _loadConnectedScatterChart: function () {
-        BusyIndicator.show(0);
+     _loadConnectedScatterChart: function () {
+            sap.ui.core.BusyIndicator.show(0);
 
-        // 🔥 STEP 1: Lấy EKET trước
-        const pEket = new Promise((resolve) => {
-          this.oOData.read("/EKET001Set", {
-            success: (d) => {
-              const set = new Set();
-              (d.results || []).forEach((r) => {
-                if (r.Ebeln) set.add(r.Ebeln);
-              });
-              resolve(set);
-            },
-            error: () => resolve(new Set()),
-          });
-        });
+            const oModel = this.oOData;
 
-        const oPRPromise = new Promise((resolve, reject) => {
-          this.oOData.read("/PRSet", {
-            urlParameters: {
-              $select: "Banfn,Bnfpo,Preis,Peinh,Menge,Badat",
-              $top: "5000",
-            },
-            success: resolve,
-            error: reject,
-          });
-        });
-
-        const oPOPromise = new Promise((resolve, reject) => {
-          this.oOData.read("/ProcurementItemSet", {
-            urlParameters: {
-              $select: "Ebeln,Ebelp,Netpr,Peinh,Menge,Aedat",
-              $top: "5000",
-            },
-            success: resolve,
-            error: reject,
-          });
-        });
-
-        const oHeaderPromise = new Promise((resolve, reject) => {
-          this.oOData.read("/ProcurementHeaderSet", {
-            urlParameters: { $select: "Ebeln,Bsart,Bstyp", $top: "5000" },
-            success: resolve,
-            error: reject,
-          });
-        });
-
-        Promise.all([pEket, oPRPromise, oPOPromise, oHeaderPromise])
-          .then(([eketSet, prData, poItemData, headerData]) => {
-            BusyIndicator.hide();
-
-            const aPRs = prData.results || [];
-            const aPOItems = poItemData.results || [];
-            const aHeaders = headerData.results || [];
-
-            // Map header
-            const mHeaderMap = {};
-            aHeaders.forEach((h) => {
-              mHeaderMap[h.Ebeln] = h;
-            });
-
-            const mAgg = { PR: {}, PO: {}, RFQ: {} };
-
-            // --- Gom PR (giữ nguyên) ---
-            aPRs.forEach((pr) => {
-              const date = this._parseDate(pr.Badat);
-              if (!date || isNaN(date)) return;
-              const monthKey = `${date.getFullYear()}-${(
-                "0" +
-                (date.getMonth() + 1)
-              ).slice(-2)}`;
-
-              const val =
-                ((parseFloat(pr.Preis) || 0) * (parseFloat(pr.Menge) || 0)) /
-                (parseFloat(pr.Peinh) || 1);
-              mAgg.PR[monthKey] = (mAgg.PR[monthKey] || 0) + val;
-            });
-
-            // 🔥 --- Gom PO / RFQ (CHỈ LẤY TRONG EKET) ---
-            aPOItems.forEach((po) => {
-              // 🔥 Bỏ qua nếu không có trong EKET
-              if (!eketSet.has(po.Ebeln)) return;
-
-              const date = this._parseDate(po.Aedat);
-              if (!date || isNaN(date)) return;
-              const monthKey = `${date.getFullYear()}-${(
-                "0" +
-                (date.getMonth() + 1)
-              ).slice(-2)}`;
-
-              const header = mHeaderMap[po.Ebeln];
-              if (!header) return;
-
-              // Phân loại: Bstyp = "F" → PO, Bstyp = "A" → RFQ
-              let phase;
-              if (header.Bstyp === "F") phase = "PO";
-              else if (header.Bstyp === "A") phase = "RFQ";
-              else return; // bỏ qua các loại khác
-
-              const val =
-                ((parseFloat(po.Netpr) || 0) * (parseFloat(po.Menge) || 0)) /
-                (parseFloat(po.Peinh) || 1);
-              mAgg[phase][monthKey] = (mAgg[phase][monthKey] || 0) + val;
-            });
-
-            // Merge data
-            const aChartData = [];
-            ["PR", "PO", "RFQ"].forEach((phase) => {
-              Object.entries(mAgg[phase]).forEach(([monthKey, val]) => {
-                aChartData.push({ Phase: phase, Amount: val, Date: monthKey });
+            /* =======================================================
+            * 1. LOAD DATA SONG SONG
+            * ======================================================= */
+            const pEKET = new Promise((resolve) => {
+              oModel.read("/EKET001Set", {
+                success: (d) => resolve(d.results || []),
+                error: () => resolve([]),
               });
             });
 
-            aChartData.sort((a, b) => a.Date.localeCompare(b.Date));
+            const pPR = new Promise((resolve) => {
+              oModel.read("/PRSet", {
+                urlParameters: {
+                  $select: "Banfn,Bnfpo,Preis,Peinh,Menge,Badat",
+                  $top: "5000",
+                },
+                success: (d) => resolve(d.results || []),
+                error: () => resolve([]),
+              });
+            });
 
-            this._displayConnectedScatterChart(aChartData);
-          })
-          .catch((e) => {
-            BusyIndicator.hide();
-            console.error("❌Connected Chart Error:", e);
-          });
-      },
+            const pItems = new Promise((resolve) => {
+              oModel.read("/ProcurementItemSet", {
+                urlParameters: {
+                  $select: "Ebeln,Ebelp,Netpr,Peinh,Menge,Aedat",
+                  $top: "5000",
+                },
+                success: (d) => resolve(d.results || []),
+                error: () => resolve([]),
+              });
+            });
+
+            const pHeaders = new Promise((resolve) => {
+              oModel.read("/ProcurementHeaderSet", {
+                urlParameters: {
+                  $select: "Ebeln,Bstyp",
+                  $top: "5000",
+                },
+                success: (d) => resolve(d.results || []),
+                error: () => resolve([]),
+              });
+            });
+
+            /* =======================================================
+            * 2. PROCESS DATA
+            * ======================================================= */
+            Promise.all([pEKET, pPR, pItems, pHeaders])
+              .then(([aEKET, aPRs, aItems, aHeaders]) => {
+                sap.ui.core.BusyIndicator.hide();
+
+                /* ---------- MAP HEADER ---------- */
+                const mHeader = {};
+                aHeaders.forEach((h) => {
+                  mHeader[h.Ebeln] = h.Bstyp;
+                });
+
+                /* ---------- MAP EKET QUANTITY ---------- */
+                const mEketQty = {}; // key = EBELN_EBELP
+                const setEketEbeln = new Set();
+
+                aEKET.forEach((e) => {
+                  if (!e.Ebeln || !e.Ebelp) return;
+                  const key = `${e.Ebeln}_${e.Ebelp}`;
+                  mEketQty[key] = (mEketQty[key] || 0) + Number(e.Menge || 0);
+                  setEketEbeln.add(e.Ebeln);
+                });
+
+                /* ---------- AGGREGATION ---------- */
+                const mAgg = {
+                  PR: {},
+                  PO: {},
+                  RFQ: {},
+                };
+
+                /* ===================================================
+                * PR
+                * =================================================== */
+                aPRs.forEach((pr) => {
+                  const d = this._parseDate(pr.Badat);
+                  if (!d) return;
+
+                  const month = `${d.getFullYear()}-${(
+                    "0" + (d.getMonth() + 1)
+                  ).slice(-2)}`;
+
+                  const val =
+                    (((Number(pr.Preis) || 0) * (Number(pr.Menge) || 0)) /
+                    100) ;
+
+                  mAgg.PR[month] = (mAgg.PR[month] || 0) + val;
+                });
+
+                /* ===================================================
+                * PO + RFQ
+                * =================================================== */
+                aItems.forEach((it) => {
+                  // 🔥 chỉ lấy những chứng từ có EKET
+                  if (!setEketEbeln.has(it.Ebeln)) return;
+
+                  const bstyp = mHeader[it.Ebeln];
+                  if (!bstyp) return;
+
+                  const d = this._parseDate(it.Aedat);
+                  if (!d) return;
+
+                  const month = `${d.getFullYear()}-${(
+                    "0" + (d.getMonth() + 1)
+                  ).slice(-2)}`;
+
+                  let qty = 0;
+
+                  if (bstyp === "F") {
+                    // PO → lấy từ EKPO
+                    qty = Number(it.Menge || 0);
+                  } else {
+                    return;
+                  }
+
+                  const val =
+                    (((Number(it.Netpr) || 0) * qty) /
+                    (Number(it.Peinh) || 1));
+
+                  const phase = bstyp === "F" ? "PO" : "RFQ";
+                  mAgg[phase][month] = (mAgg[phase][month] || 0) + val;
+                });
+
+                /* ===================================================
+                * 3. MERGE DATA FOR CHART
+                * =================================================== */
+                const aChartData = [];
+
+                ["PR", "PO", "RFQ"].forEach((phase) => {
+                  Object.entries(mAgg[phase]).forEach(([month, val]) => {
+                    aChartData.push({
+                      Phase: phase,
+                      Date: month,
+                      Amount: val,
+                    });
+                  });
+                });
+
+                aChartData.sort((a, b) => a.Date.localeCompare(b.Date));
+
+                this._displayConnectedScatterChart(aChartData);
+              })
+              .catch((e) => {
+                sap.ui.core.BusyIndicator.hide();
+                console.error("❌ Load Connected Chart Error:", e);
+              });
+          },
+
 
       /* ===== Hiển thị KPI Card ===== */
       _displayKpiCard: function (sPeriodKey, iCurrCount, iPrevCount) {
@@ -1401,11 +1498,12 @@ sap.ui.define(
 
         // Gán màu theo trạng thái
         const mColorMap = {
-          Approved: "#2e7d32", // xanh lá
-          Pending: "#f9a825", // vàng
-          Rejected: "#c62828", // đỏ
-          "No Data": "#9e9e9e", // xám
-        };
+        "Released": "#2e7d32",                  // xanh lá
+        "Processing": "#f9a825",                // vàng
+        "Processing (Reason ID)": "#c62828",    // đỏ
+        "No Data": "#9e9e9e"
+      };
+
 
         // Chuẩn hóa dữ liệu: thêm màu ứng với từng Status
         const aColoredData = aChartData.map((item) => ({
@@ -1585,57 +1683,57 @@ sap.ui.define(
         });
       },
 
-      _displayTopVendorBarChart: function (aChartData) {
-        const oVizFrame = this.getView().byId("idVendorBarChart");
-        if (!oVizFrame) {
-          console.error("❌ idVendorBarChart not found");
-          return;
-        }
+      // _displayTopVendorBarChart: function (aChartData) {
+      //   const oVizFrame = this.getView().byId("idVendorBarChart");
+      //   if (!oVizFrame) {
+      //     console.error("❌ idVendorBarChart not found");
+      //     return;
+      //   }
 
-        oVizFrame.destroyFeeds();
-        oVizFrame.destroyDataset();
+      //   oVizFrame.destroyFeeds();
+      //   oVizFrame.destroyDataset();
 
-        const oModel = new JSONModel({ items: aChartData });
-        this.getView().setModel(oModel, "topVendor");
+      //   const oModel = new JSONModel({ items: aChartData });
+      //   this.getView().setModel(oModel, "topVendor");
 
-        const oDataset = new FlattenedDataset({
-          dimensions: [{ name: "Vendor", value: "{topVendor>Vendor}" }],
-          measures: [{ name: "Count", value: "{topVendor>Count}" }],
-          data: { path: "topVendor>/items" },
-        });
+      //   const oDataset = new FlattenedDataset({
+      //     dimensions: [{ name: "Vendor", value: "{topVendor>Vendor}" }],
+      //     measures: [{ name: "Count", value: "{topVendor>Count}" }],
+      //     data: { path: "topVendor>/items" },
+      //   });
 
-        oVizFrame.setDataset(oDataset);
-        oVizFrame.setModel(oModel, "topVendor");
+      //   oVizFrame.setDataset(oDataset);
+      //   oVizFrame.setModel(oModel, "topVendor");
 
-        oVizFrame.addFeed(
-          new FeedItem({
-            uid: "valueAxis",
-            type: "Measure",
-            values: ["Count"],
-          })
-        );
-        oVizFrame.addFeed(
-          new FeedItem({
-            uid: "categoryAxis",
-            type: "Dimension",
-            values: ["Vendor"],
-          })
-        );
+      //   oVizFrame.addFeed(
+      //     new FeedItem({
+      //       uid: "valueAxis",
+      //       type: "Measure",
+      //       values: ["Count"],
+      //     })
+      //   );
+      //   oVizFrame.addFeed(
+      //     new FeedItem({
+      //       uid: "categoryAxis",
+      //       type: "Dimension",
+      //       values: ["Vendor"],
+      //     })
+      //   );
 
-        oVizFrame.setVizProperties({
-          title: {
-            text: "TopVendors",
-            visible: true,
-            alignment: "center",
-          },
-          plotArea: {
-            colorPalette: ["#F5A623"],
-            dataLabel: { visible: true },
-          },
-          legend: { visible: false },
-          tooltip: { visible: true },
-        });
-      },
+      //   oVizFrame.setVizProperties({
+      //     title: {
+      //       text: "TopVendors",
+      //       visible: true,
+      //       alignment: "center",
+      //     },
+      //     plotArea: {
+      //       colorPalette: ["#F5A623"],
+      //       dataLabel: { visible: true },
+      //     },
+      //     legend: { visible: false },
+      //     tooltip: { visible: true },
+      //   });
+      // },
 
       _displayMonthlyPRBarChart: function (aChartData) {
     const oVizFrame = this.getView().byId("idMonthlyBarChartPR");
@@ -1666,8 +1764,8 @@ sap.ui.define(
       let raw = item.Month;
 
       // If value is like "Tháng 11"
-      if (typeof raw === "string" && raw.includes("Tháng")) {
-        raw = raw.replace("Tháng", "").trim();
+      if (typeof raw === "string" && raw.includes("Month")) {
+        raw = raw.replace("Month ", "").trim();
       }
 
       const monthNum = parseInt(raw, 10);
@@ -1759,8 +1857,8 @@ sap.ui.define(
         let raw = item.Month;
 
         // Convert "Tháng 11" → 11
-        if (typeof raw === "string" && raw.includes("Tháng")) {
-            raw = raw.replace("Tháng", "").trim();
+        if (typeof raw === "string" && raw.includes("Month")) {
+            raw = raw.replace("Month ", "").trim();
         }
 
         const num = parseInt(raw, 10);
@@ -1873,13 +1971,13 @@ sap.ui.define(
           let displayAmount = item.Amount;
           let unit = "VND";
 
-          if (displayAmount >= 1_000_000_000) {
-            displayAmount = displayAmount / 1_000_000_000;
-            unit = "Billion VND";
-          } else if (displayAmount >= 1_000_000) {
-            displayAmount = displayAmount / 1_000_000;
-            unit = "Million VND";
-          }
+          // if (displayAmount >= 1_000_000_000) {
+          //   displayAmount = displayAmount / 1_000_000_000;
+          //   unit = "Billion VND";
+          // } else if (displayAmount >= 1_000_000) {
+          //   displayAmount = displayAmount / 1_000_000;
+          //   unit = "Million VND";
+          // }
 
           return {
             Date: item.Date,

@@ -32,15 +32,15 @@ sap.ui.define(
       formatter: {
         statusText: function (sFrgkz, sReason) {
           // ⭐ Reject logic: C + có ReasonId => Rejected
-          if (sFrgkz === "C" && sReason) return "Changeable";
+          if (sFrgkz === "C" && sReason) return "Processing";
 
           switch (sFrgkz) {
             case "R":
-              return "Release";
+              return "Released";
             case "C":
-              return "Changeable";
+              return "Processing";
             case "X":
-              return "Changeable";
+              return "Processing";
             default:
               return "";
           }
@@ -146,7 +146,7 @@ sap.ui.define(
         { key: "07", text: "Missing technical specification" },
         { key: "08", text: "Vendor issue or restriction" },
         { key: "09", text: "Request requires further review" },
-        { key: "12", text: "None" },
+        // { key: "12", text: "None" },
       ],
 
       // =========================================================

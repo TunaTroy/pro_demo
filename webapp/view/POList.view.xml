@@ -231,20 +231,29 @@
                     </Column>
                   </columns>
                   <items>
-                    <ColumnListItem id="_IDGenColumnListItem">
-                      <cells>
-                        <Text id="_IDGenText29"
-                              text="{
-                                path: 'detailPO>Ebelp',
-                                formatter: '.formatter.displayEbelp'
-                              }"/>
-                        <Text id="_IDGenText30" text="{detailPO>Matnr}"/>
-                        <Text id="_IDGenText28" text="{detailPO>Menge}"/>
-                        <Text id="_IDGenText31" text="{detailPO>Netpr}"/>
-                        <Text id="_IDGenText32" text="{detailPO>Meins}"/>
-                      </cells>
-                    </ColumnListItem>
-                  </items>
+                  <ColumnListItem>
+                    <cells>
+                      <!-- Item -->
+                      <Text text="{
+                        path: 'detailPO>Ebelp',
+                        formatter: '.formatter.displayEbelp'
+                      }"/>
+
+                      <!-- Material -->
+                      <Text text="{detailPO>Matnr}"/>
+
+                      <!-- Net Price -->
+                      <Text text="{detailPO>Netpr}"/>
+
+                      <!-- Quantity -->
+                      <Text text="{detailPO>Menge}"/>
+
+                      <!-- Order Unit -->
+                      <Text text="{detailPO>Meins}"/>
+                    </cells>
+                  </ColumnListItem>
+                </items>
+
                 </Table>
               </Panel>
               <Panel id="panelNotePO" headerText="📝 Manager Note" class="sapUiNoContentPadding sapUiResponsiveContentPadding sapUiSizeCompact sapUiMediumMarginTop prHeaderCard" width="100%">

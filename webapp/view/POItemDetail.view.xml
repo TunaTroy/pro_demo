@@ -68,7 +68,7 @@
             class="headerItemBox">
             <ObjectNumber
               id="objItemNumberPo"
-              unit="Item"
+              unit="Item "
               number="{path: 'Ebelp', formatter: '.formatter.displayEbelp'}"
               emphasized="true"
               class="headerItemNumber" />
@@ -119,9 +119,17 @@
               <Label text="Changed On:" />
               <Text text="{path:'Aedat', formatter:'.formatter.dateFormat'}" />
               <Label text="Net Value:" />
-              <Text text="{Netwr}" />
-               <Label text="Net Price:" />
-              <Text text="{Netpr} {Waers}" />
+              <Text text="{
+                parts: [{ path: 'Netwr' }, { path: 'Waers' }],
+                formatter: '.formatter.currencyMultiply100'
+              }" />
+
+              <Label text="Net Price:" />
+              <Text text="{
+                parts: [{ path: 'Netpr' }, { path: 'Waers' }],
+                formatter: '.formatter.currencyMultiply100'
+              }" />
+
               <Label text="Price Unit:" />
               <Text text="{Peinh}" />
               
