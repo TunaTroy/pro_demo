@@ -553,69 +553,118 @@ sap.ui.define(
         });
       },
 
-      _loadStatusDonutChartPO: function (sPeriodKey) {
-        BusyIndicator.show(0);
-        const oCurrRange = this._getDateRange(sPeriodKey);
+     _loadStatusDonutChartPO: function (sPeriodKey) {
+  BusyIndicator.show(0);
+  const oCurrRange = this._getDateRange(sPeriodKey);
 
-        this.oOData.read("/ProcurementHeaderSet", {
-          urlParameters: {
-            $select: "Ebeln,Aedat,Frgke,Bstyp",
-            $top: "5000",
-          },
-          success: function (oData) {
-            BusyIndicator.hide();
-
-            // 🔹 Lọc chỉ lấy PO (Bstyp === "F")
-            const aResults = oData.results.filter((r) => r.Bstyp === "F");
-            if (aResults.length === 0) {
-              this._displayStatusDonutChartPO([
-                { Status: "Approved", Count: 0 },
-                { Status: "Pending", Count: 0 },
-                { Status: "Rejected", Count: 0 },
-              ]);
-              return;
-            }
-
-            // 🔹 Parse ngày Aedat
-            aResults.forEach((r) => {
-              if (r.Aedat && typeof r.Aedat === "string") {
-                const match = /Date\((\d+)\)/.exec(r.Aedat);
-                if (match) r.Aedat = new Date(parseInt(match[1], 10));
-              }
-            });
-
-            // 🔹 Lọc trong khoảng thời gian
-            const aCurr = aResults.filter(
-              (r) => r.Aedat >= oCurrRange.start && r.Aedat <= oCurrRange.end
-            );
-
-            // 🔹 Đếm trạng thái (Frgkz)
-            let iApproved = 0,
-              iPending = 0,
-              iRejected = 0;
-            aCurr.forEach((r) => {
-              if (r.Frgke === "R") iApproved++;
-              else if (r.Frgke === "C") iPending++;
-              else if (r.Frgke === "A") iRejected++;
-            });
-
-            const aChartData = [
-              { Status: "Approved", Count: iApproved },
-              { Status: "Pending", Count: iPending },
-              { Status: "Rejected", Count: iRejected },
-            ].filter((i) => i.Count > 0);
-
-            this._displayStatusDonutChartPO(aChartData);
-          }.bind(this),
-
-          error: function (e) {
-            BusyIndicator.hide();
-            console.error("❌ Error loading PO Status Donut:", e);
-            MessageToast.show("Failed to load PO status data");
-            this._displayStatusDonutChartPO([{ Status: "No Data", Count: 1 }]);
-          }.bind(this),
-        });
+  /* ===============================
+   * STEP 1: EKET → PO hợp lệ
+   * =============================== */
+  const pEket = new Promise((resolve) => {
+    this.oOData.read("/EKET001Set", {
+      success: (d) => {
+        const set = new Set();
+        (d.results || []).forEach(r => r.Ebeln && set.add(r.Ebeln));
+        resolve(set);
       },
+      error: () => resolve(new Set())
+    });
+  });
+
+  /* ===============================
+   * STEP 2: Header PO
+   * =============================== */
+  const pHeader = new Promise((resolve, reject) => {
+    this.oOData.read("/ProcurementHeaderSet", {
+      urlParameters: {
+        $select: "Ebeln,Aedat,Frgke,Bstyp",
+        $top: "5000"
+      },
+      success: resolve,
+      error: reject
+    });
+  });
+
+  /* ===============================
+   * STEP 3: Reject Log
+   * =============================== */
+  const pRejectLog = new Promise((resolve) => {
+    this.oOData.read("/Reject_PO_LogSet", {
+      success: (d) => resolve(d.results || []),
+      error: () => resolve([])
+    });
+  });
+
+  Promise.all([pEket, pHeader, pRejectLog])
+    .then(([eketSet, headerData, rejectLogs]) => {
+      BusyIndicator.hide();
+
+      // map reject theo EBELN
+      const rejectMap = {};
+      rejectLogs.forEach(r => {
+        rejectMap[r.Ebeln] = true;
+      });
+
+      /* ===============================
+       * STEP 4: Filter PO hợp lệ
+       * =============================== */
+      let aPO = headerData.results.filter(h =>
+        h.Bstyp === "F" && eketSet.has(h.Ebeln)
+      );
+
+      if (!aPO.length) {
+        return this._displayStatusDonutChartPO([{ Status: "No Data", Count: 1 }]);
+      }
+
+      // Parse date
+      aPO.forEach(r => {
+        if (typeof r.Aedat === "string") {
+          const m = /Date\((\d+)\)/.exec(r.Aedat);
+          if (m) r.Aedat = new Date(parseInt(m[1], 10));
+        }
+      });
+
+      // Filter theo period
+      const aCurr = aPO.filter(r =>
+        r.Aedat >= oCurrRange.start && r.Aedat <= oCurrRange.end
+      );
+
+      /* ===============================
+       * STEP 5: Đếm status (CHUẨN POList)
+       * =============================== */
+       let iReleased = 0,
+              iProcessing = 0,
+              iProcessingReason = 0;
+
+      aCurr.forEach(r => {
+        const isRejected = !!rejectMap[r.Ebeln];
+
+        if (r.Frgke === "R") {
+          iReleased++;
+        } else if (r.Frgke === "C" && isRejected) {
+          iProcessingReason++;
+        } else if (r.Frgke === "C") {
+          iProcessing++;
+        }
+      });
+
+      const aChartData = [
+        { Status: "Released", Count: iReleased },
+        { Status: "Processing", Count: iProcessing },
+        { Status: "Processing (Reason ID)", Count: iProcessingReason }
+      ].filter(i => i.Count > 0);
+
+      this._displayStatusDonutChartPO(
+        aChartData.length ? aChartData : [{ Status: "No Data", Count: 1 }]
+      );
+    })
+    .catch(() => {
+      BusyIndicator.hide();
+      this._displayStatusDonutChartPO([{ Status: "No Data", Count: 1 }]);
+    });
+},
+
+
 
       /* ===== Load Bar Chart: Top Material ===== */
       _loadTopMaterialBarChart: function (sPeriodKey) {
@@ -1566,11 +1615,11 @@ sap.ui.define(
         oVizFrame.destroyDataset();
 
         const mColorMap = {
-          Approved: "#2e7d32", // xanh lá
-          Pending: "#f9a825", // vàng
-          Rejected: "#c62828", // đỏ
-          "No Data": "#9e9e9e",
-        };
+        "Released": "#2e7d32",                  // xanh lá
+        "Processing": "#f9a825",                // vàng
+        "Processing (Reason ID)": "#c62828",    // đỏ
+        "No Data": "#9e9e9e"
+      };
 
         const aColoredData = aChartData.map((item) => ({
           Status: item.Status,

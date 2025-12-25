@@ -47,20 +47,40 @@ sap.ui.define(
         },
 
         statusState: function (sFrgkz, sReason) {
-          // ⭐ C + ReasonId => Error (đỏ)
-          if (sFrgkz === "C" && sReason) return "Error";
-
-          switch (sFrgkz) {
-            case "R":
-              return "Success";
-            case "C":
-              return "None";
-            case "X":
-              return "Error";
-            default:
-              return "None";
+          if (sFrgkz === "R") {
+            return "Success";
           }
+
+          if (sFrgkz === "C") {
+            return sReason
+              ? "Error"    // 🔴 Processing (ReasonID)
+              : "Warning"; // 🟠 Processing
+          }
+
+          return "None";
         },
+
+
+        formatReleaseStatusIcon: function (sFrgkz, sReasonId) {
+          const hasReason =
+            sReasonId !== null &&
+            sReasonId !== undefined &&
+            String(sReasonId).trim().length > 0;
+
+          if (sFrgkz === "R") {
+            return "sap-icon://accept";
+          }
+
+          if (sFrgkz === "C") {
+            return hasReason
+              ? "sap-icon://decline"   // ❌
+              : "sap-icon://pending";  // ⏳
+          }
+
+          return "sap-icon://document";
+        },
+
+
 
         // Tooltip cho status (C)
         statusTooltip: function (sFrgkz, sReason) {
@@ -124,7 +144,7 @@ sap.ui.define(
             12: "None",
           };
           return sReason + " – " + (map[sReason] || "");
-      }
+        }
 
       },
 
@@ -163,7 +183,7 @@ sap.ui.define(
           .getRoute("PRList")
           .attachPatternMatched(this._onRouteMatched, this);
 
-        
+
         this.onGoFilter();
       },
 
@@ -279,7 +299,7 @@ sap.ui.define(
         oVH.open();
       },
 
-      
+
 
       // =========================================================
       // FILTER + GROUP
@@ -403,25 +423,30 @@ sap.ui.define(
               }
             });
 
-            
 
             // ============================
-            // 6. COMPUTE HEADER STATUS
+            // 6. COMPUTE HEADER STATUS (FIX)
             // ============================
             groups.forEach((g) => {
-              const hasRejected = g.Items.some(
+              const oRejectedItem = g.Items.find(
                 (it) => it.Frgkz === "C" && it.ReasonId
               );
-              const hasApproved = g.Items.some((it) => it.Frgkz === "R");
+              const oApprovedItem = g.Items.find(
+                (it) => it.Frgkz === "R"
+              );
 
-              if (hasRejected) {
-                g.Frgkz = "X"; // UI REJECTED
-              } else if (hasApproved) {
-                g.Frgkz = "R"; // APPROVED
+              if (oRejectedItem) {
+                g.Frgkz = "C";                     // ✅ GIỮ C
+                g.ReasonId = oRejectedItem.ReasonId; // ✅ GIỮ REASON
+              } else if (oApprovedItem) {
+                g.Frgkz = "R";
+                g.ReasonId = "";
               } else {
-                g.Frgkz = "C"; // PENDING
+                g.Frgkz = "C";
+                g.ReasonId = "";
               }
             });
+
 
             // ============================
             // 7. CLIENT-SIDE POST FILTER BY STATUS
@@ -429,12 +454,22 @@ sap.ui.define(
             let groupsFiltered = groups;
 
             if (sStatus === "R") {
+              // Released
               groupsFiltered = groups.filter((g) => g.Frgkz === "R");
+
             } else if (sStatus === "C") {
-              groupsFiltered = groups.filter((g) => g.Frgkz === "C");
+              // Processing (NO Reason)
+              groupsFiltered = groups.filter(
+                (g) => g.Frgkz === "C" && !g.ReasonId
+              );
+
             } else if (sStatus === "X") {
-              groupsFiltered = groups.filter((g) => g.Frgkz === "X");
+              // Processing (ReasonID)
+              groupsFiltered = groups.filter(
+                (g) => g.Frgkz === "C" && g.ReasonId
+              );
             }
+
 
             // ============================
             // 8. SET MODEL TO TABLE
@@ -444,7 +479,7 @@ sap.ui.define(
             );
 
             sap.m.MessageToast.show(`${groupsFiltered.length} PR found`);
-        },
+          },
 
           error: () => {
             sap.ui.core.BusyIndicator.hide();
@@ -630,182 +665,216 @@ sap.ui.define(
       onApprovePR: function () {
         const oDetail = this.byId("detailPanel");
         const oDetailModel = oDetail.getModel();
-        const aItems = oDetailModel ? oDetailModel.getProperty("/Items") : [];
-        const sBanfn = oDetailModel ? oDetailModel.getProperty("/Banfn") : "";
+
+        if (!oDetailModel) {
+          return MessageBox.error("❌ No PR selected.");
+        }
+
+        const aItems = oDetailModel.getProperty("/Items") || [];
+        const sBanfn = oDetailModel.getProperty("/Banfn");
 
         if (!aItems.length) {
-          return MessageToast.show("⚠️ No items to approve.");
+          return MessageBox.information("ℹ️ No PR items found.");
         }
 
-        // chỉ approve được trạng thái C (dù có ReasonId hay không)
-        const aPendingItems = aItems.filter((it) => it.Frgkz === "C");
+        /* ===============================
+         * ✅ VALIDATION NGHIỆP VỤ
+         * =============================== */
 
-        const aLockedItems = aItems.filter((it) => it.Frgkz !== "C");
+        const aPendingItems = aItems.filter(
+          it => it.Frgkz === "C" && !it.ReasonId
+        );
+
+        const aRejectedItems = aItems.filter(
+          it => it.Frgkz === "C" && it.ReasonId
+        );
+
+        if (aRejectedItems.length > 0) {
+          return MessageBox.error(
+            "❌ Rejected PR cannot be approved."
+          );
+        }
 
         if (aPendingItems.length === 0) {
-          return MessageToast.show("ℹ️ All items already processed.");
+          return MessageBox.information(
+            "❌ Only Pending PR can be approved."
+          );
         }
 
+        const sBanfnPadded = String(sBanfn).padStart(10, "0");
+
+        /* ===============================
+         * ✅ CONFIRM (GIỐNG PO)
+         * =============================== */
         MessageBox.confirm(
-          "Approve " +
-            aPendingItems.length +
-            " pending item(s) for PR " +
-            sBanfn +
-            "?",
+          `Approve PR ${sBanfnPadded} (${aPendingItems.length} item(s))?`,
           {
-            onClose: function (sAction) {
+            actions: [MessageBox.Action.OK, MessageBox.Action.CANCEL],
+            emphasizedAction: MessageBox.Action.OK,
+
+            onClose: (sAction) => {
               if (sAction !== MessageBox.Action.OK) return;
 
               sap.ui.core.BusyIndicator.show(0);
               const oModel = this.getView().getModel();
 
-              oModel.setHeaders({
-                "Content-Type": "application/json",
-                Accept: "application/json",
-                "X-Requested-With": "XMLHttpRequest",
-              });
-              oModel.refreshSecurityToken();
+              let iIndex = 0;
 
-              let iSuccess = 0;
-              let iFail = 0;
-
-              const processItems = function (items, index) {
-                if (index >= items.length) {
+              const processNext = () => {
+                if (iIndex >= aPendingItems.length) {
                   sap.ui.core.BusyIndicator.hide();
-                  let sMsg = "Approved " + "all item(s).";
-                
-                  if (aLockedItems.length > 0) {
-                    sMsg += " Skipped " + aLockedItems.length + " locked.";
-                  }
-                  MessageBox.success(sMsg);
-                  this._refreshAfterAction(
-                    String(sBanfn).toString().padStart(10, "0")
+
+                  /* ===============================
+                   * ✅ CLEAR REJECT STATE TRÊN UI
+                   * =============================== */
+                  aItems.forEach(it => {
+                    it.Frgkz = "R";
+                    it.ReasonId = "";
+                  });
+
+                  oDetailModel.setProperty("/Items", aItems);
+                  oDetailModel.refresh(true);
+
+                  MessageBox.success(
+                    `✅ PR ${sBanfnPadded} approved successfully.`
                   );
+
+                  // Reload list & detail
+                  this._loadPRList && this._loadPRList();
+                  this._refreshAfterAction &&
+                    this._refreshAfterAction(sBanfnPadded);
+
                   return;
                 }
 
-                const item = items[index];
-                const sBanfnPadded = String(item.Banfn).padStart(10, "0");
-                const sBnfpoPadded = String(item.Bnfpo).padStart(5, "0");
+                const it = aPendingItems[iIndex];
+                const sBnfpo = String(it.Bnfpo).padStart(5, "0");
+
                 const sPath =
-                  "/PRSet(Banfn='" +
-                  sBanfnPadded +
-                  "',Bnfpo='" +
-                  sBnfpoPadded +
-                  "')";
+                  `/PRSet(Banfn='${sBanfnPadded}',Bnfpo='${sBnfpo}')`;
+
                 const oPayload = {
                   Banfn: sBanfnPadded,
-                  Bnfpo: sBnfpoPadded,
-                  Frgkz: "R",
+                  Bnfpo: sBnfpo,
+                  Frgkz: "R"
                 };
 
                 oModel.update(sPath, oPayload, {
-                  success: function () {
-                    iSuccess++;
-                    processItems.call(this, items, index + 1);
-                  }.bind(this),
-                  error: function () {
-                    iFail++;
-                    processItems.call(this, items, index + 1);
-                  }.bind(this),
+                  success: () => {
+                    iIndex++;
+                    processNext();
+                  },
+                  error: () => {
+                    sap.ui.core.BusyIndicator.hide();
+                    MessageBox.error(
+                      "❌ Failed to approve PR. Please try again."
+                    );
+                  }
                 });
-              }.bind(this);
+              };
 
-              processItems(aPendingItems, 0);
-            }.bind(this),
+              processNext();
+            }
           }
         );
       },
+
+
 
       // =========================================================
       // REJECT ALL APPROVED ITEMS (R → C) + chọn Reason
       // =========================================================
       onRejectPR: function () {
         const oDetail = this.byId("detailPanel");
-        const oDetailModel = oDetail.getModel();
-        const aItems = oDetailModel ? oDetailModel.getProperty("/Items") : [];
-        const sBanfn = oDetailModel ? oDetailModel.getProperty("/Banfn") : "";
+        const oDetailModel = oDetail?.getModel();
+
+        if (!oDetailModel) {
+          return MessageBox.error("❌ No PR selected.");
+        }
+
+        const aItems = oDetailModel.getProperty("/Items") || [];
+        const sBanfn = oDetailModel.getProperty("/Banfn");
 
         if (!aItems.length) {
-          return sap.m.MessageToast.show("⚠️ No items to reject.");
+          return MessageBox.information("ℹ️ No PR items found.");
         }
 
-        const aPendingItems = aItems.filter((it) => it.Frgkz === "R");
-        const aLockedItems = aItems.filter((it) => it.Frgkz !== "R");
+        /* ===============================
+         * ✅ VALIDATION NGHIỆP VỤ
+         * =============================== */
+        const aApprovedItems = aItems.filter(it => it.Frgkz === "R");
+        const aLockedItems = aItems.filter(it => it.Frgkz !== "R");
 
-        if (aPendingItems.length === 0) {
-          return sap.m.MessageToast.show("ℹ️ All items already approved.");
+        if (aApprovedItems.length === 0) {
+          return MessageBox.information(
+            "❌ Only Approved PO can be rejected."
+          );
         }
 
-        // Popup chọn Reason
-        const oSelect = new sap.m.Select({
-          width: "100%",
-        });
+        const sBanfnPadded = String(sBanfn).padStart(10, "0");
 
-        this._aRejectReasons.forEach(function (r) {
+        /* ===============================
+         * 1️⃣ CHỌN REJECT REASON
+         * =============================== */
+        const oSelect = new sap.m.Select({ width: "100%" });
+
+        this._aRejectReasons.forEach(r => {
           oSelect.addItem(
             new sap.ui.core.Item({
               key: r.key,
-              text: r.key + " - " + r.text,
+              text: `${r.key} - ${r.text}`
             })
           );
         });
 
         const oDialog = new sap.m.Dialog({
-          title: "Reject items for PR " + sBanfn,
-          contentWidth: "400px",
+          title: `Reject PR ${sBanfnPadded}`,
           type: "Message",
+          contentWidth: "420px",
           content: [
             new sap.m.VBox({
               items: [
                 new sap.m.Text({
-                  text:
-                    "Select reject reason for " +
-                    aPendingItems.length +
-                    " item(s):",
+                  text: `Select reject reason for ${aApprovedItems.length} item(s):`
                 }),
-                oSelect,
-              ],
-            }),
+                oSelect
+              ]
+            })
           ],
           beginButton: new sap.m.Button({
             text: "Reject",
             type: "Reject",
-            press: function () {
+            press: () => {
               const sReason = oSelect.getSelectedKey();
               if (!sReason) {
-                sap.m.MessageToast.show("⚠️ Please select a reason.");
+                MessageBox.error("❌ Please select a reject reason.");
                 return;
               }
-
               oDialog.close();
-              this._executeRejectItems(
-                aPendingItems,
+              this._executeRejectPRItems(
+                aApprovedItems,
                 aLockedItems,
-                sBanfn,
+                sBanfnPadded,
                 sReason
               );
-            }.bind(this),
+            }
           }),
           endButton: new sap.m.Button({
             text: "Cancel",
-            press: function () {
-              oDialog.close();
-            },
+            press: () => oDialog.close()
           }),
-          afterClose: function () {
-            oDialog.destroy();
-          },
+          afterClose: () => oDialog.destroy()
         });
 
         this.getView().addDependent(oDialog);
         oDialog.open();
       },
 
-      _executeRejectItems: function (
-        aPendingItems,
+
+      _executeRejectPRItems: function (
+        aApprovedItems,
         aLockedItems,
-        sBanfn,
+        sBanfnPadded,
         sReason
       ) {
         const oModel = this.getView().getModel();
@@ -814,59 +883,73 @@ sap.ui.define(
         oModel.setHeaders({
           "Content-Type": "application/json",
           Accept: "application/json",
-          "X-Requested-With": "XMLHttpRequest",
+          "X-Requested-With": "XMLHttpRequest"
         });
         oModel.refreshSecurityToken();
 
-        let iSuccess = 0;
-        let iFail = 0;
+        let iIndex = 0;
 
-        const processItems = function (items, index) {
-          if (index >= items.length) {
+        const processNext = () => {
+          if (iIndex >= aApprovedItems.length) {
             sap.ui.core.BusyIndicator.hide();
 
-            let sMsg = "Rejected " + "all item(s).";
-            if (iFail > 0) {
-              sMsg += " " ;
-            }
+            /* ===============================
+             * ✅ UPDATE UI NGAY LẬP TỨC
+             * =============================== */
+            const oDetailModel = this.byId("detailPanel").getModel();
+            const aItems = oDetailModel.getProperty("/Items") || [];
+
+            aItems.forEach(it => {
+              if (it.Frgkz === "R") {
+                it.Frgkz = "C";
+                it.ReasonId = sReason;
+              }
+            });
+
+            oDetailModel.setProperty("/Items", aItems);
+            oDetailModel.refresh(true);
+
+            let sMsg = `PR ${sBanfnPadded} rejected successfully.`;
             if (aLockedItems.length > 0) {
-              sMsg += " Skipped " + aLockedItems.length + " locked.";
+              sMsg += ` Skipped ${aLockedItems.length} locked item(s).`;
             }
 
-            sap.m.MessageBox.success(sMsg);
-            this._refreshAfterAction(String(sBanfn).padStart(10, "0"));
+            MessageBox.success(sMsg);
+
+            this._refreshAfterAction &&
+              this._refreshAfterAction(sBanfnPadded);
+
             return;
           }
 
-          const item = items[index];
-
-          const sBanfnPadded = String(item.Banfn).padStart(10, "0");
-          const sBnfpoPadded = String(item.Bnfpo).padStart(5, "0");
+          const it = aApprovedItems[iIndex];
+          const sBnfpo = String(it.Bnfpo).padStart(5, "0");
 
           const sPath =
-            "/PRSet(Banfn='" + sBanfnPadded + "',Bnfpo='" + sBnfpoPadded + "')";
+            `/PRSet(Banfn='${sBanfnPadded}',Bnfpo='${sBnfpo}')`;
 
           const oPayload = {
             Banfn: sBanfnPadded,
-            Bnfpo: sBnfpoPadded,
-            Frgkz: "C", // ❗ REJECT FLAG
-            REASON_ID: sReason, // gửi Reason_ID cho backend
+            Bnfpo: sBnfpo,
+            Frgkz: "C",
+            REASON_ID: sReason
           };
 
           oModel.update(sPath, oPayload, {
-            success: function () {
-              iSuccess++;
-              processItems.call(this, items, index + 1);
-            }.bind(this),
-            error: function () {
-              iFail++;
-              processItems.call(this, items, index + 1);
-            }.bind(this),
+            success: () => {
+              iIndex++;
+              processNext();
+            },
+            error: () => {
+              sap.ui.core.BusyIndicator.hide();
+              MessageBox.error("❌ Failed to reject PR items.");
+            }
           });
-        }.bind(this);
+        };
 
-        processItems(aPendingItems, 0);
+        processNext();
       },
+
 
       // =========================================================
       // REFRESH AFTER ACTION

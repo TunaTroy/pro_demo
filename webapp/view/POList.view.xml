@@ -170,24 +170,20 @@
                                     />
                                     <core:Item
                                         id="_IDGenItem2"
-                                        key="Approved"
-                                        text="Approved"
+                                        key="Released"
+                                        text="Released"
                                     />
                                     <core:Item
                                         id="_IDGenItem3"
-                                        key="Pending"
-                                        text="Pending"
+                                        key="Processing"
+                                        text="Processing"
                                     />
                                     <core:Item
                                         id="_IDGenItem"
-                                        key="Rejected"
-                                        text="Rejected"
+                                        key="Processing (ReasonID)"
+                                        text="Processing (ReasonID)"
                                     />
-                                    <core:Item
-                                        id="_IDGenItem4"
-                                        key="Others"
-                                        text="Others"
-                                    />
+                                  
                                 </items>
                             </Select>
                         </fb:control>
@@ -261,16 +257,7 @@
                                         level="H2"
                                     />
                                     <ToolbarSpacer id="_IDGenToolbarSpacer1" />
-                                    <Button
-                                        id="_IDGenButton"
-                                        icon="sap-icon://sort"
-                                        press=".onSort"
-                                    />
-                                    <Button
-                                        id="_IDGenButton1"
-                                        icon="sap-icon://filter"
-                                        press=".onFilter"
-                                    />
+                                   
                                 </OverflowToolbar>
                             </headerToolbar>
                             <columns>
@@ -376,25 +363,25 @@
                                         />
                                         <ObjectStatus
                                             text="{
-    parts: [
-      { path: 'po>Frgke' },
-      { path: 'po>IsRejected' }
-    ],
-    formatter: '.formatter.formatReleaseStatusText'
-  }"
-                                            state="{
-    parts: [
-      { path: 'po>Frgke' },
-      { path: 'po>IsRejected' }
-    ],
-    formatter: '.formatter.formatReleaseStatusState'
-  }"
-                                            icon="{
-    parts: [
-      { path: 'po>Frgke' },
-      { path: 'po>IsRejected' }
-    ],
-    formatter: '.formatter.formatReleaseStatusIcon'
+                                            parts: [
+                                            { path: 'po>Frgke' },
+                                            { path: 'po>IsRejected' }
+                                            ],
+                                            formatter: '.formatter.formatReleaseStatusText'
+                                        }"
+                                                                                    state="{
+                                            parts: [
+                                            { path: 'po>Frgke' },
+                                            { path: 'po>IsRejected' }
+                                            ],
+                                            formatter: '.formatter.formatReleaseStatusState'
+                                        }"
+                                                                                    icon="{
+                                            parts: [
+                                            { path: 'po>Frgke' },
+                                            { path: 'po>IsRejected' }
+                                            ],
+                                            formatter: '.formatter.formatReleaseStatusIcon'
   }"
                                         />
                                     </cells>
@@ -465,92 +452,85 @@
                 + ' • Created On: ' + ${path:'detailPO>Aedat', formatter:'.formatter.dateFormat'} }"
                                         />
                                     </HBox>
-<!-- ===== STATUS ===== -->
-<HBox
-  class="sapUiTinyMarginTop"
-  alignItems="Center">
+        <!-- ===== STATUS ===== -->
+        <HBox
+        class="sapUiTinyMarginTop"
+        alignItems="Center">
 
-  <Text
-    text="Status:"
-    class="sapUiTinyMarginEnd"/>
+        <Text
+            text="Status:"
+            class="sapUiTinyMarginEnd"/>
 
-  <ObjectStatus
-    text="{
-      parts: [
-        { path: 'detailPO>Frgke' },
-        { path: 'detailPO>IsRejected' }
-      ],
-      formatter: '.formatter.formatReleaseStatusText'
-    }"
-    state="{
-      parts: [
-        { path: 'detailPO>Frgke' },
-        { path: 'detailPO>IsRejected' }
-      ],
-      formatter: '.formatter.formatReleaseStatusState'
-    }"
-    icon="{
-      parts: [
-        { path: 'detailPO>Frgke' },
-        { path: 'detailPO>IsRejected' }
-      ],
-      formatter: '.formatter.formatReleaseStatusIcon'
-    }"/>
-</HBox>
+        <ObjectStatus
+            text="{
+            parts: [
+                { path: 'detailPO>Frgke' },
+                { path: 'detailPO>IsRejected' }
+            ],
+            formatter: '.formatter.formatReleaseStatusText'
+            }"
+            state="{
+            parts: [
+                { path: 'detailPO>Frgke' },
+                { path: 'detailPO>IsRejected' }
+            ],
+            formatter: '.formatter.formatReleaseStatusState'
+            }" />
+        </HBox>
 
-<!-- ===== REJECT REASON (SECOND LINE) ===== -->
-<HBox
-  visible="{= ${detailPO>IsRejected} === true }"
-  class="sapUiTinyMarginBegin sapUiTinyMarginTop"
-  wrap="Wrap">
+        <!-- ===== REJECT REASON (SECOND LINE) ===== -->
+        <HBox
+        visible="{= ${detailPO>IsRejected} === true }"
+        class="sapUiTinyMarginBegin sapUiTinyMarginTop"
+        wrap="Wrap">
 
-  <Text
-    text="Reason:"
-    class="sapUiTinyMarginEnd sapUiSmallMarginBegin"
-  />
-
-  <Text
-    text="{= ${detailPO>RejectReasonId} + ' – ' + ${detailPO>RejectReasonText} }"
-    wrapping="true"
-    class="sapUiContentLabel"
-  />
-</HBox>
-
-                                </VBox>
-                            </Panel>
-
-                          <!-- ================= ACTION BUTTONS (GIỐNG PR) ================= -->
-<HBox
-    class="sapUiTinyMarginBottom"
-    justifyContent="End">
-
-    <Button
-        icon="sap-icon://accept"
-        text="Approve"
-        type="Emphasized"
-        press="onApprovePO"
-        visible="{=
-            ${userRole>/feRole} === 'INVENTORY_MANAGER' ||
-            ${userRole>/feRole} === 'PROCUREMENT_STAFF' ||
-            ${userRole>/feRole} === 'ADMIN'
-        }"/>
-
-    <Button
-        icon="sap-icon://decline"
-        text="Reject"
-        type="Reject"
-        class="sapUiTinyMarginBegin"
-        press="onRejectPO"
-        
-        visible="{=
-            ${userRole>/feRole} === 'INVENTORY_MANAGER' ||
-            ${userRole>/feRole} === 'PROCUREMENT_STAFF' ||
-            ${userRole>/feRole} === 'ADMIN'
-        }"
-      
-
+        <Text
+            text="Reason:"
+            class="sapUiTinyMarginEnd sapUiSmallMarginBegin"
         />
-</HBox>
+
+        <Text
+            text="{= ${detailPO>RejectReasonId} + ' – ' + ${detailPO>RejectReasonText} }"
+            wrapping="true"
+            class="sapUiContentLabel"
+        />
+        </HBox>
+
+                                        </VBox>
+                                    </Panel>
+
+                                <!-- ================= ACTION BUTTONS (GIỐNG PR) ================= -->
+        <HBox
+            class="sapUiTinyMarginBottom"
+            justifyContent="End">
+
+            <Button
+                icon="sap-icon://accept"
+                text="Approve"
+                type="Emphasized"
+                press="onApprovePO"
+                visible="{=
+                    ${userRole>/feRole} === 'INVENTORY_MANAGER' ||
+                    ${userRole>/feRole} === 'PROCUREMENT_STAFF' ||
+                    ${userRole>/feRole} === 'ADMIN'
+                }"/>
+
+            <Button
+                icon="sap-icon://decline"
+                text="Reject"
+                type="Reject"
+                class="sapUiTinyMarginBegin"
+                press="onRejectPO"
+                
+                visible="{=
+                    ${userRole>/feRole} === 'INVENTORY_MANAGER' ||
+                    ${userRole>/feRole} === 'PROCUREMENT_STAFF' ||
+                    ${userRole>/feRole} === 'ADMIN'
+                }"
+            
+
+                />
+        </HBox>
 
                             
                             <!-- ===== ITEMS TABLE ===== -->
@@ -606,10 +586,10 @@
                                                 <!-- Item -->
                                                 <Text
                                                     text="{
-                        path: 'detailPO>Ebelp',
-                        formatter: '.formatter.displayEbelp'
-                      }"
-                                                />
+                                                        path: 'detailPO>Ebelp',
+                                                        formatter: '.formatter.displayEbelp'
+                                                    }"
+                                                                                />
 
                                                 <!-- Material -->
                                                 <Text text="{detailPO>Matnr}" />
@@ -694,23 +674,5 @@
                 </l:PaneContainer>
             </l:ResponsiveSplitter>
         </content>
-        <!-- ==================== FOOTER ==================== -->
-        <footer>
-            <OverflowToolbar id="_IDGenOverflowToolbar1">
-                <ToolbarSpacer id="_IDGenToolbarSpacer" />
-                <Button
-                    id="_IDGenButton2"
-                    text="View Notes"
-                    icon="sap-icon://notes"
-                    press=".onOpenNotes"
-                />
-                <Button
-                    id="_IDGenButton4"
-                    text="Follow-up"
-                    icon="sap-icon://activity-items"
-                    press=".onFollowUp"
-                />
-            </OverflowToolbar>
-        </footer>
     </Page>
 </mvc:View>

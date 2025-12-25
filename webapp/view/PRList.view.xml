@@ -83,7 +83,7 @@
                   <core:Item key="" text="All"/>
                   <core:Item key="R" text="Released" />
                   <core:Item key="C" text=" Processing" />
-                  <core:Item key="X" text=" Processing (Reason Reject)" />
+                  <core:Item key="X" text=" Processing (ReasonID)" />
                 </items>
               </Select>
             </fb:control>
@@ -98,7 +98,24 @@
             <l:layoutData>
               <l:SplitterLayoutData id="layoutMaster" size="100%" resizable="true"/>
             </l:layoutData>
-            <Table id="tblPRList" items="{ path: '/groups' }" mode="SingleSelectLeft" selectionChange="onSelectPR" class="sapUiSizeCompact stickyTable tableHeaderBorder" growing="true" growingThreshold="100" width="100%">
+            <Table id="tblPRList" 
+                   items="{ path: '/groups' }" 
+                   mode="SingleSelectLeft" 
+                   selectionChange="onSelectPR" 
+                   class="sapUiSizeCompact stickyTable tableHeaderBorder" 
+                   growing="true" 
+                   growingThreshold="100" 
+                   width="100%">
+               <headerToolbar>
+                     <OverflowToolbar >
+                        <Title   
+                            text="PR List ({= ${/groups}.length } items)"
+                            level="H2"
+                            />
+                      <ToolbarSpacer  />
+                                   
+                       </OverflowToolbar>
+               </headerToolbar> 
               <noData>
                 <IllustratedMessage illustrationType="sapIllus-NoData" title="No matching Purchase Requisitions found" description="Try adjusting your filters or clear all filters to see more results."/>
               </noData>
@@ -135,7 +152,24 @@
                     <Text text="{path:'Badat', formatter:'.formatter.dateFormat'}"/>
                     <Text text="{ItemCount}"/>
                     <!-- ⭐ FIX 1: Status sử dụng Frgkz + ReasonId -->
-                    <ObjectStatus text="{parts:[{path:'Frgkz'}, {path:'ReasonId'}], formatter:'.formatter.statusText'}" state="{parts:[{path:'Frgkz'}, {path:'ReasonId'}], formatter:'.formatter.statusState'}"/>
+                   <ObjectStatus
+                    text="{
+                      parts: [{ path: 'Frgkz' }, { path: 'ReasonId' }],
+                      formatter: '.formatter.statusText'
+                    }"
+                    state="{
+                      parts: [{ path: 'Frgkz' }, { path: 'ReasonId' }],
+                      formatter: '.formatter.statusState'
+                    }"
+                    icon="{
+                      parts: [{ path: 'Frgkz' }, { path: 'ReasonId' }],
+                      formatter: '.formatter.formatReleaseStatusIcon'
+                    }"
+                  />
+
+
+
+
                   </cells>
                 </ColumnListItem>
               </items>

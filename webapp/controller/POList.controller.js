@@ -34,11 +34,11 @@ sap.ui.define(
         // ===== STATUS TEXT =====
         formatReleaseStatusText: function (sFrgke, bIsRejected) {
           if (sFrgke === "R") {
-            return "Approved";
+            return "Released";
           }
 
           if (sFrgke === "C") {
-            return bIsRejected ? "Rejected" : "Pending";
+            return bIsRejected ? "Processing" : "Processing";
           }
 
           return "Unknown";
@@ -274,13 +274,13 @@ sap.ui.define(
         if (sStatus && sStatus !== "ALL") {
           aResult = aResult.filter((r) => {
             switch (sStatus) {
-              case "Approved":
+              case "Released":
                 return r.Frgke === "R";
 
-              case "Pending":
+              case "Processing":
                 return r.Frgke === "C" && !r.IsRejected;
 
-              case "Rejected":
+              case "Processing (ReasonID)":
                 return r.Frgke === "C" && r.IsRejected;
 
               default:
@@ -490,15 +490,21 @@ sap.ui.define(
              * STEP 6 — enrich Header (⭐ QUAN TRỌNG)
              * ===================================================== */
             aHeader.forEach((h) => {
-              h.Items = itemMap[h.Ebeln] || [];
-              h.ItemCount = h.Items.length;
+            h.Items = itemMap[h.Ebeln] || [];
+            h.ItemCount = h.Items.length;
 
-              const log = rejectMap[h.Ebeln];
+            const log = rejectMap[h.Ebeln];
 
-              h.IsRejected = !!log;
-              h.RejectReasonId = log ? log.ReasonId : "";
-              h.RejectReasonText = log ? reasonTextMap[log.ReasonId] || "" : "";
-            });
+            // ✅ CHỈ REJECT KHI Frgke = C VÀ CÓ LOG
+            const isRejected = h.Frgke === "C" && !!log;
+
+            h.IsRejected = isRejected;
+            h.RejectReasonId = isRejected ? log.ReasonId : "";
+            h.RejectReasonText = isRejected
+              ? reasonTextMap[log.ReasonId] || ""
+              : "";
+          });
+
 
             /* =====================================================
              * STEP 7 — set Model
@@ -749,12 +755,25 @@ sap.ui.define(
             };
 
             oModel.update(sPath, oPayload, {
-              success: () => {
-                sap.ui.core.BusyIndicator.hide();
-                MessageToast.show(`✅ PO ${sEbeln} approved successfully`);
-                this._loadPOList(); // reload list
-                this._refreshPOAfterAction(sEbeln);
-              },
+             success: () => {
+  sap.ui.core.BusyIndicator.hide();
+
+  // ✅ FIX 1: clear reject state NGAY LẬP TỨC
+  const oDetailModel = this.getView().getModel("detailPO");
+  if (oDetailModel) {
+    oDetailModel.setProperty("/Frgke", "R");
+    oDetailModel.setProperty("/IsRejected", false);
+    oDetailModel.setProperty("/RejectReasonId", "");
+    oDetailModel.setProperty("/RejectReasonText", "");
+  }
+
+  MessageToast.show(`✅ PO ${sEbeln} approved successfully`);
+
+  // ✅ FIX 2: reload list & detail
+  this._loadPOList();
+  this._refreshPOAfterAction(sEbeln);
+},
+
               error: (err) => {
                 sap.ui.core.BusyIndicator.hide();
                 console.error(err);
@@ -995,34 +1014,36 @@ sap.ui.define(
             error: reject,
           });
         });
+          Promise.all([pHeader, pItems, pRejectLog, pRejectReason])
+            .then(([header, items, rejectLogs, reasons]) => {
+              sap.ui.core.BusyIndicator.hide();
+              if (!header) return;
 
-        Promise.all([pHeader, pItems, pRejectLog, pRejectReason])
-          .then(([header, items, rejectLogs, reasons]) => {
-            sap.ui.core.BusyIndicator.hide();
-            if (!header) return;
+              header.Items = items || [];
+              header.ItemCount = header.Items.length;
 
-            header.Items = items || [];
-            header.ItemCount = header.Items.length;
+              // ✅ map reason master
+              const reasonMap = {};
+              (reasons || []).forEach((r) => {
+                reasonMap[r.ReasonId] = r.Description;
+              });
 
-            /* ===== MAP REJECT INFO ===== */
-            const log = rejectLogs && rejectLogs[0];
-            const reasonMap = {};
-            reasons.forEach((r) => {
-              reasonMap[r.ReasonId] = r.Description;
+              const log = rejectLogs && rejectLogs[0];
+
+              // ✅ CHỈ reject khi Frgke = C
+              const isRejected = header.Frgke === "C" && !!log;
+
+              header.IsRejected = isRejected;
+              header.RejectReasonId = isRejected ? log.ReasonId : "";
+              header.RejectReasonText = isRejected
+                ? reasonMap[log.ReasonId] || ""
+                : "";
+
+              this.getView().getModel("detailPO").setData(header);
+
+              MessageToast.show(`🔄 PO ${sEbeln} refreshed successfully`);
             });
 
-            header.IsRejected = !!log;
-            header.RejectReasonId = log ? log.ReasonId : "";
-            header.RejectReasonText = log ? reasonMap[log.ReasonId] || "" : "";
-
-            this.getView().getModel("detailPO").setData(header);
-
-            MessageToast.show(`🔄 PO ${sEbeln} refreshed successfully`);
-          })
-          .catch(() => {
-            sap.ui.core.BusyIndicator.hide();
-            MessageToast.show("⚠️ Cannot refresh PO details.");
-          });
       },
 
       onGoToDashboard: function () {
