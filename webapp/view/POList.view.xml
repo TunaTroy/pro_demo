@@ -518,6 +518,41 @@
 
                                 </VBox>
                             </Panel>
+
+                          <!-- ================= ACTION BUTTONS (GIỐNG PR) ================= -->
+<HBox
+    class="sapUiTinyMarginBottom"
+    justifyContent="End">
+
+    <Button
+        icon="sap-icon://accept"
+        text="Approve"
+        type="Emphasized"
+        press="onApprovePO"
+        visible="{=
+            ${userRole>/feRole} === 'INVENTORY_MANAGER' ||
+            ${userRole>/feRole} === 'PROCUREMENT_STAFF' ||
+            ${userRole>/feRole} === 'ADMIN'
+        }"/>
+
+    <Button
+        icon="sap-icon://decline"
+        text="Reject"
+        type="Reject"
+        class="sapUiTinyMarginBegin"
+        press="onRejectPO"
+        
+        visible="{=
+            ${userRole>/feRole} === 'INVENTORY_MANAGER' ||
+            ${userRole>/feRole} === 'PROCUREMENT_STAFF' ||
+            ${userRole>/feRole} === 'ADMIN'
+        }"
+      
+
+        />
+</HBox>
+
+                            
                             <!-- ===== ITEMS TABLE ===== -->
                             <Panel
                                 id="panelPOItems"

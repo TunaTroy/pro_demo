@@ -76,6 +76,8 @@ sap.ui.define(
         },
       },
 
+      _aRejectPOReasons: [],
+
       // ============================
       // INIT
       // ============================
@@ -107,6 +109,8 @@ sap.ui.define(
 
         // Load PO List lần đầu
         this._loadPOList();
+
+        this._loadRejectPOReasons();
       },
 
       _onRouteMatched: function () {
@@ -709,8 +713,27 @@ sap.ui.define(
 
       onApprovePO: function () {
         const oPO = this.getView().getModel("detailPO").getData();
+
+        if (!oPO || !oPO.Ebeln) {
+          return MessageToast.show("⚠️ No PO selected.");
+        }
+
+        /* ===============================
+         * ✅ VALIDATION NGHIỆP VỤ
+         * =============================== */
+        if (oPO.Frgke !== "C") {
+          return MessageBox.error("❌ Only Pending PO can be approved.");
+        }
+
+        if (oPO.IsRejected) {
+          return MessageBox.error("❌ Rejected PO cannot be approved.");
+        }
+
         const sEbeln = String(oPO.Ebeln).padStart(10, "0");
 
+        /* ===============================
+         * ✅ CONFIRM
+         * =============================== */
         MessageBox.confirm(`Approve PO ${sEbeln}?`, {
           onClose: (sAction) => {
             if (sAction !== MessageBox.Action.OK) return;
@@ -718,24 +741,24 @@ sap.ui.define(
             sap.ui.core.BusyIndicator.show(0);
 
             const oModel = this.oODataModel;
-
             const sPath = `/ProcurementHeaderSet(Ebeln='${sEbeln}')`;
 
             const oPayload = {
               Ebeln: sEbeln,
-              Frgke: "R", // 🎯 Approved for header
+              Frgke: "R", // ✅ Approved
             };
 
             oModel.update(sPath, oPayload, {
               success: () => {
                 sap.ui.core.BusyIndicator.hide();
-                MessageBox.success(`PO ${sEbeln} approved!`);
+                MessageToast.show(`✅ PO ${sEbeln} approved successfully`);
+                this._loadPOList(); // reload list
                 this._refreshPOAfterAction(sEbeln);
               },
               error: (err) => {
                 sap.ui.core.BusyIndicator.hide();
                 console.error(err);
-                MessageBox.error("Failed to approve PO.");
+                MessageBox.error("❌ Failed to approve PO.");
               },
             });
           },
@@ -743,37 +766,149 @@ sap.ui.define(
       },
 
       onRejectPO: function () {
-        const oPO = this.getView().getModel("detailPO").getData();
+        const oDetailModel = this.getView().getModel("detailPO");
+        const oPO = oDetailModel?.getData();
+
+        if (!oPO || !oPO.Ebeln) {
+          return sap.m.MessageToast.show("⚠️ No PO selected.");
+        }
+
+        /* ===============================
+         * 1️⃣ CHỈ REJECT KHI PO = APPROVED
+         * =============================== */
+        if (oPO.Frgke !== "R") {
+          return sap.m.MessageBox.error("❌ Only Approved PO can be rejected.");
+        }
+
+        if (oPO.IsRejected === true) {
+          return sap.m.MessageBox.error(
+            "❌ This PO has already been rejected."
+          );
+        }
+
         const sEbeln = String(oPO.Ebeln).padStart(10, "0");
 
-        MessageBox.confirm(`Reject PO ${sEbeln}?`, {
-          onClose: (sAction) => {
-            if (sAction !== MessageBox.Action.OK) return;
+        /* ===============================
+         * 2️⃣ POPUP CHỌN REJECT REASON
+         * =============================== */
+        const oSelect = new sap.m.Select({ width: "100%" });
 
-            sap.ui.core.BusyIndicator.show(0);
+        this._aRejectPOReasons
+          .filter((r) => r.Type === "F") // ⭐ CHẮC CHẮN PO
+          .forEach((r) => {
+            oSelect.addItem(
+              new sap.ui.core.Item({
+                key: r.ReasonId,
+                text: `${r.ReasonId} - ${r.Description}`,
+              })
+            );
+          });
 
-            const oModel = this.oODataModel;
+        const oDialog = new sap.m.Dialog({
+          title: "Reject PO " + sEbeln,
+          type: "Message",
+          contentWidth: "420px",
+          content: [
+            new sap.m.VBox({
+              items: [
+                new sap.m.Text({
+                  text: "Please select reject reason:",
+                }),
+                oSelect,
+              ],
+            }),
+          ],
 
-            const sPath = `/ProcurementHeaderSet(Ebeln='${sEbeln}')`;
+          beginButton: new sap.m.Button({
+            text: "Reject",
+            type: "Reject",
+            press: () => {
+              const sReason = oSelect.getSelectedKey();
+              if (!sReason) {
+                return sap.m.MessageToast.show(
+                  "⚠️ Please select reject reason."
+                );
+              }
 
-            const oPayload = {
-              Ebeln: sEbeln,
-              Frgke: "A", // ❌ Rejected
-            };
+              oDialog.close();
+              this._executeRejectPO(sEbeln, sReason);
+            },
+          }),
 
-            oModel.update(sPath, oPayload, {
-              success: () => {
-                sap.ui.core.BusyIndicator.hide();
-                MessageBox.success(`PO ${sEbeln} rejected!`);
-                this._refreshPOAfterAction(sEbeln);
-              },
-              error: (err) => {
-                sap.ui.core.BusyIndicator.hide();
-                console.error(err);
-                MessageBox.error("Failed to reject PO.");
-              },
-            });
+          endButton: new sap.m.Button({
+            text: "Cancel",
+            press: () => oDialog.close(),
+          }),
+
+          afterClose: () => oDialog.destroy(),
+        });
+
+        this.getView().addDependent(oDialog);
+        oDialog.open();
+      },
+
+      _executeRejectPO: function (sEbeln, sReasonId) {
+        const oModel = this.oODataModel;
+        sap.ui.core.BusyIndicator.show(0);
+
+        const sPath = `/ProcurementHeaderSet(Ebeln='${sEbeln}')`;
+
+        const oPayload = {
+          Ebeln: sEbeln,
+          Frgke: "C", // R → C (reject)
+        };
+
+        // ⭐ GỬI REASON_ID QUA HEADER - Đặt trực tiếp trong update()
+        oModel.update(sPath, oPayload, {
+          headers: {
+            "X-Reason-Id": sReasonId, // ✅ Custom header
           },
+          success: () => {
+            sap.ui.core.BusyIndicator.hide();
+            sap.m.MessageToast.show(`❌ PO ${sEbeln} rejected successfully`);
+
+            // Reload list và refresh detail
+            this._loadPOList();
+            this._refreshPOAfterAction(sEbeln);
+          },
+          error: (err) => {
+            sap.ui.core.BusyIndicator.hide();
+            console.error("❌ Reject PO failed:", err);
+
+            // Parse error message
+            let sErrorMsg = "Failed to reject PO.";
+            if (err.responseText) {
+              try {
+                const oError = JSON.parse(err.responseText);
+                sErrorMsg = oError.error?.message?.value || sErrorMsg;
+              } catch (e) {
+                // Ignore parse error
+              }
+            }
+
+            sap.m.MessageBox.error(`❌ ${sErrorMsg}`);
+          },
+        });
+      },
+
+      _loadRejectPOReasons: function () {
+        const oModel = this.oODataModel;
+
+        return new Promise((resolve, reject) => {
+          oModel.read("/Reject_POSet", {
+            filters: [
+              new sap.ui.model.Filter(
+                "Type",
+                sap.ui.model.FilterOperator.EQ,
+                "F" // ⭐ PO ONLY
+              ),
+            ],
+            success: (d) => {
+              this._aRejectPOReasons = d.results || [];
+              resolve(this._aRejectPOReasons);
+            },
+            error: reject,
+          });
         });
       },
 
@@ -810,7 +945,6 @@ sap.ui.define(
       _refreshPOAfterAction: function (sEbeln) {
         const oModel = this.getView().getModel();
 
-        // Refresh PO header + items
         sap.ui.core.BusyIndicator.show(0);
 
         const pHeader = new Promise((resolve, reject) => {
@@ -841,13 +975,45 @@ sap.ui.define(
           });
         });
 
-        Promise.all([pHeader, pItems])
-          .then(([header, items]) => {
+        const pRejectLog = new Promise((resolve, reject) => {
+          oModel.read("/Reject_PO_LogSet", {
+            filters: [
+              new sap.ui.model.Filter(
+                "Ebeln",
+                sap.ui.model.FilterOperator.EQ,
+                sEbeln
+              ),
+            ],
+            success: (d) => resolve(d.results),
+            error: reject,
+          });
+        });
+
+        const pRejectReason = new Promise((resolve, reject) => {
+          oModel.read("/Reject_POSet", {
+            success: (d) => resolve(d.results),
+            error: reject,
+          });
+        });
+
+        Promise.all([pHeader, pItems, pRejectLog, pRejectReason])
+          .then(([header, items, rejectLogs, reasons]) => {
             sap.ui.core.BusyIndicator.hide();
             if (!header) return;
 
             header.Items = items || [];
             header.ItemCount = header.Items.length;
+
+            /* ===== MAP REJECT INFO ===== */
+            const log = rejectLogs && rejectLogs[0];
+            const reasonMap = {};
+            reasons.forEach((r) => {
+              reasonMap[r.ReasonId] = r.Description;
+            });
+
+            header.IsRejected = !!log;
+            header.RejectReasonId = log ? log.ReasonId : "";
+            header.RejectReasonText = log ? reasonMap[log.ReasonId] || "" : "";
 
             this.getView().getModel("detailPO").setData(header);
 
