@@ -31,43 +31,43 @@ sap.ui.define(
           return oDate.toLocaleDateString("en-GB");
         },
 
-        formatReleaseStatusText: function (s) {
-          switch (s) {
-            // Approved
-            case "R": // Released, no changes
-            case "T": // PO Changeable
-              return "Approved";
-
-            // Pending
-            case "0": // Changeable
-            case "C": // Processing/Changeable
-              return "Pending";
-
-            // Rejected
-            case "A":
-              return "Rejected";
-
-            // Others
-            case "B": // Blocked, no changes
-            case "G": // Blocked, no changes
-            case "X": // Blocked
-            default:
-              return "Others";
+        // ===== STATUS TEXT =====
+        formatReleaseStatusText: function (sFrgke, bIsRejected) {
+          if (sFrgke === "R") {
+            return "Approved";
           }
+
+          if (sFrgke === "C") {
+            return bIsRejected ? "Rejected" : "Pending";
+          }
+
+          return "Unknown";
         },
 
-        formatReleaseStatusState: function (frgke, hasRejected) {
-          if (frgke === "R") return "Success";
-          if (frgke === "C" && hasRejected) return "Error";
-          if (frgke === "C") return "Warning";
+        // ===== STATUS STATE =====
+        formatReleaseStatusState: function (sFrgke, bIsRejected) {
+          if (sFrgke === "R") {
+            return "Success"; // green
+          }
+
+          if (sFrgke === "C") {
+            return bIsRejected ? "Error" : "Warning"; // red / orange
+          }
+
           return "None";
         },
 
-        formatReleaseStatusIcon: function (frgke, hasRejected) {
-          if (frgke === "R") return "sap-icon://accept";
-          if (frgke === "C" && hasRejected) return "sap-icon://decline";
-          if (frgke === "C") return "sap-icon://pending";
-          return "sap-icon://question-mark";
+        // ===== STATUS ICON =====
+        formatReleaseStatusIcon: function (sFrgke, bIsRejected) {
+          if (sFrgke === "R") {
+            return "sap-icon://accept";
+          }
+
+          if (sFrgke === "C") {
+            return bIsRejected ? "sap-icon://decline" : "sap-icon://pending";
+          }
+
+          return "sap-icon://document";
         },
 
         displayEbelp: function (sEbelp) {
@@ -215,9 +215,10 @@ sap.ui.define(
       },
 
       onFilterSearch: function () {
-        const oTable = this.byId("poTable");
-        const aFilters = [];
+        const aSourceData = this._originalPOData || [];
+        let aResult = [...aSourceData];
 
+        // ====== PO NUMBER ======
         const oPO = this.byId("poFilter");
         const sPOtyped = oPO.getValue().trim();
         if (sPOtyped) {
@@ -225,135 +226,69 @@ sap.ui.define(
           oPO.setValue("");
         }
 
-        const aPOTokens = oPO.getTokens();
-        if (aPOTokens.length > 0) {
-          const aPOFilters = aPOTokens.map(
-            (t) =>
-              new sap.ui.model.Filter(
-                "Ebeln",
-                sap.ui.model.FilterOperator.EQ,
-                t.getKey()
-              )
-          );
-          aFilters.push(new sap.ui.model.Filter(aPOFilters, false)); // OR
+        const aPOTokens = oPO.getTokens().map((t) => t.getKey());
+        if (aPOTokens.length) {
+          aResult = aResult.filter((r) => aPOTokens.includes(r.Ebeln));
         }
 
-        const oBsart = this.byId("orderTypeFilter");
-        const sBsartTyped = oBsart.getValue().trim();
-        if (sBsartTyped) {
-          oBsart.addToken(
-            new sap.m.Token({ key: sBsartTyped, text: sBsartTyped })
-          );
-          oBsart.setValue("");
+        // ====== ORDER TYPE ======
+        const aBsart = this.byId("orderTypeFilter")
+          .getTokens()
+          .map((t) => t.getKey());
+        if (aBsart.length) {
+          aResult = aResult.filter((r) => aBsart.includes(r.Bsart));
         }
 
-        const aBsartTokens = oBsart.getTokens();
-        if (aBsartTokens.length > 0) {
-          const aBsartFilters = aBsartTokens.map(
-            (t) =>
-              new sap.ui.model.Filter(
-                "Bsart",
-                sap.ui.model.FilterOperator.EQ,
-                t.getKey()
-              )
-          );
-          aFilters.push(new sap.ui.model.Filter(aBsartFilters, false));
+        // ====== PURCH GROUP ======
+        const aEkgrp = this.byId("ekgrpFilterd")
+          .getTokens()
+          .map((t) => t.getKey());
+        if (aEkgrp.length) {
+          aResult = aResult.filter((r) => aEkgrp.includes(r.Ekgrp));
         }
 
-        const oEkgrp = this.byId("ekgrpFilterd");
-        const sEkgrpTyped = oEkgrp.getValue().trim();
-        if (sEkgrpTyped) {
-          oEkgrp.addToken(
-            new sap.m.Token({ key: sEkgrpTyped, text: sEkgrpTyped })
-          );
-          oEkgrp.setValue("");
-        }
-
-        const aEkgrpTokens = oEkgrp.getTokens();
-        if (aEkgrpTokens.length > 0) {
-          const aEkgrpFilters = aEkgrpTokens.map(
-            (t) =>
-              new sap.ui.model.Filter(
-                "Ekgrp",
-                sap.ui.model.FilterOperator.EQ,
-                t.getKey()
-              )
-          );
-          aFilters.push(new sap.ui.model.Filter(aEkgrpFilters, false));
-        }
-
-        const oErnam = this.byId("humanFilter");
-        const sErnamTyped = oErnam.getValue().trim();
-        if (sErnamTyped) {
-          oErnam.addToken(
-            new sap.m.Token({ key: sErnamTyped, text: sErnamTyped })
-          );
-          oErnam.setValue("");
-        }
-
-        const aErnamTokens = oErnam.getTokens();
-        if (aErnamTokens.length > 0) {
-          const aErnamFilters = aErnamTokens.map(
-            (t) =>
-              new sap.ui.model.Filter(
-                "Ernam",
-                sap.ui.model.FilterOperator.EQ,
-                t.getKey()
-              )
-          );
-          aFilters.push(new sap.ui.model.Filter(aErnamFilters, false));
+        // ====== CREATED BY ======
+        const aErnam = this.byId("humanFilter")
+          .getTokens()
+          .map((t) => t.getKey());
+        if (aErnam.length) {
+          aResult = aResult.filter((r) => aErnam.includes(r.Ernam));
         }
 
         // ====== CREATED DATE ======
         const oDateFrom = this.byId("dateFilter").getDateValue();
         const oDateTo = this.byId("dateFilter").getSecondDateValue();
         if (oDateFrom && oDateTo) {
-          aFilters.push(
-            new sap.ui.model.Filter(
-              "Aedat",
-              sap.ui.model.FilterOperator.BT,
-              oDateFrom,
-              oDateTo
-            )
-          );
+          aResult = aResult.filter((r) => {
+            const d = new Date(r.Aedat);
+            return d >= oDateFrom && d <= oDateTo;
+          });
         }
 
-        // ====== STATUS (UI-LEVEL FILTER, MATCH BACKEND) ======
+        // ====== STATUS (⭐ NGHIỆP VỤ CHUẨN) ======
         const sStatus = this.byId("statusFilter").getSelectedKey();
-        let aFilteredData = this._originalPOData || [];
-
         if (sStatus && sStatus !== "ALL") {
-          aFilteredData = aFilteredData.filter((h) => {
+          aResult = aResult.filter((r) => {
             switch (sStatus) {
               case "Approved":
-                return h.Frgke === "R";
+                return r.Frgke === "R";
 
               case "Pending":
-                return h.Frgke === "C" && !h.HasRejected;
+                return r.Frgke === "C" && !r.IsRejected;
 
-            case "Rejected":
-              aStatusValues = ["A"];
-              break;
+              case "Rejected":
+                return r.Frgke === "C" && r.IsRejected;
 
-            case "Others":
-              aStatusValues = ["B", "G", "X"];
-              break;
-          }
-
-          if (aStatusValues.length > 0) {
-            aFilters.push(
-              new sap.ui.model.Filter(
-                aStatusValues.map(
-                  (v) => new sap.ui.model.Filter("Frgke", FilterOperator.EQ, v)
-                ),
-                false // OR
-              )
-            );
-          }
+              default:
+                return true;
+            }
+          });
         }
 
-        // ===== APPLY TO TABLE ======
-        oTable.getBinding("items").filter(aFilters);
+        // ====== APPLY RESULT ======
+        this.getView().setModel(new JSONModel(aResult), "po");
+
+        sap.m.MessageToast.show(`🔍 Found ${aResult.length} PO(s)`);
       },
 
       onValueHelpPO: function (oEvent) {
@@ -414,15 +349,10 @@ sap.ui.define(
       },
 
       onRefresh: function () {
-        const oTable = this.byId("poTable");
-        const oBinding = oTable.getBinding("items");
-
-        if (oBinding) {
-          oBinding.refresh();
-        }
-
-        MessageToast.show("🔄 Data refreshed");
+        MessageToast.show("🔄 Reloading PO list...");
+        this._loadPOList(); // ⭐ GỌI LẠI LOGIC LOAD THẬT
       },
+
       onNavHome: function () {
         const oRouter = this.getOwnerComponent().getRouter();
 
@@ -449,139 +379,138 @@ sap.ui.define(
 
         const oModel = this.oODataModel;
 
+        /* =====================================================
+         * STEP 1 — lấy EKET để xác định danh sách PO
+         * ===================================================== */
         const pEket = new Promise((resolve, reject) => {
           oModel.read("/EKET001Set", {
-            success: (d) => resolve(d.results),
+            success: (d) => resolve(d.results || []),
             error: reject,
           });
         });
 
         pEket
           .then((aEket) => {
-            // Không có EKET → không có PO tương ứng
-            if (!aEket || aEket.length === 0) {
+            if (!aEket.length) {
               this.getView().setModel(new JSONModel([]), "po");
               this._originalPOData = [];
               sap.ui.core.BusyIndicator.hide();
-              sap.m.MessageToast.show("No PO found for selected PR list.");
-              return null; // để skip bước Promise.all phía dưới
-            }
-
-            // STEP 2 — lấy list PO (Ebeln) duy nhất từ EKET
-            const aPO = [...new Set(aEket.map((e) => e.Ebeln))];
-
-            if (aPO.length === 0) {
-              this.getView().setModel(new JSONModel([]), "po");
-              this._originalPOData = [];
-              sap.ui.core.BusyIndicator.hide();
-              sap.m.MessageToast.show("No PO found for selected PR list.");
+              MessageToast.show("No PO found.");
               return null;
             }
 
-            // STEP 3 — tạo filter OR cho Ebeln
+            /* =====================================================
+             * STEP 2 — unique EBELN
+             * ===================================================== */
+            const aPO = [...new Set(aEket.map((e) => e.Ebeln))];
+            if (!aPO.length) return null;
+
             const oPOFilter = new Filter({
               filters: aPO.map(
                 (p) => new Filter("Ebeln", FilterOperator.EQ, p)
               ),
-              and: false, // OR
+              and: false,
             });
 
-            console.log("opo: ", new Filter("Bstyp", FilterOperator.EQ, "F"));
-
-            // STEP 4 — đọc ProcurementHeaderSet theo Ebeln + Bstyp = "F" (PO)
+            /* =====================================================
+             * STEP 3 — HEADER / ITEMS / REJECT LOG (SONG SONG)
+             * ===================================================== */
             const pHeader = new Promise((resolve, reject) => {
               oModel.read("/ProcurementHeaderSet", {
                 filters: [
-                  oPOFilter, // list Ebeln
-                  new Filter("Bstyp", FilterOperator.EQ, "F"), // 🔥 chỉ PO
+                  oPOFilter,
+                  new Filter("Bstyp", FilterOperator.EQ, "F"), // PO only
                 ],
-                success: (d) => resolve(d.results),
+                success: (d) => resolve(d.results || []),
                 error: reject,
               });
             });
 
-            // STEP 5 — đọc ProcurementItemSet để merge Items
             const pItems = new Promise((resolve, reject) => {
               oModel.read("/ProcurementItemSet", {
-                success: (d) => resolve(d.results),
+                success: (d) => resolve(d.results || []),
                 error: reject,
               });
             });
 
-            return Promise.all([pHeader, pItems]);
-          })
-          .then((result) => {
-            // Nếu ở trên đã return null thì bỏ qua
-            if (!result) return;
-
-            const [aHeader, aItems] = result;
-
-            // Map Items theo Ebeln
-            const mapItems = {};
-            aItems.forEach((it) => {
-              if (!mapItems[it.Ebeln]) {
-                mapItems[it.Ebeln] = [];
-              }
-              mapItems[it.Ebeln].push(it);
-            });
-
-            // ===============================
-            // 🔥 LOAD REJECT FLAG FROM ZPO_NOTE
-            // ===============================
-            const pRejectChecks = aHeader.map((h) => {
-              return new Promise((resolve) => {
-                const sEbeln = String(h.Ebeln).padStart(10, "0");
-
-                oModel.read(`/PONoteSet(Ebeln='${sEbeln}')`, {
-                  success: (d) => {
-                    h.HasRejected = !!(d.Note && d.Note.startsWith("REJECT:"));
-                    resolve();
-                  },
-                  error: () => {
-                    h.HasRejected = false;
-                    resolve();
-                  },
-                });
+            const pRejectLog = new Promise((resolve, reject) => {
+              oModel.read("/Reject_PO_LogSet", {
+                success: (d) => resolve(d.results || []),
+                error: reject,
               });
             });
 
-            Promise.all(pRejectChecks).then(() => {
-              this.getView().getModel("po").refresh(true);
+            const pRejectReasonMaster = new Promise((resolve, reject) => {
+              oModel.read("/Reject_POSet", {
+                success: (d) => resolve(d.results || []),
+                error: reject,
+              });
             });
 
-            // Enrich header: Items, ItemCount, TotalNetValue
+            return Promise.all([
+              pHeader,
+              pItems,
+              pRejectLog,
+              pRejectReasonMaster,
+            ]);
+          })
+          .then((result) => {
+            if (!result) return;
+
+            const [aHeader, aItems, aRejectLogs, aRejectReasons] = result;
+
+            /* =====================================================
+             * STEP 4 — map Items theo EBELN
+             * ===================================================== */
+            const itemMap = {};
+            aItems.forEach((it) => {
+              if (!itemMap[it.Ebeln]) itemMap[it.Ebeln] = [];
+              itemMap[it.Ebeln].push(it);
+            });
+
+            /* =====================================================
+             * STEP 5 — map Reject Log theo EBELN
+             * ===================================================== */
+            const rejectMap = {};
+            aRejectLogs.forEach((r) => {
+              // nếu nhiều record → record mới nhất ghi đè
+              rejectMap[r.Ebeln] = r;
+            });
+
+            const reasonTextMap = {};
+            aRejectReasons.forEach((r) => {
+              reasonTextMap[r.ReasonId] = r.Description;
+            });
+
+            /* =====================================================
+             * STEP 6 — enrich Header (⭐ QUAN TRỌNG)
+             * ===================================================== */
             aHeader.forEach((h) => {
-              const aIt = mapItems[h.Ebeln] || [];
-              h.Items = aIt;
-              h.ItemCount = aIt.length;
+              h.Items = itemMap[h.Ebeln] || [];
+              h.ItemCount = h.Items.length;
 
-              // 🔥 DERIVE REJECT FLAG (MATCH BACKEND)
-              h.HasRejected = false;
-              if (h.Note && h.Note.startsWith("REJECT:")) {
-                h.HasRejected = true;
-              }
+              const log = rejectMap[h.Ebeln];
+
+              h.IsRejected = !!log;
+              h.RejectReasonId = log ? log.ReasonId : "";
+              h.RejectReasonText = log ? reasonTextMap[log.ReasonId] || "" : "";
             });
 
-            // Gán model cho view "po" (binding hiện tại của bạn)
-            const oPOModel = new JSONModel(aHeader);
-            this.getView().setModel(oPOModel, "po");
-
-            // Lưu lại bản gốc để reset sort
+            /* =====================================================
+             * STEP 7 — set Model
+             * ===================================================== */
+            this.getView().setModel(new JSONModel(aHeader), "po");
             this._originalPOData = JSON.parse(JSON.stringify(aHeader));
 
             sap.ui.core.BusyIndicator.hide();
-            sap.m.MessageToast.show(
-              `${aHeader.length} POs loaded (mapped from EKET)`
-            );
+            MessageToast.show(`${aHeader.length} POs loaded`);
           })
           .catch((err) => {
-            console.error("Error loading PO list from EKET:", err);
+            console.error("❌ Load PO failed:", err);
             sap.ui.core.BusyIndicator.hide();
-            sap.m.MessageBox.error("Failed to load PO list (EKET-based).");
+            MessageBox.error("Failed to load PO list.");
           });
       },
-
-      
 
       _createSimpleValueHelp: function (oEvent, sTitle, sKey, aValues) {
         // Convert values -> [{ key: "..."}]
@@ -829,7 +758,7 @@ sap.ui.define(
 
             const oPayload = {
               Ebeln: sEbeln,
-              Frgke: "C", // ❌ Rejected
+              Frgke: "A", // ❌ Rejected
             };
 
             oModel.update(sPath, oPayload, {

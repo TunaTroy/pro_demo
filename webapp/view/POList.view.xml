@@ -1,276 +1,681 @@
-  <mvc:View controllerName="demodashboard.controller.POList"
+<mvc:View
+    controllerName="demodashboard.controller.POList"
     xmlns:mvc="sap.ui.core.mvc"
     xmlns="sap.m"
     xmlns:core="sap.ui.core"
     xmlns:fb="sap.ui.comp.filterbar"
-    xmlns:l="sap.ui.layout" displayBlock="true">
+    xmlns:l="sap.ui.layout"
+    displayBlock="true"
+>
     <Page id="poListPage">
-      <!-- Modern Navigation Bar -->
-<HBox class="topNavBar" justifyContent="SpaceBetween" alignItems="Center" width="100%">
-    
-    <!-- Logo SAP -->
-    <HBox alignItems="Center">
-        <Image src="https://upload.wikimedia.org/wikipedia/commons/5/59/SAP_2011_logo.svg"
-               width="90px"
-               class="sapLogo"
-                press="onGoToDashboard"/>
-                <Text text="Purchase Order" class="dashboardTitle"/>
-    </HBox>
+        <!-- Modern Navigation Bar -->
+        <HBox
+            class="topNavBar"
+            justifyContent="SpaceBetween"
+            alignItems="Center"
+            width="100%"
+        >
+            <!-- Logo SAP -->
+            <HBox alignItems="Center">
+                <Image
+                    src="https://upload.wikimedia.org/wikipedia/commons/5/59/SAP_2011_logo.svg"
+                    width="90px"
+                    class="sapLogo"
+                    press="onGoToDashboard"
+                />
+                <Text
+                    text="Purchase Order"
+                    class="dashboardTitle"
+                />
+            </HBox>
 
-    <!-- Menu -->
-    <HBox class="navMenu" alignItems="Center" justifyContent="Center">
-              <Link  text="Purchase Requisiton"  class="navItem" press="onGoToPRList" visible="{=
+            <!-- Menu -->
+            <HBox
+                class="navMenu"
+                alignItems="Center"
+                justifyContent="Center"
+            >
+                <Link
+                    text="Purchase Requisiton"
+                    class="navItem"
+                    press="onGoToPRList"
+                    visible="{=
         ${userRole>/feRole} === 'INVENTORY_STAFF' ||
         ${userRole>/feRole} === 'INVENTORY_MANAGER' ||
         ${userRole>/feRole} === 'ADMIN'
-    }" />
-              <Link  text="Request For Quotation" class="navItem" press="onGoToRFQList" visible="{=
+    }"
+                />
+                <Link
+                    text="Request For Quotation"
+                    class="navItem"
+                    press="onGoToRFQList"
+                    visible="{=
         ${userRole>/feRole} === 'PROCUREMENT_STAFF' ||
         ${userRole>/feRole} === 'PROCUREMENT_MANAGER' ||
         ${userRole>/feRole} === 'ADMIN'
-    }" />
-              <Link  text="Purchase Order" class="navItem" press="onGoToPOList" visible="{=
+    }"
+                />
+                <Link
+                    text="Purchase Order"
+                    class="navItem"
+                    press="onGoToPOList"
+                    visible="{=
         ${userRole>/feRole} === 'PROCUREMENT_STAFF' ||
         ${userRole>/feRole} === 'PROCUREMENT_MANAGER' ||
         ${userRole>/feRole} === 'ADMIN'
-    }" />
-          </HBox>
-
-</HBox>
+    }"
+                />
+            </HBox>
+        </HBox>
 
         <headerContent>
-      <HBox alignItems="Center" justifyContent="End" class="sapUiTinyMarginEnd sapUiTinyMarginTop">
-        <Button icon="sap-icon://home" text="Home" press="onNavHome" type="Transparent"/>
-        <Button icon="sap-icon://refresh" text="Reload" press="onRefresh" type="Transparent"/>
-        <Button icon="sap-icon://excel-attachment" text="Export Excel" press="onExportExcel" type="Transparent"/>
-      </HBox>
-    </headerContent>
+            <HBox
+                alignItems="Center"
+                justifyContent="End"
+                class="sapUiTinyMarginEnd sapUiTinyMarginTop"
+            >
+                <Button
+                    icon="sap-icon://home"
+                    text="Home"
+                    press="onNavHome"
+                    type="Transparent"
+                />
+                <Button
+                    icon="sap-icon://refresh"
+                    text="Reload"
+                    press="onRefresh"
+                    type="Transparent"
+                />
+                <Button
+                    icon="sap-icon://excel-attachment"
+                    text="Export Excel"
+                    press="onExportExcel"
+                    type="Transparent"
+                />
+            </HBox>
+        </headerContent>
 
-
-
-    <!-- ========= PAGE CONTENT MUST WRAP EVERYTHING ========= -->
-    <content>
-      <!-- ==================== FILTER BAR ==================== -->
-      <fb:FilterBar id=".poFilterBar" class="customFoFilterBar" persistencyKey="poFilterBar" useToolbar="false" search=".onFilterSearch">
-        <fb:filterGroupItems>
-          <fb:FilterGroupItem id="_IDGenFilterGroupItem" name="Ebeln" label="PO Number" groupName="default" visibleInFilterBar="true">
-            <fb:control>
-              <MultiInput id="poFilter" showValueHelp="true" valueHelpRequest=".onValueHelpPO"/>
-            </fb:control>
-          </fb:FilterGroupItem>
-          <fb:FilterGroupItem id="_IDGenFilterGroupItem1" name="Bsart" label="Order Type" groupName="default" visibleInFilterBar="true">
-            <fb:control>
-              <MultiInput id="orderTypeFilter" showValueHelp="true" valueHelpRequest=".onValueHelpOrderType"/>
-            </fb:control>
-          </fb:FilterGroupItem>
-          <fb:FilterGroupItem id="_IDGenFilterGroupItem2" name="Aedat" label="Created Date" groupName="default" visibleInFilterBar="true">
-            <fb:control>
-              <DateRangeSelection id="dateFilter" displayFormat="dd.MM.yyyy"/>
-            </fb:control>
-          </fb:FilterGroupItem>
-          <fb:FilterGroupItem id="_IDGenFilterGroupItem3" name="Frgke" label="Release Status" groupName="default" visibleInFilterBar="true">
-            <fb:control>
-              <Select id="statusFilter" selectedKey="ALL">
-                <items>
-                  <core:Item id="_IDGenItem1" key="ALL" text="All"/>
-                  <core:Item id="_IDGenItem2" key="Approved" text="Approved"/>
-                  <core:Item id="_IDGenItem3" key="Pending" text="Pending"/>
-                  <core:Item id="_IDGenItem" key="Rejected" text="Rejected"/>
-                  <core:Item id="_IDGenItem4" key="Others" text="Others"/>
-                </items>
-              </Select>
-            </fb:control>
-          </fb:FilterGroupItem>
-          <fb:FilterGroupItem id="_IDGenFilterGroupItem4" name="Ekgrp" label="Purch. Group" groupName="default" visibleInFilterBar="true">
-            <fb:control>
-              <MultiInput id="ekgrpFilterd" showValueHelp="true" valueHelpRequest=".onValueHelpEkgrp"/>
-            </fb:control>
-          </fb:FilterGroupItem>
-          <fb:FilterGroupItem id="_IDGenFilterGroupItem5" name="Ernam" label="Created By" groupName="default" visibleInFilterBar="true">
-            <fb:control>
-              <MultiInput id="humanFilter" showValueHelp="true" valueHelpRequest=".onValueHelpErnam"/>
-            </fb:control>
-          </fb:FilterGroupItem>
-        </fb:filterGroupItems>
-      </fb:FilterBar>
-      <!-- ========== RESPONSIVE SPLITTER ========== -->
-      <l:ResponsiveSplitter id="mainSplitter" defaultPane="poTablePane">
-        <l:PaneContainer id="_IDGenPaneContainer" orientation="Horizontal">
-          <!-- LEFT TABLE PANE -->
-          <l:SplitPane id="poTablePane">
-            <l:layoutData>
-              <l:SplitterLayoutData id="poTableLayout" size="100%" resizable="true"/>
-            </l:layoutData>
-            <Table id="poTable" class="tableHeaderBorder" items="{path: 'po>/'}" mode="SingleSelectLeft" selectionChange=".onSelectPO" sticky="ColumnHeaders" growing="true" growingThreshold="150" width="100%">
-              <headerToolbar>
-                <OverflowToolbar id="_IDGenOverflowToolbar">
-                  <Title id="_IDGenTitle" text="PO List ({= ${po>/}.length } items)" level="H2"/>
-                  <ToolbarSpacer id="_IDGenToolbarSpacer1"/>
-                  <Button id="_IDGenButton" icon="sap-icon://sort" press=".onSort"/>
-                  <Button id="_IDGenButton1" icon="sap-icon://filter" press=".onFilter"/>
-                </OverflowToolbar>
-              </headerToolbar>
-              <columns>
-                <Column id="_IDGenColumn1" width="120px">
-                  <Text id="_IDGenText5" text="Purchase Order."/>
-                </Column>
-                <Column id="_IDGenColumn2" width="100px">
-                  <Text id="_IDGenText6" text="Order Type"/>
-                </Column>
-                <Column id="_IDGenColumn" width="130px">
-                  <Text id="_IDGenText7" text="Purch. Group"/>
-                </Column>
-                <Column id="_IDGenColumn4" width="130px">
-                  <Text id="_IDGenText4" text="Created By"/>
-                </Column>
-                <Column id="colCreatedDate" width="140px" hAlign="Left">
-                  <HBox id="_IDGenHBox2" width="100%" justifyContent="Start">
-                    <Link id="_IDGenLink1" text="Created Date" press=".onSortCreatedDate" subtle="true"/>
-                  </HBox>
-                </Column>
-                <Column id="_IDGenColumn3" width="100px">
-                  <Text id="_IDGenText10" text="Items Count"/>
-                </Column>
-                <Column id="_IDGenColumn5" width="100px">
-                  <Text id="_IDGenText11" text="Status"/>
-                </Column>
-              </columns>
-              <items>
-                <ColumnListItem id="_IDGenColumnListItem1">
-                  <cells>
-                    <Link id="_IDGenText13" text="{po>Ebeln}"/>
-                    <Text id="_IDGenText14" text="{po>Bsart}"/>
-                    <Text id="_IDGenText12" text="{po>Ekgrp}"/>
-                    <Text id="_IDGenText15" text="{po>Ernam}"/>
-                    <Text id="_IDGenText17" text="{ path:'po>Aedat', formatter:'.formatter.dateFormat' }"/>
-                    <Text id="_IDGenText16" text="{po>ItemCount}"/>
-                    <ObjectStatus id="_IDGenObjectStatus" text="{path:'po>Frgke', 
-                                  formatter:'.formatter.formatReleaseStatusText'}" state="{path:'po>Frgke', 
-                                  formatter:'.formatter.formatReleaseStatusState'}" icon="{path:'po>Frgke', 
-                                  formatter:'.formatter.formatReleaseStatusIcon'}"/>
-                  </cells>
-                </ColumnListItem>
-              </items>
-            </Table>
-          </l:SplitPane>
-          <!-- RIGHT DETAIL PANEL -->
-          <l:SplitPane id="poDetailPane">
-            <l:layoutData>
-              <l:SplitterLayoutData id="_IDGenSplitterLayoutData1" size="0%" resizable="true"/>
-            </l:layoutData>
-            <VBox id="poDetailPanel" visible="false" class="sapUiMediumMargin sapUiSizeCompact sapUiNoContentPadding sapUiResponsiveContentPadding">
-              <!-- ===== HEADER CARD ===== -->
-              <Panel id="panelPODetailHeader" class="sapUiNoContentPadding sapUiResponsiveContentPadding sapUiSizeCompact sapUiMediumMarginBottom" width="100%" headerText="PO Details">
-                <VBox id="_IDGenVBox2" class="sapUiSmallMargin sapUiSizeCompact">
-                  <!-- Dòng tiêu đề + nút đóng -->
-                  <HBox id="_IDGenHBox" justifyContent="SpaceBetween" alignItems="Center" class="sapUiTinyMarginBottom">
-                    <Text id="_IDGenText19" text="{detailPO>Ebeln}" class="sapUiTinyMarginEnd sapUiTinyMarginBottom sapMTitle sapMTitleStyleH4"/>
-                    <Button id="_IDGenButton3" icon="sap-icon://decline" press="onCloseDetail" type="Transparent"/>
-                  </HBox>
-                  <!-- Loại PO -->
-                  <Text id="_IDGenText20" text="{detailPO>Bsart}" class="prHeaderSubTitle"/>
-                  <!-- Group / Created By / Created On -->
-                  <HBox id="_IDGenHBox4" class="sapUiTinyMarginTop" wrap="Wrap">
-                    <Text id="_IDGenText21" text="{= 'Group: ' + ${detailPO>Ekgrp}
+        <!-- ========= PAGE CONTENT MUST WRAP EVERYTHING ========= -->
+        <content>
+            <!-- ==================== FILTER BAR ==================== -->
+            <fb:FilterBar
+                id=".poFilterBar"
+                class="customFoFilterBar"
+                persistencyKey="poFilterBar"
+                useToolbar="false"
+                search=".onFilterSearch"
+            >
+                <fb:filterGroupItems>
+                    <fb:FilterGroupItem
+                        id="_IDGenFilterGroupItem"
+                        name="Ebeln"
+                        label="PO Number"
+                        groupName="default"
+                        visibleInFilterBar="true"
+                    >
+                        <fb:control>
+                            <MultiInput
+                                id="poFilter"
+                                showValueHelp="true"
+                                valueHelpRequest=".onValueHelpPO"
+                            />
+                        </fb:control>
+                    </fb:FilterGroupItem>
+                    <fb:FilterGroupItem
+                        id="_IDGenFilterGroupItem1"
+                        name="Bsart"
+                        label="Order Type"
+                        groupName="default"
+                        visibleInFilterBar="true"
+                    >
+                        <fb:control>
+                            <MultiInput
+                                id="orderTypeFilter"
+                                showValueHelp="true"
+                                valueHelpRequest=".onValueHelpOrderType"
+                            />
+                        </fb:control>
+                    </fb:FilterGroupItem>
+                    <fb:FilterGroupItem
+                        id="_IDGenFilterGroupItem2"
+                        name="Aedat"
+                        label="Created Date"
+                        groupName="default"
+                        visibleInFilterBar="true"
+                    >
+                        <fb:control>
+                            <DateRangeSelection
+                                id="dateFilter"
+                                displayFormat="dd.MM.yyyy"
+                            />
+                        </fb:control>
+                    </fb:FilterGroupItem>
+                    <fb:FilterGroupItem
+                        id="_IDGenFilterGroupItem3"
+                        name="Frgke"
+                        label="Release Status"
+                        groupName="default"
+                        visibleInFilterBar="true"
+                    >
+                        <fb:control>
+                            <Select
+                                id="statusFilter"
+                                selectedKey="ALL"
+                            >
+                                <items>
+                                    <core:Item
+                                        id="_IDGenItem1"
+                                        key="ALL"
+                                        text="All"
+                                    />
+                                    <core:Item
+                                        id="_IDGenItem2"
+                                        key="Approved"
+                                        text="Approved"
+                                    />
+                                    <core:Item
+                                        id="_IDGenItem3"
+                                        key="Pending"
+                                        text="Pending"
+                                    />
+                                    <core:Item
+                                        id="_IDGenItem"
+                                        key="Rejected"
+                                        text="Rejected"
+                                    />
+                                    <core:Item
+                                        id="_IDGenItem4"
+                                        key="Others"
+                                        text="Others"
+                                    />
+                                </items>
+                            </Select>
+                        </fb:control>
+                    </fb:FilterGroupItem>
+                    <fb:FilterGroupItem
+                        id="_IDGenFilterGroupItem4"
+                        name="Ekgrp"
+                        label="Purch. Group"
+                        groupName="default"
+                        visibleInFilterBar="true"
+                    >
+                        <fb:control>
+                            <MultiInput
+                                id="ekgrpFilterd"
+                                showValueHelp="true"
+                                valueHelpRequest=".onValueHelpEkgrp"
+                            />
+                        </fb:control>
+                    </fb:FilterGroupItem>
+                    <fb:FilterGroupItem
+                        id="_IDGenFilterGroupItem5"
+                        name="Ernam"
+                        label="Created By"
+                        groupName="default"
+                        visibleInFilterBar="true"
+                    >
+                        <fb:control>
+                            <MultiInput
+                                id="humanFilter"
+                                showValueHelp="true"
+                                valueHelpRequest=".onValueHelpErnam"
+                            />
+                        </fb:control>
+                    </fb:FilterGroupItem>
+                </fb:filterGroupItems>
+            </fb:FilterBar>
+            <!-- ========== RESPONSIVE SPLITTER ========== -->
+            <l:ResponsiveSplitter
+                id="mainSplitter"
+                defaultPane="poTablePane"
+            >
+                <l:PaneContainer
+                    id="_IDGenPaneContainer"
+                    orientation="Horizontal"
+                >
+                    <!-- LEFT TABLE PANE -->
+                    <l:SplitPane id="poTablePane">
+                        <l:layoutData>
+                            <l:SplitterLayoutData
+                                id="poTableLayout"
+                                size="100%"
+                                resizable="true"
+                            />
+                        </l:layoutData>
+                        <Table
+                            id="poTable"
+                            class="tableHeaderBorder"
+                            items="{path: 'po>/'}"
+                            mode="SingleSelectLeft"
+                            selectionChange=".onSelectPO"
+                            sticky="ColumnHeaders"
+                            growing="true"
+                            growingThreshold="150"
+                            width="100%"
+                        >
+                            <headerToolbar>
+                                <OverflowToolbar id="_IDGenOverflowToolbar">
+                                    <Title
+                                        id="_IDGenTitle"
+                                        text="PO List ({= ${po>/}.length } items)"
+                                        level="H2"
+                                    />
+                                    <ToolbarSpacer id="_IDGenToolbarSpacer1" />
+                                    <Button
+                                        id="_IDGenButton"
+                                        icon="sap-icon://sort"
+                                        press=".onSort"
+                                    />
+                                    <Button
+                                        id="_IDGenButton1"
+                                        icon="sap-icon://filter"
+                                        press=".onFilter"
+                                    />
+                                </OverflowToolbar>
+                            </headerToolbar>
+                            <columns>
+                                <Column
+                                    id="_IDGenColumn1"
+                                    width="120px"
+                                >
+                                    <Text
+                                        id="_IDGenText5"
+                                        text="Purchase Order."
+                                    />
+                                </Column>
+                                <Column
+                                    id="_IDGenColumn2"
+                                    width="100px"
+                                >
+                                    <Text
+                                        id="_IDGenText6"
+                                        text="Order Type"
+                                    />
+                                </Column>
+                                <Column
+                                    id="_IDGenColumn"
+                                    width="130px"
+                                >
+                                    <Text
+                                        id="_IDGenText7"
+                                        text="Purch. Group"
+                                    />
+                                </Column>
+                                <Column
+                                    id="_IDGenColumn4"
+                                    width="130px"
+                                >
+                                    <Text
+                                        id="_IDGenText4"
+                                        text="Created By"
+                                    />
+                                </Column>
+                                <Column
+                                    id="colCreatedDate"
+                                    width="140px"
+                                    hAlign="Left"
+                                >
+                                    <HBox
+                                        id="_IDGenHBox2"
+                                        width="100%"
+                                        justifyContent="Start"
+                                    >
+                                        <Link
+                                            id="_IDGenLink1"
+                                            text="Created Date"
+                                            press=".onSortCreatedDate"
+                                            subtle="true"
+                                        />
+                                    </HBox>
+                                </Column>
+                                <Column
+                                    id="_IDGenColumn3"
+                                    width="100px"
+                                >
+                                    <Text
+                                        id="_IDGenText10"
+                                        text="Items Count"
+                                    />
+                                </Column>
+                                <Column
+                                    id="_IDGenColumn5"
+                                    width="100px"
+                                >
+                                    <Text
+                                        id="_IDGenText11"
+                                        text="Status"
+                                    />
+                                </Column>
+                            </columns>
+                            <items>
+                                <ColumnListItem id="_IDGenColumnListItem1">
+                                    <cells>
+                                        <Link
+                                            id="_IDGenText13"
+                                            text="{po>Ebeln}"
+                                        />
+                                        <Text
+                                            id="_IDGenText14"
+                                            text="{po>Bsart}"
+                                        />
+                                        <Text
+                                            id="_IDGenText12"
+                                            text="{po>Ekgrp}"
+                                        />
+                                        <Text
+                                            id="_IDGenText15"
+                                            text="{po>Ernam}"
+                                        />
+                                        <Text
+                                            id="_IDGenText17"
+                                            text="{ path:'po>Aedat', formatter:'.formatter.dateFormat' }"
+                                        />
+                                        <Text
+                                            id="_IDGenText16"
+                                            text="{po>ItemCount}"
+                                        />
+                                        <ObjectStatus
+                                            text="{
+    parts: [
+      { path: 'po>Frgke' },
+      { path: 'po>IsRejected' }
+    ],
+    formatter: '.formatter.formatReleaseStatusText'
+  }"
+                                            state="{
+    parts: [
+      { path: 'po>Frgke' },
+      { path: 'po>IsRejected' }
+    ],
+    formatter: '.formatter.formatReleaseStatusState'
+  }"
+                                            icon="{
+    parts: [
+      { path: 'po>Frgke' },
+      { path: 'po>IsRejected' }
+    ],
+    formatter: '.formatter.formatReleaseStatusIcon'
+  }"
+                                        />
+                                    </cells>
+                                </ColumnListItem>
+                            </items>
+                        </Table>
+                    </l:SplitPane>
+                    <!-- RIGHT DETAIL PANEL -->
+                    <l:SplitPane id="poDetailPane">
+                        <l:layoutData>
+                            <l:SplitterLayoutData
+                                id="_IDGenSplitterLayoutData1"
+                                size="0%"
+                                resizable="true"
+                            />
+                        </l:layoutData>
+                        <VBox
+                            id="poDetailPanel"
+                            visible="false"
+                            class="sapUiMediumMargin sapUiSizeCompact sapUiNoContentPadding sapUiResponsiveContentPadding"
+                        >
+                            <!-- ===== HEADER CARD ===== -->
+                            <Panel
+                                id="panelPODetailHeader"
+                                class="sapUiNoContentPadding sapUiResponsiveContentPadding sapUiSizeCompact sapUiMediumMarginBottom"
+                                width="100%"
+                                headerText="PO Details"
+                            >
+                                <VBox
+                                    id="_IDGenVBox2"
+                                    class="sapUiSmallMargin sapUiSizeCompact"
+                                >
+                                    <!-- Dòng tiêu đề + nút đóng -->
+                                    <HBox
+                                        id="_IDGenHBox"
+                                        justifyContent="SpaceBetween"
+                                        alignItems="Center"
+                                        class="sapUiTinyMarginBottom"
+                                    >
+                                        <Text
+                                            id="_IDGenText19"
+                                            text="{detailPO>Ebeln}"
+                                            class="sapUiTinyMarginEnd sapUiTinyMarginBottom sapMTitle sapMTitleStyleH4"
+                                        />
+                                        <Button
+                                            id="_IDGenButton3"
+                                            icon="sap-icon://decline"
+                                            press="onCloseDetail"
+                                            type="Transparent"
+                                        />
+                                    </HBox>
+                                    <!-- Loại PO -->
+                                    <Text
+                                        id="_IDGenText20"
+                                        text="{detailPO>Bsart}"
+                                        class="prHeaderSubTitle"
+                                    />
+                                    <!-- Group / Created By / Created On -->
+                                    <HBox
+                                        id="_IDGenHBox4"
+                                        class="sapUiTinyMarginTop"
+                                        wrap="Wrap"
+                                    >
+                                        <Text
+                                            id="_IDGenText21"
+                                            text="{= 'Group: ' + ${detailPO>Ekgrp}
                 + ' • Created By: ' + ${detailPO>Ernam}
-                + ' • Created On: ' + ${path:'detailPO>Aedat', formatter:'.formatter.dateFormat'} }"/>
-                  </HBox>
-                  <!-- Status -->
-                  <HBox id="_IDGenHBox3" class="sapUiTinyMarginTop" alignItems="Center">
-                    <Text id="_IDGenText23" text="Status:"/>
-                    <ObjectStatus id="_IDGenObjectStatus1" text="{path:'detailPO>Frgke', formatter:'.formatter.formatReleaseStatusText'}" state="{path:'detailPO>Frgke', formatter:'.formatter.formatReleaseStatusState'}" icon="{path:'detailPO>Frgke', formatter:'.formatter.formatReleaseStatusIcon'}" class="sapUiTinyMarginBegin"/>
-                  </HBox>
-                  <HBox id="_IDGenHBox6" class="sapUiTinyMarginTop" justifyContent="End">
+                + ' • Created On: ' + ${path:'detailPO>Aedat', formatter:'.formatter.dateFormat'} }"
+                                        />
+                                    </HBox>
+<!-- ===== STATUS ===== -->
+<HBox
+  class="sapUiTinyMarginTop"
+  alignItems="Center">
 
-                  <!-- Nút APPROVE → thêm marginEnd để tách khỏi Reject -->
-                  <Button id="btnApprovePO"
-                          text="Approve"
-                          icon="sap-icon://accept"
-                          type="Emphasized"
-                          press=".onApprovePO"
-                          class="sapUiTinyMarginEnd"
-                          visible="{
-                              = ${userRole>/feRole} === 'PROCUREMENT_MANAGER' ||
-                                ${userRole>/feRole} === 'ADMIN'
-                          }"/>
+  <Text
+    text="Status:"
+    class="sapUiTinyMarginEnd"/>
 
-                  <!-- Nút REJECT đứng sau, không cần margin -->
-                  <Button id="btnRejectPO"
-                          text="Reject"
-                          icon="sap-icon://decline"
-                          type="Reject"
-                          press=".onRejectPO"
-                          visible="{
-                              = ${userRole>/feRole} === 'PROCUREMENT_MANAGER' ||
-                                ${userRole>/feRole} === 'ADMIN'
-                          }"/>
-              </HBox>
+  <ObjectStatus
+    text="{
+      parts: [
+        { path: 'detailPO>Frgke' },
+        { path: 'detailPO>IsRejected' }
+      ],
+      formatter: '.formatter.formatReleaseStatusText'
+    }"
+    state="{
+      parts: [
+        { path: 'detailPO>Frgke' },
+        { path: 'detailPO>IsRejected' }
+      ],
+      formatter: '.formatter.formatReleaseStatusState'
+    }"
+    icon="{
+      parts: [
+        { path: 'detailPO>Frgke' },
+        { path: 'detailPO>IsRejected' }
+      ],
+      formatter: '.formatter.formatReleaseStatusIcon'
+    }"/>
+</HBox>
 
-                </VBox>
-              </Panel>
-              <!-- ===== ITEMS TABLE ===== -->
-              <Panel id="panelPOItems" headerText="📦 Items" class="sapUiNoContentPadding sapUiResponsiveContentPadding sapUiSizeCompact" width="100%">
-                <Table id="tblPOItems" mode="SingleSelectMaster" selectionChange="onItemPress" items="{detailPO>/Items}" class="sapUiSizeCompact" width="100%">
-                  <columns>
-                    <Column id="_IDGenColumn6">
-                      <Text id="_IDGenText18" text="Item"/>
-                    </Column>
-                    <Column id="_IDGenColumn8">
-                      <Text id="_IDGenText25" text="Material"/>
-                    </Column>
-                    <Column id="_IDGenColumn10">
-                      <Text id="_IDGenText27" text="Net Price"/>
-                    </Column>
-                    <Column id="_IDGenColumn7">
-                      <Text id="_IDGenText24" text="Quantity"/>
-                    </Column>                   
-                    <Column id="_IDGenColumn9">
-                      <Text id="_IDGenText26" text="Order Unit"/>
-                    </Column>
-                  </columns>
-                  <items>
-                    <ColumnListItem id="_IDGenColumnListItem">
-                      <cells>
-                        <Text id="_IDGenText29"
-                              text="{
-                                path: 'detailPO>Ebelp',
-                                formatter: '.formatter.displayEbelp'
-                              }"/>
-                        <Text id="_IDGenText30" text="{detailPO>Matnr}"/>
-                        <Text id="_IDGenText28" text="{detailPO>Menge}"/>
-                        <Text id="_IDGenText31" text="{detailPO>Netpr}"/>
-                        <Text id="_IDGenText32" text="{detailPO>Meins}"/>
-                      </cells>
-                    </ColumnListItem>
-                  </items>
-                </Table>
-              </Panel>
-              <Panel id="panelNotePO" headerText="📝 Manager Note" class="sapUiNoContentPadding sapUiResponsiveContentPadding sapUiSizeCompact sapUiMediumMarginTop prHeaderCard" width="100%">
-                <VBox id="vboxNotePO" class="sapUiSmallMargin sapUiSizeCompact">
-                  <!-- 📄 Hiển thị nội dung note khi chưa bật chế độ edit -->
-                  <Text id="txtPONote" text="{poNoteModel>/Note}" wrapping="true" visible="{= !${poNoteModel>/Editable} }" class="sapUiTinyMarginTop sapUiSmallMarginBottom sapUiSmallPadding"/>
-                  <!-- ✏️ TextArea cho chế độ chỉnh sửa -->
-                  <TextArea id="taPONoteEdit" value="{poNoteModel>/Note}" rows="4" width="100%" visible="{poNoteModel>/Editable}" placeholder="Enter note here..." class="sapUiTinyMarginTop sapUiSmallMarginBottom sapUiSmallPadding"/>
-                  <!-- 🔘 Nút hành động -->
-                  <HBox id="hboxNoteButtonsPO" class="sapUiTinyMarginTop" justifyContent="End">
-                    <Button id="btnEditNotePO" text="Edit" type="Transparent" icon="sap-icon://edit" visible="{poNoteModel>/CanEdit}" enabled="{= !${poNoteModel>/Editable} }" press=".onEditNotePo"/>
-                    <Button id="btnSaveNotePO" text="Save" type="Emphasized" icon="sap-icon://save" visible="{poNoteModel>/Editable}" press=".onSaveNotePo"/>
-                    <Button id="btnCancelNotePO" text="Cancel" type="Reject" icon="sap-icon://decline" visible="{poNoteModel>/Editable}" press=".onCancelEditNotePo"/>
-                  </HBox>
-                </VBox>
-              </Panel>
-            </VBox>
-          </l:SplitPane>
-        </l:PaneContainer>
-      </l:ResponsiveSplitter>
-    </content>
-    <!-- ==================== FOOTER ==================== -->
-    <footer>
-      <OverflowToolbar id="_IDGenOverflowToolbar1">
-        <ToolbarSpacer id="_IDGenToolbarSpacer"/>
-        <Button id="_IDGenButton2" text="View Notes" icon="sap-icon://notes" press=".onOpenNotes"/>
-        <Button id="_IDGenButton4" text="Follow-up" icon="sap-icon://activity-items" press=".onFollowUp"/>
-      </OverflowToolbar>
-    </footer>
-  </Page>
+<!-- ===== REJECT REASON (SECOND LINE) ===== -->
+<HBox
+  visible="{= ${detailPO>IsRejected} === true }"
+  class="sapUiTinyMarginBegin sapUiTinyMarginTop"
+  wrap="Wrap">
+
+  <Text
+    text="Reason:"
+    class="sapUiTinyMarginEnd sapUiSmallMarginBegin"
+  />
+
+  <Text
+    text="{= ${detailPO>RejectReasonId} + ' – ' + ${detailPO>RejectReasonText} }"
+    wrapping="true"
+    class="sapUiContentLabel"
+  />
+</HBox>
+
+                                </VBox>
+                            </Panel>
+                            <!-- ===== ITEMS TABLE ===== -->
+                            <Panel
+                                id="panelPOItems"
+                                headerText="📦 Items"
+                                class="sapUiNoContentPadding sapUiResponsiveContentPadding sapUiSizeCompact"
+                                width="100%"
+                            >
+                                <Table
+                                    id="tblPOItems"
+                                    mode="SingleSelectMaster"
+                                    selectionChange="onItemPress"
+                                    items="{detailPO>/Items}"
+                                    class="sapUiSizeCompact"
+                                    width="100%"
+                                >
+                                    <columns>
+                                        <Column id="_IDGenColumn6">
+                                            <Text
+                                                id="_IDGenText18"
+                                                text="Item"
+                                            />
+                                        </Column>
+                                        <Column id="_IDGenColumn8">
+                                            <Text
+                                                id="_IDGenText25"
+                                                text="Material"
+                                            />
+                                        </Column>
+                                        <Column id="_IDGenColumn10">
+                                            <Text
+                                                id="_IDGenText27"
+                                                text="Net Price"
+                                            />
+                                        </Column>
+                                        <Column id="_IDGenColumn7">
+                                            <Text
+                                                id="_IDGenText24"
+                                                text="Quantity"
+                                            />
+                                        </Column>
+                                        <Column id="_IDGenColumn9">
+                                            <Text
+                                                id="_IDGenText26"
+                                                text="Order Unit"
+                                            />
+                                        </Column>
+                                    </columns>
+                                    <items>
+                                        <ColumnListItem>
+                                            <cells>
+                                                <!-- Item -->
+                                                <Text
+                                                    text="{
+                        path: 'detailPO>Ebelp',
+                        formatter: '.formatter.displayEbelp'
+                      }"
+                                                />
+
+                                                <!-- Material -->
+                                                <Text text="{detailPO>Matnr}" />
+
+                                                <!-- Net Price -->
+                                                <Text text="{detailPO>Netpr}" />
+
+                                                <!-- Quantity -->
+                                                <Text text="{detailPO>Menge}" />
+
+                                                <!-- Order Unit -->
+                                                <Text text="{detailPO>Meins}" />
+                                            </cells>
+                                        </ColumnListItem>
+                                    </items>
+                                </Table>
+                            </Panel>
+                            <Panel
+                                id="panelNotePO"
+                                headerText="📝 Manager Note"
+                                class="sapUiNoContentPadding sapUiResponsiveContentPadding sapUiSizeCompact sapUiMediumMarginTop prHeaderCard"
+                                width="100%"
+                            >
+                                <VBox
+                                    id="vboxNotePO"
+                                    class="sapUiSmallMargin sapUiSizeCompact"
+                                >
+                                    <!-- 📄 Hiển thị nội dung note khi chưa bật chế độ edit -->
+                                    <Text
+                                        id="txtPONote"
+                                        text="{poNoteModel>/Note}"
+                                        wrapping="true"
+                                        visible="{= !${poNoteModel>/Editable} }"
+                                        class="sapUiTinyMarginTop sapUiSmallMarginBottom sapUiSmallPadding"
+                                    />
+                                    <!-- ✏️ TextArea cho chế độ chỉnh sửa -->
+                                    <TextArea
+                                        id="taPONoteEdit"
+                                        value="{poNoteModel>/Note}"
+                                        rows="4"
+                                        width="100%"
+                                        visible="{poNoteModel>/Editable}"
+                                        placeholder="Enter note here..."
+                                        class="sapUiTinyMarginTop sapUiSmallMarginBottom sapUiSmallPadding"
+                                    />
+                                    <!-- 🔘 Nút hành động -->
+                                    <HBox
+                                        id="hboxNoteButtonsPO"
+                                        class="sapUiTinyMarginTop"
+                                        justifyContent="End"
+                                    >
+                                        <Button
+                                            id="btnEditNotePO"
+                                            text="Edit"
+                                            type="Transparent"
+                                            icon="sap-icon://edit"
+                                            visible="{poNoteModel>/CanEdit}"
+                                            enabled="{= !${poNoteModel>/Editable} }"
+                                            press=".onEditNotePo"
+                                        />
+                                        <Button
+                                            id="btnSaveNotePO"
+                                            text="Save"
+                                            type="Emphasized"
+                                            icon="sap-icon://save"
+                                            visible="{poNoteModel>/Editable}"
+                                            press=".onSaveNotePo"
+                                        />
+                                        <Button
+                                            id="btnCancelNotePO"
+                                            text="Cancel"
+                                            type="Reject"
+                                            icon="sap-icon://decline"
+                                            visible="{poNoteModel>/Editable}"
+                                            press=".onCancelEditNotePo"
+                                        />
+                                    </HBox>
+                                </VBox>
+                            </Panel>
+                        </VBox>
+                    </l:SplitPane>
+                </l:PaneContainer>
+            </l:ResponsiveSplitter>
+        </content>
+        <!-- ==================== FOOTER ==================== -->
+        <footer>
+            <OverflowToolbar id="_IDGenOverflowToolbar1">
+                <ToolbarSpacer id="_IDGenToolbarSpacer" />
+                <Button
+                    id="_IDGenButton2"
+                    text="View Notes"
+                    icon="sap-icon://notes"
+                    press=".onOpenNotes"
+                />
+                <Button
+                    id="_IDGenButton4"
+                    text="Follow-up"
+                    icon="sap-icon://activity-items"
+                    press=".onFollowUp"
+                />
+            </OverflowToolbar>
+        </footer>
+    </Page>
 </mvc:View>
